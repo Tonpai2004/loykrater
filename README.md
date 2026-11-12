@@ -1,110 +1,112 @@
-# ลอยกะเธอ (Loikratur) — บางกอกทวิกาล 🌕🪷🏮
-> **“จันทร์เอ๋ยจันทร์เจ้าฉาย แสงพราวพรายเหนือสายชล ชวนเธอลอยกระทงอธิษฐานกมล ฝากสายน้ำและลมบนช่วยนำพา”**
->
-> เว็บแอปพลิเคชัน **ลอยกระทงและปล่อยโคมลอยดิจิทัลแบบ Interactive Multiplayer** ที่ผสานการตรวจจับท่าทางมือด้วย AI (**MediaPipe Hand Landmarker**) เข้ากับงานศิลปะคอลลาจเรขาคณิต (**100% Procedural HTML5 Canvas & SVG**) ในบรรยากาศวรรณศิลป์ **“ท่าน้ำพระนครร่วมสมัย (Contemporary Thai-Global Craft)”**
+# Loikratur (ลอยกะเธอ)
+
+**Loikratur (ลอยกะเธอ)** คือเว็บแอปพลิเคชันเชิงโต้ตอบแบบเรียลไทม์ (Interactive Multiplayer Web Experience) ที่นำประเพณีลอยกระทงและปล่อยโคมลอยของไทยมาตีความใหม่ในรูปแบบงานศิลปะดิจิทัลร่วมสมัยภายใต้บรรยากาศ "ท่าน้ำพระนครยามราตรี"
+
+โปรเจกต์นี้ออกแบบมาเพื่อแก้ปัญหาความจำเจของเว็บไซต์ลอยกระทงออนไลน์ทั่วไปที่มักเป็นเพียงแบบฟอร์มกรอกข้อความแล้วกดปุ่มส่ง โดยเปลี่ยนให้ผู้ใช้ได้มีส่วนร่วมกับพิธีกรรมผ่านการตรวจจับท่าทางมือด้วย AI (Hand Gesture Tracking) เพื่อหยิบและประคองกระทงไปวางลงในสายน้ำ หรือปล่อยโคมลอยขึ้นสู่ท้องฟ้าด้วยตัวเองและสามารถเล่นพร้อมกับคนข้างกายได้ในหน้าจอเดียวกัน
 
 ---
 
-## 💡 แนวคิดและที่มาของโปรเจกต์ (Project Concept & Vision)
+## แนวคิดและการออกแบบ (Concept & Design Rationale)
 
-**“ลอยกะเธอ (Loikratur)”** เกิดจากไอเดียที่ต้องการเปลี่ยนเว็บลอยกระทงออนไลน์แบบเดิม ๆ (ที่มักเป็นแค่ฟอร์มกรอกชื่อแล้วกดปุ่มส่ง) ให้กลายเป็น **ประสบการณ์เชิงโต้ตอบ (Interactive Ritual Experience)** ที่ผู้เล่นได้มีส่วนร่วมจริงตั้งแต่การเลือกพับกลีบใบตอง การจารึกคำอธิษฐานคล้องจอง ไปจนถึงการ **ยกมือขึ้นหน้ากล้องแล้วใช้นิ้วจีบ (Pinch Gesture)** เพื่อประคองกระทงไปวางในวงแสงบนผิวน้ำ หรือส่งโคมทองลอยขึ้นสู่ฟากฟ้าด้วยตัวเอง หรือทำไปพร้อมกับคนพิเศษข้างกาย
+1. **Physicality in Digital Ritual (การสร้างสัมผัสทางกายภาพบนหน้าเว็บ)**
+   แทนที่จะใช้การคลิกปุ่มเพียงอย่างเดียว ระบบใช้กล้องเว็บแคมตรวจจับพิกัดมือแบบเรียลไทม์ ผู้ใช้ต้องทำท่า "จีบนิ้ว" (Pinch Gesture) เพื่อหยิบกระทงหรือโคมลอยที่ตัวเองพับไว้ แล้วค่อยๆ ลากไปวางในวงแสงเป้าหมายบนผิวน้ำหรือบนท้องฟ้า สร้างความรู้สึกของการ "ประคองและปล่อย" ที่ใกล้เคียงกับการลอยกระทงจริง
 
-### ความท้าทายทางวิศวกรรมและการออกแบบที่โปรเจกต์นี้แก้ไข:
-1. **Zero External Image Assets (100% Procedural Art):** กราฟิกทุกชิ้นในฉาก—ตั้งแต่ท้องฟ้ายามราตรี ดวงจันทร์ เจดีย์ริมน้ำ คลื่นสะท้อนน้ำ กระทงใบตอง 3 รูปทรง โคมลอยล้านนา มือ 2D ทั้ง 5 นิ้ว ไปจนถึงภาพพระแม่คงคา—ถูกวาดขึ้นด้วยโค้ดคณิตศาสตร์และเรขาคณิตบน HTML5 Canvas และ SVG ทั้งหมด
-2. **60 FPS Performance Optimization:** ใช้เทคนิค **Offscreen Canvas Sprite Caching** (`getOrCreateKrathongSprite` และ `getOrCreateLanternSprite`) เพื่อแคชรูปทรงกระทงและโคมลอยที่ซับซ้อนไว้ในหน่วยความจำ และอัปเดตพิกัดมือผ่าน React `useRef` โดยตรงเพื่อหลีกเลี่ยงการ Re-render ของ React ที่ 60Hz
-3. **Zero-Server-Cost Multiplayer Architecture:** ประมวลผล AI Hand Tracking บนเครื่องผู้ใช้ (Client-Side 100%) และซิงก์เฉพาะข้อมูล JSON ขนาดเล็กผ่าน **Firebase Realtime Database** พร้อมระบบ **Local BroadcastChannel Fallback** ที่ช่วยให้รันทดสอบระบบ Multiplayer ข้ามแท็บเบราว์เซอร์ได้ทันทีแม้ยังไม่ได้เชื่อมต่อ Firebase
+2. **Contemporary Phra Nakhon Aesthetics (บรรยากาศพระนครร่วมสมัย)**
+   งานออกแบบผสมผสานโครงสร้างสถาปัตยกรรมไทยประยุกต์ (เช่น กรอบตัดเหลี่ยมย่อมุม และโทนสีเครื่องรักปิดทอง) เข้ากับวรรณศิลป์ไทยแบบเจ้าบทเจ้ากลอน มีระบบสุ่มคำกลอนอธิษฐานคล้องจองทั้งสำหรับผู้ที่ลอยคนเดียวและผู้ที่ลอยเป็นคู่
 
----
+3. **Zero-Asset Procedural Rendering (กราฟิกวาดด้วยโค้ด 100%)**
+   องค์ประกอบภาพทั้งหมดในฉาก ไม่ว่าจะเป็นท้องฟ้า ดวงจันทร์ เจดีย์ริมน้ำ คลื่นสะท้อนแสงจันทร์ กระทงใบตองทั้ง 3 รูปทรง โคมลอยล้านนา มือจำลอง 2 มิติ ไปจนถึงภาพพระแม่คงคา ถูกสร้างขึ้นด้วยโค้ดคณิตศาสตร์และเรขาคณิตผ่าน HTML5 Canvas และ SVG โดยไม่ใช้ไฟล์รูปภาพภายนอก ทำให้โหลดเร็วและปรับขนาดตามความละเอียดหน้าจอได้อย่างสมบูรณ์
 
-## ✨ ฟีเจอร์หลัก (Key Features)
-
-- **🤲 2D Illustrated Hand & Multi-Hand Tracking (รองรับสูงสุด 2 มือพร้อมกัน):**
-  - ใช้ `@mediapipe/tasks-vision` ตรวจจับจุดข้อต่อมือ 21 จุด (`numHands: 2`)
-  - วาด **2D Hand Avatar** ที่มีฝ่ามือ ข้อนิ้วทั้ง 5 เล็บสีทอง กำไลข้อมือ และประกายดาวเมื่อทำท่าจีบนิ้วโป้งและนิ้วชี้เข้าหากัน
-  - รองรับการลากด้วยเมาส์หรือนิ้วสัมผัสหน้าจอ (Touch/Pointer Fallback) ควบคู่กันเสมอ
-- **🪷 ลอยกระทงสายน้ำ & 🏮 ปล่อยโคมลอยขึ้นฟ้า:**
-  - เลือกรูปแบบพิธีได้ 3 แบบ: **ประทีปคู่ฟ้าและสายชล (กระทง + โคมลอย)**, **ล่องนาวาฝากแม่คงคา (เฉพาะกระทง)**, หรือ **ลอยโคมทองท่องเวหา (เฉพาะโคมลอย)**
-  - **วงแสงเป้าหมายแยกจุดชัดเจน:** ลากกระทงไปวางในวงแสงดอกบัวบนผิวน้ำ หรือลากโคมลอยเข้าสู่วงแสงเวหาด้านบนเพื่อให้โคมลอยทะยานขึ้นฟ้าโดยอัตโนมัติ
-- **👫 โหมดลอยเดี่ยว & ลอยคู่เคียงขวัญ (1–2 Players):**
-  - เลือกเล่นคนเดียว หรือเล่นคู่พร้อมกัน 2 คนหน้ากล้องเดียว โดยมีช่องจารึกคำอธิษฐานและนามของผู้ลอยทั้งสองแยกกัน
-- **📜 วรรณศิลป์มู้ดพระนคร & ระบบสุ่มกลอนคำพร:**
-  - มีปุ่ม **“สุ่มกลอนคำพรพระนคร”** และ **“สุ่มกลอนคู่รัก”** สำหรับสุ่มบทกลอนแปดคล้องจองในกลิ่นอายบางกอกทวิกาล
-- **🙏 สาส์นอวยพรจากพระแม่คงคาเทวี (`MaeKhongkhaModal`):**
-  - รอจนผู้เล่นปล่อยกระทงและโคมลอย **ครบทุกชิ้นในรอบนั้น** (เช่น กระทง 2 + โคมลอย 1 = ครบ 3 ชิ้น) จึงแสดงโปสการ์ดที่ระลึกพร้อมภาพวาด 2D พระแม่คงคาในซุ้มเรือนแก้ว บทกลอนอวยพร สมุดลงนามรีวิว และปุ่มแชร์คำเชิญ
+4. **Serverless & Zero-Cost Scalability (รองรับผู้เล่นหลายคนโดยไม่มีค่าเซิร์ฟเวอร์)**
+   การประมวลผลโมเดล AI สำหรับจับพิกัดมือทำงานอยู่บนเบราว์เซอร์ของผู้ใช้ทั้งหมด (Client-Side WebAssembly/WebGL) ส่วนการซิงก์ข้อมูลกระทงและโคมลอยของผู้เล่นแต่ละคนจะส่งเฉพาะข้อมูล JSON ขนาดเล็กผ่าน Firebase Realtime Database และมีระบบสำรองข้อมูลผ่าน `BroadcastChannel` API เพื่อให้สามารถทดสอบระบบ Multiplayer ข้ามแท็บเบราว์เซอร์ได้ทันทีแม้ในสภาพแวดล้อมที่ไม่ได้ตั้งค่าฐานข้อมูล
 
 ---
 
-## 🛠️ Tech Stack
+## ฟีเจอร์และการทำงานหลัก (Core Capabilities)
 
-| หมวดหมู่ | เทคโนโลยีที่ใช้ |
-| :--- | :--- |
-| **Framework** | Next.js 16 (App Router, Turbopack) |
-| **Language** | TypeScript |
-| **Styling & Typography** | Tailwind CSS v4 + Google Fonts (`Pridi`, `Bai Jamjuree`, `Charm`, `Cormorant Garamond`) |
-| **AI Hand Tracking** | `@mediapipe/tasks-vision` (HandLandmarker — Client-side WebAssembly/WebGL) |
-| **Graphics & Physics** | HTML5 Canvas 2D API (Offscreen Sprite Caching + Spring Physics) & Framer Motion |
-| **Icons & Effects** | `iconoir-react`, `@phosphor-icons/react`, `canvas-confetti` |
-| **Realtime Multiplayer** | Firebase Realtime Database + Web `BroadcastChannel` Fallback |
-| **Package Manager** | `pnpm` |
+- **Dual-Hand Gesture Tracking:** รองรับการตรวจจับมือพร้อมกันสูงสุด 2 ข้าง (`numHands: 2`) ด้วย `@mediapipe/tasks-vision` พร้อมวาดโมเดลมือ 2 มิติตามจุดข้อต่อทั้ง 21 จุด และมีระบบ Fallback สำหรับการลากด้วยเมาส์หรือหน้าจอสัมผัส
+- **Multi-Mode & Co-op Support:** เลือกได้ว่าจะลอยเฉพาะกระทง ปล่อยเฉพาะโคมลอย หรือทำทั้งสองอย่างในรอบเดียวกัน และรองรับโหมดผู้เล่น 1 คน หรือ 2 คนพร้อมกัน
+- **Target Spotlight Release Mechanics:** แสดงวงกลมแสงเป้าหมายบนผิวน้ำสำหรับวางกระทง และวงกลมแสงด้านบนท้องฟ้าสำหรับปล่อยโคมลอย พร้อมระบบฟิสิกส์แบบสปริง (Spring Physics) และความลึกตามระยะสายตา (Perspective Scaling)
+- **End-of-Round Blessing & Guestbook:** ระบบจะตรวจสอบจนกว่าผู้เล่นจะปล่อยกระทงและโคมลอยครบทุกชิ้นในรอบนั้น จึงจะแสดงหน้าต่างสาส์นอวยพรจากพระแม่คงคา พร้อมสมุดลงนามเขียนความประทับใจและระบบแชร์คำเชิญ
 
 ---
 
-## 📂 โครงสร้างโปรเจกต์ (Project Structure)
+## สถาปัตยกรรมและเทคโนโลยี (Tech Stack & Architecture)
+
+- **Framework:** Next.js 16 (App Router, Turbopack)
+- **Language:** TypeScript
+- **Styling & Typography:** Tailwind CSS v4 ร่วมกับฟอนต์ `Pridi`, `Bai Jamjuree`, `Charm` และ `Cormorant Garamond`
+- **Computer Vision:** `@mediapipe/tasks-vision` (HandLandmarker)
+- **Rendering & Animation:** HTML5 Canvas 2D API (พร้อมระบบ Offscreen Canvas Sprite Caching เพื่อรักษาความลื่นไหลที่ 60 FPS) และ Framer Motion
+- **Realtime Data Sync:** Firebase Realtime Database และ Web `BroadcastChannel` API
+- **Package Manager:** `pnpm`
+
+### โครงสร้างไดเรกทอรี (Directory Structure)
 
 ```text
 loikrater/
 ├── src/
 │   ├── app/
-│   │   ├── globals.css              # ตั้งค่า Theme, ฟอนต์ และคลาสย่อมุมไทยร่วมสมัย (.thai-chamfer)
-│   │   ├── layout.tsx               # โหลดฟอนต์ไทย-สากล และตั้งค่า Metadata (ลอยกะเธอ / Loikratur)
-│   │   └── page.tsx                 # หน้าหลัก จัดการ GameState ('CUSTOMIZE' | 'INTERACT' | 'FLOATING')
+│   │   ├── globals.css              # ตั้งค่าตัวแปรสี ฟอนต์ และคลาสรูปทรงย่อมุม (.thai-chamfer)
+│   │   ├── layout.tsx               # โหลดฟอนต์และกำหนด Metadata ของเว็บแอปพลิเคชัน
+│   │   └── page.tsx                 # หน้าหลักและ State Machine ('CUSTOMIZE' | 'INTERACT' | 'FLOATING')
 │   ├── components/
-│   │   ├── CustomizationPanel.tsx   # โรงพับใบตองและสมุดข่อยจารึกคำพร (เลือกโหมด, สี, รูปทรง, สุ่มกลอน)
-│   │   ├── RiverCanvas.tsx          # HTML5 Canvas หลัก จัดการลูป 60FPS, ฟิสิกส์การหยิบ-ปล่อย และ Perspective
-│   │   ├── HandTrackerHUD.tsx       # หน้าจอกล้องเว็บแคมขนาดย่อ แสดงสถานะจำนวนมือและจำนวนประทีปที่ปล่อยแล้ว
-│   │   └── MaeKhongkhaModal.tsx     # โปสการ์ดสาส์นอวยพรพระแม่คงคา สมุดลงนามรีวิว และระบบแชร์
+│   │   ├── CustomizationPanel.tsx   # แผงปรับแต่งรูปทรงกระทง โทนสี โหมดผู้เล่น และสมุดจารึกคำอธิษฐาน
+│   │   ├── RiverCanvas.tsx          # คอมโพเนนต์ Canvas หลัก จัดการ Render Loop 60FPS และระบบหยิบ-ปล่อย
+│   │   ├── HandTrackerHUD.tsx       # หน้าจอกล้องเว็บแคมขนาดย่อและปุ่มควบคุมระหว่างการลอย
+│   │   └── MaeKhongkhaModal.tsx     # หน้าต่างสาส์นอวยพรพระแม่คงคา สมุดลงนามรีวิว และระบบแชร์
 │   ├── hooks/
-│   │   └── useHandTracking.ts       # Custom Hook โหลดโมเดล MediaPipe HandLandmarker และคำนวณท่าจีบนิ้ว 2 มือ
+│   │   └── useHandTracking.ts       # Custom Hook สำหรับจัดการกล้อง โมเดล MediaPipe และการคำนวณท่าจีบนิ้ว
 │   ├── lib/
-│   │   ├── canvasRenderer.ts        # ฟังก์ชันวาดกราฟิก 2D ทั้งหมด (ฉากคืนเพ็ญ, กระทง, โคมลอย, วงแสง, มือ 2D)
-│   │   └── firebase.ts              # ระบบเชื่อมต่อ Firebase Realtime Database และ BroadcastChannel Fallback
+│   │   ├── canvasRenderer.ts        # ฟังก์ชันวาดกราฟิก 2D บน Canvas และระบบ Offscreen Sprite Cache
+│   │   └── firebase.ts              # โมดูลเชื่อมต่อ Firebase Realtime Database และระบบ Fallback
 │   └── types/
-│       └── krathong.ts              # TypeScript Interfaces ทั้งหมดของระบบ
-├── .env.example                     # ตัวอย่างไฟล์ตั้งค่าตัวแปรสภาพแวดล้อมสำหรับ Firebase
-├── design.md                        # เอกสารกำหนดทิศทางงานศิลป์ (Art Direction & Animation Physics)
+│       └── krathong.ts              # นิยาม Type และ Interface ทั้งหมดของโปรเจกต์
+├── .env.example                     # ตัวอย่างไฟล์ตั้งค่า Environment Variables
+├── design.md                        # เอกสารกำหนดแนวทางงานศิลป์และฟิสิกส์การเคลื่อนไหว
 └── package.json
 ```
 
 ---
 
-## 🚀 วิธี Clone และรันโปรเจกต์ (Getting Started)
+## การติดตั้งและเริ่มต้นใช้งาน (Getting Started)
 
-ผู้ที่สนใจศึกษาโค้ดหรือนำไปพัฒนาต่อสามารถ Clone โปรเจกต์ไปรันบนเครื่องได้ทันที (แม้ยังไม่มี Firebase Key ก็สามารถรันและทดสอบทุกฟีเจอร์ได้ครบถ้วน):
+โปรเจกต์นี้สามารถโคลนไปรันบนเครื่องเพื่อศึกษาโครงสร้างโค้ดหรือพัฒนาต่อได้ทันที โดยไม่จำเป็นต้องมีคีย์ของ Firebase ในการรันครั้งแรก
 
-### 1. Clone โปรเจกต์และติดตั้งแพ็กเกจ
+### 1. โคลนโปรเจกต์และติดตั้งแพ็กเกจ
+
 ```bash
 git clone https://github.com/Tonpai2004/loikrater.git
 cd loikrater
 pnpm install
 ```
 
-### 2. รันเซิร์ฟเวอร์สำหรับการพัฒนา (Development Server)
+### 2. รันเซิร์ฟเวอร์สำหรับการพัฒนา
+
 ```bash
 pnpm dev
 ```
-จากนั้นเปิดเบราว์เซอร์ไปที่ **[http://localhost:3000](http://localhost:3000)** (อนุญาตสิทธิ์การใช้กล้องเว็บแคมเพื่อทดสอบระบบจีบนิ้วหยิบกระทงและโคมลอย)
+
+เปิดเบราว์เซอร์ไปที่ `http://localhost:3000` (หากต้องการทดสอบการควบคุมด้วยมือ ให้กดอนุญาตการเข้าถึงกล้องเว็บแคมบนเบราว์เซอร์)
+
+### 3. การตรวจสอบคุณภาพโค้ดและ Type
+
+```bash
+pnpm lint
+pnpm tsc --noEmit
+```
 
 ---
 
-## 🌐 การตั้งค่า Firebase สำหรับโหมด Multiplayer ออนไลน์ (Optional)
+## การตั้งค่า Firebase Realtime Database (สำหรับการซิงก์ออนไลน์)
 
-หากต้องการให้กระทงและโคมลอยซิงก์ออนไลน์ข้ามเครื่องแบบเรียลไทม์ผ่าน Firebase Realtime Database:
+หากต้องการเปิดใช้งานระบบซิงก์ข้อมูลกระทงและโคมลอยระหว่างผู้เล่นหลายคนผ่านอินเทอร์เน็ต ให้ตั้งค่าดังนี้:
 
-1. คัดลอกไฟล์ `.env.example` เป็น `.env.local`:
+1. คัดลอกไฟล์ `.env.example` เป็น `.env.local`
    ```bash
    cp .env.example .env.local
    ```
-2. สร้างโปรเจกต์บน [Firebase Console](https://console.firebase.google.com/) เปิดใช้งาน **Realtime Database** และนำค่า Config มาใส่ใน `.env.local`:
+2. สร้างโปรเจกต์บน Firebase Console เปิดใช้งาน **Realtime Database** และนำค่าการเชื่อมต่อมาใส่ใน `.env.local`
    ```env
    NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
@@ -114,7 +116,7 @@ pnpm dev
    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
    NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
    ```
-3. ตั้งค่า **Realtime Database Rules** ดังนี้:
+3. กำหนด Security Rules ของ Realtime Database เพื่อเปิดให้ซิงก์และเรียงลำดับตามเวลาที่สร้าง
    ```json
    {
      "rules": {
@@ -129,13 +131,13 @@ pnpm dev
 
 ---
 
-## 🌱 แนวทางการนำไปพัฒนาต่อ (Ideas for Contributors)
+## แนวทางการพัฒนาต่อยอด (Future Enhancements)
 
-หากคุณต้องการ Fork หรือ Clone โปรเจกต์นี้ไปต่อยอด สามารถลองเพิ่มฟีเจอร์เหล่านี้ได้:
-- **เสียงดนตรีบรรเลงประกอบ (Procedural Web Audio API / Ambient Soundscape):** เพิ่มเสียงคลื่นน้ำกระทบตลิ่ง เสียงดนตรีไทยเดิมบรรเลงเบา ๆ และเสียงพลุเมื่อปล่อยโคมลอยสำเร็จ
-- **ระบบสร้างห้องส่วนตัว (Private River Rooms):** ให้คู่รักหรือกลุ่มเพื่อนสร้าง URL ห้องเฉพาะของตัวเองเพื่อลอยกระทงด้วยกันแบบส่วนตัว
-- **ระบบบันทึกรูปโปสการ์ดคำพร (Downloadable Souvenir Card):** เพิ่มปุ่มแปลงหน้าต่างสาส์นอวยพรพระแม่คงคาเป็นไฟล์ภาพ PNG สำหรับแชร์ลง Instagram Story
+สำหรับนักพัฒนาที่สนใจนำซอร์สโค้ดไปศึกษาหรือต่อยอด สามารถขยายความสามารถของระบบเพิ่มเติมได้ในหลายมิติ:
+- **Procedural Audio & Soundscape:** สร้างเสียงบรรยากาศสายน้ำและดนตรีบรรเลงด้วย Web Audio API ที่ตอบสนองต่อความเร็วในการเคลื่อนไหวมือและการปล่อยกระทง
+- **Private Session Rooms:** เพิ่มระบบสร้างรหัสห้อง (Room ID) เพื่อให้กลุ่มเพื่อนหรือคู่รักสามารถสร้างคุ้งน้ำส่วนตัวสำหรับลอยด้วยกันเฉพาะกลุ่ม
+- **Canvas Snapshot Export:** เพิ่มฟังก์ชันบันทึกภาพโปสการ์ดคำอธิษฐานและกระทงของผู้ใช้เป็นไฟล์รูปภาพความละเอียดสูงสำหรับดาวน์โหลดเก็บเป็นที่ระลึก
 
 ---
 
-พัฒนาและออกแบบโดย **[Tonpai2004](https://github.com/Tonpai2004)**
+พัฒนาและดูแลโดย [Tonpai2004](https://github.com/Tonpai2004)
