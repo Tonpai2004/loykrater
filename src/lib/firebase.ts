@@ -29,67 +29,100 @@ const FALLBACK_CHANNEL_NAME = 'loi_krathong_multiplayer_bus';
 const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] = [
   {
     itemType: 'krathong',
-    spawnXRatio: 0.22,
-    spawnYRatio: 0.81,
+    spawnXRatio: 0.14,
+    spawnYRatio: 0.84,
     config: {
       baseColor: '#2D6A4F',
       flowerColor: '#FF99C8',
       candleColor: '#F4D06F',
       baseStyle: 'classic-lotus',
-      wishText: 'จันทร์กระจ่างกลางนภา ณ ท่าน้ำ ขอความงามความสุขจงอยู่คู่ใจ',
-      authorName: 'น้องแก้ว',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
     },
   },
   {
     itemType: 'krathong',
-    spawnXRatio: 0.56,
-    spawnYRatio: 0.84,
+    spawnXRatio: 0.28,
+    spawnYRatio: 0.79,
     config: {
       baseColor: '#40916C',
       flowerColor: '#F4D06F',
       candleColor: '#FF8C42',
       baseStyle: 'royal-pleat',
-      wishText: 'ฝากทุกข์โศกลอยลับไปกับสายชล ให้แย้มยลแต่สิ่งดีตลอดปี',
-      authorName: 'ม.ร.ว.พุฒิภัทร จุฑาเทพ',
-    },
-  },
-  {
-    itemType: 'lantern',
-    spawnXRatio: 0.46,
-    spawnYRatio: 0.28,
-    config: {
-      baseColor: '#2D6A4F',
-      flowerColor: '#FF8C42',
-      candleColor: '#F4D06F',
-      baseStyle: 'layered-star',
-      wishText: 'โคมทองลอยลิ่วล่องสู่ฟากฟ้า ขอสัญญาเคียงคู่เธอไม่เสื่อมคลาย',
-      authorName: 'พระอรรถคดีวิชัย & อนงค์',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
     },
   },
   {
     itemType: 'krathong',
-    spawnXRatio: 0.78,
-    spawnYRatio: 0.8,
+    spawnXRatio: 0.42,
+    spawnYRatio: 0.86,
     config: {
       baseColor: '#52B788',
       flowerColor: '#FFF275',
       candleColor: '#F4D06F',
       baseStyle: 'layered-star',
-      wishText: 'สิบห้าค่ำเดือนสิบสองน้ำนองตลิ่ง ขอพักพิงพบกัลยาณมิตรไมตรี',
-      authorName: 'นางบุหลัน',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
+    },
+  },
+  {
+    itemType: 'lantern',
+    spawnXRatio: 0.32,
+    spawnYRatio: 0.29,
+    config: {
+      baseColor: '#2D6A4F',
+      flowerColor: '#FF8C42',
+      candleColor: '#F4D06F',
+      baseStyle: 'layered-star',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
     },
   },
   {
     itemType: 'krathong',
-    spawnXRatio: 0.34,
-    spawnYRatio: 0.83,
+    spawnXRatio: 0.58,
+    spawnYRatio: 0.82,
     config: {
       baseColor: '#B5838D',
       flowerColor: '#E0AAFF',
       candleColor: '#FFF275',
       baseStyle: 'classic-lotus',
-      wishText: 'สายน้ำไหลพัดพาความเศร้าหมอง ให้เรืองรองดั่งทองทาบนภาลัย',
-      authorName: 'นายทองก้อน',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
+    },
+  },
+  {
+    itemType: 'krathong',
+    spawnXRatio: 0.72,
+    spawnYRatio: 0.87,
+    config: {
+      baseColor: '#2D6A4F',
+      flowerColor: '#FF8C42',
+      candleColor: '#F4D06F',
+      baseStyle: 'royal-pleat',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
+    },
+  },
+  {
+    itemType: 'krathong',
+    spawnXRatio: 0.85,
+    spawnYRatio: 0.8,
+    config: {
+      baseColor: '#40916C',
+      flowerColor: '#FF99C8',
+      candleColor: '#FFF275',
+      baseStyle: 'layered-star',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
     },
   },
   {
@@ -101,8 +134,121 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
       flowerColor: '#F4D06F',
       candleColor: '#FFF275',
       baseStyle: 'royal-pleat',
-      wishText: 'ลอยประทีปทองส่องทางสว่างไสว คิดสิ่งใดสมถวิลสิ้นหมองศรี',
-      authorName: 'หลวงประดิษฐ์ฯ',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
+    },
+  },
+  {
+    itemType: 'krathong',
+    spawnXRatio: 0.2,
+    spawnYRatio: 0.76,
+    config: {
+      baseColor: '#52B788',
+      flowerColor: '#F4D06F',
+      candleColor: '#FF8C42',
+      baseStyle: 'classic-lotus',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
+    },
+  },
+  {
+    itemType: 'krathong',
+    spawnXRatio: 0.36,
+    spawnYRatio: 0.88,
+    config: {
+      baseColor: '#2D6A4F',
+      flowerColor: '#E0AAFF',
+      candleColor: '#F4D06F',
+      baseStyle: 'royal-pleat',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
+    },
+  },
+  {
+    itemType: 'krathong',
+    spawnXRatio: 0.5,
+    spawnYRatio: 0.77,
+    config: {
+      baseColor: '#40916C',
+      flowerColor: '#FFF275',
+      candleColor: '#FF99C8',
+      baseStyle: 'layered-star',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
+    },
+  },
+  {
+    itemType: 'krathong',
+    spawnXRatio: 0.65,
+    spawnYRatio: 0.83,
+    config: {
+      baseColor: '#B5838D',
+      flowerColor: '#FF99C8',
+      candleColor: '#F4D06F',
+      baseStyle: 'classic-lotus',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
+    },
+  },
+  {
+    itemType: 'lantern',
+    spawnXRatio: 0.52,
+    spawnYRatio: 0.31,
+    config: {
+      baseColor: '#B5838D',
+      flowerColor: '#FFF275',
+      candleColor: '#FF8C42',
+      baseStyle: 'classic-lotus',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
+    },
+  },
+  {
+    itemType: 'krathong',
+    spawnXRatio: 0.79,
+    spawnYRatio: 0.85,
+    config: {
+      baseColor: '#2D6A4F',
+      flowerColor: '#F4D06F',
+      candleColor: '#FFF275',
+      baseStyle: 'royal-pleat',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
+    },
+  },
+  {
+    itemType: 'krathong',
+    spawnXRatio: 0.11,
+    spawnYRatio: 0.78,
+    config: {
+      baseColor: '#40916C',
+      flowerColor: '#FF8C42',
+      candleColor: '#F4D06F',
+      baseStyle: 'layered-star',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
+    },
+  },
+  {
+    itemType: 'krathong',
+    spawnXRatio: 0.9,
+    spawnYRatio: 0.84,
+    config: {
+      baseColor: '#52B788',
+      flowerColor: '#E0AAFF',
+      candleColor: '#FFF275',
+      baseStyle: 'classic-lotus',
+      wishText: '',
+      authorName: '',
+      hideWish: true,
     },
   },
 ];
@@ -110,17 +256,17 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
 export function createAmbientFloatingItem(seq: number): FloatingKrathong {
   const template =
     INITIAL_COMMUNITY_KRATHONGS[seq % INITIAL_COMMUNITY_KRATHONGS.length];
-  const jitterX = ((seq * 37) % 19 - 9) * 0.012;
-  const jitterY = ((seq * 23) % 11 - 5) * 0.008;
+  const jitterX = (((seq * 37) % 23) - 11) * 0.011;
+  const jitterY = (((seq * 29) % 13) - 6) * 0.008;
 
   const spawnXRatio = Math.max(
-    0.12,
-    Math.min(0.88, template.spawnXRatio + jitterX)
+    0.08,
+    Math.min(0.92, template.spawnXRatio + jitterX)
   );
   const spawnYRatio =
     template.itemType === 'lantern'
       ? Math.max(0.2, Math.min(0.35, template.spawnYRatio + jitterY))
-      : Math.max(0.74, Math.min(0.88, template.spawnYRatio + jitterY));
+      : Math.max(0.72, Math.min(0.89, template.spawnYRatio + jitterY));
 
   return {
     ...template,
@@ -210,14 +356,13 @@ export function subscribeToGlobalRiver(
 
   if (!db) {
     const now = Date.now();
-    let fallbackList: FloatingKrathong[] = INITIAL_COMMUNITY_KRATHONGS.slice(
-      0,
-      4
-    ).map((item, idx) => ({
-      ...item,
-      id: `seed-${idx}`,
-      createdAt: now - idx * 3800,
-    }));
+    let fallbackList: FloatingKrathong[] = INITIAL_COMMUNITY_KRATHONGS.map(
+      (item, idx) => ({
+        ...item,
+        id: `seed-${idx}`,
+        createdAt: now - idx * 1350,
+      })
+    );
 
     queueMicrotask(() => {
       onUpdate(fallbackList);

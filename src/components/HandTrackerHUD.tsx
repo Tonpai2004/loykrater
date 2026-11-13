@@ -8,7 +8,6 @@ import {
   Undo,
   SendDiagonal,
   RefreshDouble,
-  Sparks,
 } from 'iconoir-react';
 import { GameState, HandGestureState } from '@/types/krathong';
 
@@ -199,7 +198,6 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
               onClick={onOpenBlessingModal}
               className="thai-chamfer-sm font-heading flex items-center gap-1.5 border border-[#D4AF37]/50 bg-[#141932] px-4 py-2.5 text-xs font-medium text-[#FFF275] transition-colors hover:bg-[#D4AF37]/20"
             >
-              <Sparks width={15} height={15} className="text-[#D4AF37]" />
               <span>เปิดสาส์นอวยพรพระแม่คงคา</span>
             </button>
 

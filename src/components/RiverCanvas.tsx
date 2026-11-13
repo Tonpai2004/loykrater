@@ -385,23 +385,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
                 0.1,
                 Math.min(0.9, trackedHand.cursor.y)
               );
-
-              if (activeItem.itemType === 'lantern') {
-                const skySpot = findNearestSpot(
-                  { x: activeItem.x, y: activeItem.y },
-                  SKY_LANTERN_TARGETS,
-                  SPOT_HIT_RADIUS_RATIO * 1.15
-                );
-                if (skySpot) {
-                  completeSingleItemRelease(
-                    activeItem,
-                    skySpot.x,
-                    skySpot.y,
-                    width,
-                    height
-                  );
-                }
-              }
             }
           } else if (grabbedItem) {
             grabbedItem.grabbedByHandIndex = null;
@@ -479,33 +462,44 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
       const now = Date.now();
       const activeRiverItems = riverItems.filter((item) => {
+        if (currentMode === 'INTERACT' && item.isLocal) return true;
         const age = now - item.createdAt;
         return age >= 0 && age < FLOAT_LIFESPAN_MS;
       });
 
       const computedFloating = activeRiverItems
         .map((item, idx) => {
-          const elapsed = Math.max(0, now - item.createdAt);
+          // Wait until the last item in the set is released before counting down user's items
+          const rawElapsed = Math.max(0, now - item.createdAt);
+          const elapsed =
+            currentMode === 'INTERACT' && item.isLocal
+              ? Math.min(1600, rawElapsed)
+              : rawElapsed;
           const progress = Math.min(1, elapsed / FLOAT_LIFESPAN_MS);
           const isLantern = item.itemType === 'lantern';
 
-          // Wish tag appears briefly (~3.2s) then fades out by 4.5s so the river stays clean
+          // Wish tag appears briefly (~5.5s) then fades out by 7.5s after the round completes
           let wishTagOpacity = 0;
-          if (!item.config.hideWish && currentMode !== 'INTERACT') {
-            if (elapsed <= WISH_TAG_VISIBLE_MS) {
-              wishTagOpacity = 1;
-            } else if (elapsed < WISH_TAG_FADE_END_MS) {
-              wishTagOpacity =
-                1 -
-                (elapsed - WISH_TAG_VISIBLE_MS) /
-                  (WISH_TAG_FADE_END_MS - WISH_TAG_VISIBLE_MS);
+          if (!item.config.hideWish) {
+            if (currentMode === 'INTERACT' && item.isLocal) {
+              wishTagOpacity = 0.9;
+            } else if (currentMode !== 'INTERACT') {
+              if (elapsed <= WISH_TAG_VISIBLE_MS) {
+                wishTagOpacity = 1;
+              } else if (elapsed < WISH_TAG_FADE_END_MS) {
+                wishTagOpacity =
+                  1 -
+                  (elapsed - WISH_TAG_VISIBLE_MS) /
+                    (WISH_TAG_FADE_END_MS - WISH_TAG_VISIBLE_MS);
+              }
             }
           }
 
           // Smooth fade-in for ambient spawns and smooth fade-out at the end of its 24s float
           const lifeFadeIn = item.isLocal ? 1 : Math.min(1, elapsed / 900);
           const lifeFadeOut = progress > 0.78 ? (1 - progress) / 0.22 : 1;
-          const interactDimFactor = currentMode === 'INTERACT' ? 0.34 : 1;
+          const interactDimFactor =
+            currentMode === 'INTERACT' && !item.isLocal ? 0.42 : 1;
           const finalOpacity = Math.max(
             0,
             Math.min(1, lifeFadeIn * lifeFadeOut * interactDimFactor)
@@ -799,23 +793,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
     grabbedItem.targetX = Math.max(0.08, Math.min(0.92, normX));
     grabbedItem.targetY = Math.max(0.08, Math.min(0.9, normY));
-
-    if (grabbedItem.itemType === 'lantern') {
-      const skySpot = findNearestSpot(
-        { x: grabbedItem.targetX, y: grabbedItem.targetY },
-        SKY_LANTERN_TARGETS,
-        SPOT_HIT_RADIUS_RATIO * 1.15
-      );
-      if (skySpot) {
-        completeSingleItemRelease(
-          grabbedItem,
-          skySpot.x,
-          skySpot.y,
-          window.innerWidth,
-          window.innerHeight
-        );
-      }
-    }
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {

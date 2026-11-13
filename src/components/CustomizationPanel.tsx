@@ -4,7 +4,6 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PeaceHand,
-  Sparks,
   RefreshDouble,
   Eye,
   EyeClosed,
@@ -117,7 +116,6 @@ const FLOWER_COLORS: ColorOption[] = [
   { label: 'ชมพูบัวหลวง', value: '#FF99C8', accent: '#FFF275' },
   { label: 'เหลืองดาวเรือง', value: '#F4D06F', accent: '#FF8C42' },
   { label: 'ส้มชาดมงคล', value: '#FF8C42', accent: '#FFF275' },
-  { label: 'เหลืองนวลจันทร์', value: '#FFF275', accent: '#F4D06F' },
   { label: 'ม่วงดอกรัก', value: '#E0AAFF', accent: '#FF99C8' },
 ];
 
@@ -848,10 +846,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                       ฝากถ้อยคำคล้องจองล่องธารา
                     </h3>
                   </div>
-
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#D4AF37]/70 bg-[#B83B2A] text-[#FFF275] shadow-sm">
-                    <Sparks width={16} height={16} strokeWidth={1.8} />
-                  </div>
                 </div>
 
                 {currentCount > 1 && (
@@ -1016,9 +1010,8 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                       onClick={() => setIsBookSubmerged(false)}
                       className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#FFF275]/80 bg-[#0B0E17]/95 px-4 py-2.5 text-xs font-semibold text-[#FFF275] shadow-[0_0_26px_rgba(244,208,111,0.45)] backdrop-blur-md transition-all hover:bg-[#141932]"
                     >
-                      <Sparks width={15} height={15} strokeWidth={2} />
                       <span>
-                        ✦ อัญเชิญสมุดข่อยขึ้นจากสายน้ำ (กลับมาแต่งกระทง) ✦
+                        อัญเชิญสมุดข่อยขึ้นจากสายน้ำ (กลับมาแต่งกระทง)
                       </span>
                     </button>
 

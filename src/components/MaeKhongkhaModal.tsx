@@ -21,12 +21,6 @@ interface MaeKhongkhaModalProps {
   onDismiss: () => void;
 }
 
-const SPRING_TRANSITION = {
-  type: 'spring' as const,
-  stiffness: 100,
-  damping: 16,
-};
-
 function GoddessMaeKhongkhaIllustration() {
   return (
     <div className="relative mx-auto flex h-56 w-56 items-center justify-center">
@@ -226,13 +220,20 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
           exit={{ opacity: 0 }}
           className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#060810]/85 p-4 backdrop-blur-md"
         >
-          <motion.div
-            initial={{ opacity: 0, y: 32, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.96 }}
-            transition={SPRING_TRANSITION}
-            className="thai-chamfer relative grid max-h-[92vh] w-full max-w-3xl grid-cols-1 overflow-y-auto border border-[#D4AF37]/60 bg-[#0E1222] shadow-[0_30px_90px_rgba(0,0,0,0.92)] md:grid-cols-12"
-          >
+          {/* Water-Surface Horizon Mask so the Modal emerges up out of the river water */}
+          <div className="relative flex w-full max-w-3xl flex-col items-center overflow-hidden pb-3">
+            <motion.div
+              initial={{ opacity: 0, y: 420, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 400, scale: 0.93 }}
+              transition={{
+                type: 'spring',
+                stiffness: 58,
+                damping: 15,
+                mass: 1.15,
+              }}
+              className="thai-chamfer relative z-10 grid max-h-[90vh] w-full grid-cols-1 overflow-y-auto border border-[#D4AF37]/60 bg-[#0E1222] shadow-[0_30px_90px_rgba(0,0,0,0.92),0_18px_50px_rgba(244,208,111,0.22)] md:grid-cols-12"
+            >
             {/* Left Panel (5 cols): Nocturnal Shrine Art Print */}
             <div className="relative flex flex-col items-center justify-between border-b border-[#D4AF37]/30 bg-[#080B14] p-6 text-center text-[#FFFDF7] md:col-span-5 md:border-r md:border-b-0">
               <div className="font-heading flex w-full items-center justify-between text-[10px] tracking-wider text-[#F4D06F]/85">
@@ -320,7 +321,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                       <p className="font-wish text-sm text-[#FFFDF7]">
                         {slot.hideWish ? (
                           <span className="text-[#FFF275]/80 italic">
-                            ✦ อธิษฐานไว้ในใจ (ซ่อนคำพรส่วนตัว) ✦
+                            อธิษฐานไว้ในใจ (ซ่อนคำพรส่วนตัว)
                           </span>
                         ) : (
                           <>
@@ -438,7 +439,17 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                 </button>
               </div>
             </div>
-          </motion.div>
+            </motion.div>
+
+            {/* Shimmering Golden River Ripple at the water surface base */}
+            <motion.div
+              initial={{ opacity: 0, scaleX: 0.35 }}
+              animate={{ opacity: [0, 0.85, 0.35], scaleX: [0.4, 1.15, 0.98] }}
+              exit={{ opacity: 0, scaleX: 0.4 }}
+              transition={{ duration: 1.1, ease: 'easeOut' }}
+              className="pointer-events-none h-2.5 w-4/5 rounded-full border border-[#FFF275]/60 bg-[#D4AF37]/25 blur-[1px]"
+            />
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

@@ -1005,7 +1005,7 @@ export function drawStageItemBeacon(
   ctx.font = '600 11px "Bai Jamjuree", sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(
-    isGrabbed ? '✦ กำลังประคองไปลอย ✦' : '✦ หยิบชิ้นนี้ไปลอย ✦',
+    isGrabbed ? 'กำลังประคองไปลอย' : 'หยิบชิ้นนี้ไปลอย',
     0,
     badgeY + 15
   );

@@ -39,7 +39,7 @@ const DEFAULT_KRATHONG_CONFIG: KrathongConfig = {
   selectedSlotIndex: 0,
 };
 
-const MIN_AMBIENT_ITEMS = 5;
+const MIN_AMBIENT_ITEMS = 16;
 const BLESSING_MODAL_DELAY_MS = 7800;
 
 export default function LoiKrathongPage() {
@@ -53,7 +53,12 @@ export default function LoiKrathongPage() {
   const [totalRoundCount, setTotalRoundCount] = useState<number>(1);
   const [isBlessingModalOpen, setIsBlessingModalOpen] = useState<boolean>(false);
   const blessingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const ambientSeqRef = useRef<number>(4);
+  const ambientSeqRef = useRef<number>(16);
+  const gameStateRef = useRef<GameState>(gameState);
+
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
 
   const scheduleBlessingModal = useCallback(() => {
     if (blessingTimerRef.current) {
@@ -79,24 +84,32 @@ export default function LoiKrathongPage() {
     return () => unsubscribe();
   }, []);
 
-  // Prune expired floating items after their 24s lifespan AND gently spawn new ambient background items
+  // Prune expired floating items after their 24s lifespan AND continuously spawn ambient background Krathongs
   useEffect(() => {
     const cycleInterval = setInterval(() => {
       const now = Date.now();
+      const inInteract = gameStateRef.current === 'INTERACT';
       setFloatingKrathongs((prev) => {
         const active = prev.filter(
-          (item) => now - item.createdAt < FLOAT_LIFESPAN_MS
+          (item) =>
+            (inInteract && item.isLocal) ||
+            now - item.createdAt < FLOAT_LIFESPAN_MS
         );
 
-        if (active.length < MIN_AMBIENT_ITEMS) {
-          ambientSeqRef.current += 1;
-          const nextAmbient = createAmbientFloatingItem(ambientSeqRef.current);
-          return [...active, nextAmbient];
+        const ambientCount = active.filter((i) => !i.isLocal).length;
+        if (ambientCount < MIN_AMBIENT_ITEMS) {
+          const spawnCount = Math.min(2, MIN_AMBIENT_ITEMS - ambientCount);
+          const spawned: FloatingKrathong[] = [];
+          for (let s = 0; s < spawnCount; s++) {
+            ambientSeqRef.current += 1;
+            spawned.push(createAmbientFloatingItem(ambientSeqRef.current));
+          }
+          return [...active, ...spawned];
         }
 
         return active.length === prev.length ? prev : active;
       });
-    }, 3400);
+    }, 1400);
 
     return () => clearInterval(cycleInterval);
   }, []);
@@ -132,6 +145,13 @@ export default function LoiKrathongPage() {
 
   const handleAllItemsReleased = useCallback(
     (totalCount: number) => {
+      const roundEndNow = Date.now();
+      // Start the float & fade-out timer for ALL items in the set simultaneously once the last item is released
+      setFloatingKrathongs((prev) =>
+        prev.map((item) =>
+          item.isLocal ? { ...item, createdAt: roundEndNow } : item
+        )
+      );
       setReleasedCount(totalCount);
       setTotalRoundCount(totalCount);
       setGameState('FLOATING');
@@ -157,6 +177,12 @@ export default function LoiKrathongPage() {
       }
     }
 
+    const roundEndNow = Date.now();
+    setFloatingKrathongs((prev) =>
+      prev.map((item) =>
+        item.isLocal ? { ...item, createdAt: roundEndNow } : item
+      )
+    );
     scheduleBlessingModal();
   }, [krathongConfig, handleReleaseItem, scheduleBlessingModal]);
 
@@ -164,6 +190,9 @@ export default function LoiKrathongPage() {
     if (blessingTimerRef.current) {
       clearTimeout(blessingTimerRef.current);
     }
+    setFloatingKrathongs((prev) =>
+      prev.map((item) => (item.isLocal ? { ...item, isLocal: false } : item))
+    );
     setIsBlessingModalOpen(false);
     setGameState('CUSTOMIZE');
   }, []);
