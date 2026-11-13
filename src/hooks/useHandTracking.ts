@@ -13,6 +13,7 @@ const PINCH_ENGAGE_THRESHOLD = 0.065;
 const PINCH_RELEASE_THRESHOLD = 0.088;
 const CURSOR_SMOOTHING_FACTOR = 0.42;
 const MIN_DETECTION_INTERVAL_MS = 32;
+const MAX_TRACKED_HANDS = 5;
 
 interface UseHandTrackingOptions {
   enabled: boolean;
@@ -59,8 +60,12 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const landmarkerRef = useRef<HandLandmarker | null>(null);
   const rafIdRef = useRef<number | null>(null);
-  const smoothedCursorsRef = useRef<(NormalizedPoint | null)[]>([null, null]);
-  const isPinchingByHandRef = useRef<boolean[]>([false, false]);
+  const smoothedCursorsRef = useRef<(NormalizedPoint | null)[]>(
+    Array(MAX_TRACKED_HANDS).fill(null)
+  );
+  const isPinchingByHandRef = useRef<boolean[]>(
+    Array(MAX_TRACKED_HANDS).fill(false)
+  );
   const gestureRef = useRef<HandGestureState>({ ...INITIAL_GESTURE_STATE });
   const [reloadTrigger, setReloadTrigger] = useState(0);
   const [gestureState, setGestureState] = useState<HandGestureState>(INITIAL_GESTURE_STATE);
@@ -94,10 +99,10 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
               delegate: 'GPU',
             },
             runningMode: 'VIDEO',
-            numHands: 2,
-            minHandDetectionConfidence: 0.52,
-            minHandPresenceConfidence: 0.52,
-            minTrackingConfidence: 0.52,
+            numHands: MAX_TRACKED_HANDS,
+            minHandDetectionConfidence: 0.5,
+            minHandPresenceConfidence: 0.5,
+            minTrackingConfidence: 0.5,
           });
         }
 
@@ -152,8 +157,8 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
 
             if (rawHands.length === 0) {
               const wasTracking = gestureRef.current.isTracking;
-              isPinchingByHandRef.current = [false, false];
-              smoothedCursorsRef.current = [null, null];
+              isPinchingByHandRef.current = Array(MAX_TRACKED_HANDS).fill(false);
+              smoothedCursorsRef.current = Array(MAX_TRACKED_HANDS).fill(null);
               gestureRef.current = {
                 isReady: true,
                 isTracking: false,
@@ -170,7 +175,9 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
                 setGestureState({ ...gestureRef.current });
               }
             } else {
-              const trackedHands: TrackedHand[] = rawHands.slice(0, 2).map((landmarks, idx) => {
+              const trackedHands: TrackedHand[] = rawHands
+                .slice(0, MAX_TRACKED_HANDS)
+                .map((landmarks, idx) => {
                 const mirroredLandmarks: NormalizedPoint[] = landmarks.map((pt) => ({
                   x: 1 - pt.x,
                   y: pt.y,

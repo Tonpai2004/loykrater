@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CustomizationPanel } from '@/components/CustomizationPanel';
 import { HandTrackerHUD } from '@/components/HandTrackerHUD';
@@ -29,10 +29,8 @@ const DEFAULT_KRATHONG_CONFIG: KrathongConfig = {
   baseStyle: 'classic-lotus',
   wishText: 'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน',
   authorName: '',
-  partnerName: '',
-  partnerWishText: '',
-  ritualMode: 'both',
-  playerCount: 1,
+  offeringCount: 1,
+  selectedSlotIndex: 0,
 };
 
 const SPRING_TRANSITION = {
@@ -78,8 +76,18 @@ export default function LoiKrathongPage() {
   const [floatingKrathongs, setFloatingKrathongs] = useState<FloatingKrathong[]>([]);
   const [cameraEnabled, setCameraEnabled] = useState<boolean>(true);
   const [releasedCount, setReleasedCount] = useState<number>(0);
-  const [totalRoundCount, setTotalRoundCount] = useState<number>(2);
+  const [totalRoundCount, setTotalRoundCount] = useState<number>(1);
   const [isBlessingModalOpen, setIsBlessingModalOpen] = useState<boolean>(false);
+  const blessingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleBlessingModal = useCallback(() => {
+    if (blessingTimerRef.current) {
+      clearTimeout(blessingTimerRef.current);
+    }
+    blessingTimerRef.current = setTimeout(() => {
+      setIsBlessingModalOpen(true);
+    }, 3200);
+  }, []);
 
   const shouldTrackHand = gameState === 'INTERACT' && cameraEnabled;
   const { videoRef, gestureState, gestureRef, retryCamera } = useHandTracking({
@@ -121,14 +129,15 @@ export default function LoiKrathongPage() {
     setTotalRoundCount(total);
   }, []);
 
-  const handleAllItemsReleased = useCallback((totalCount: number) => {
-    setReleasedCount(totalCount);
-    setTotalRoundCount(totalCount);
-    setGameState('FLOATING');
-    setTimeout(() => {
-      setIsBlessingModalOpen(true);
-    }, 950);
-  }, []);
+  const handleAllItemsReleased = useCallback(
+    (totalCount: number) => {
+      setReleasedCount(totalCount);
+      setTotalRoundCount(totalCount);
+      setGameState('FLOATING');
+      scheduleBlessingModal();
+    },
+    [scheduleBlessingModal]
+  );
 
   const handleQuickLaunch = useCallback(async () => {
     const items = buildStageItems(krathongConfig);
@@ -147,12 +156,13 @@ export default function LoiKrathongPage() {
       }
     }
 
-    setTimeout(() => {
-      setIsBlessingModalOpen(true);
-    }, 850);
-  }, [krathongConfig, handleReleaseItem]);
+    scheduleBlessingModal();
+  }, [krathongConfig, handleReleaseItem, scheduleBlessingModal]);
 
   const handlePlayAgain = useCallback(() => {
+    if (blessingTimerRef.current) {
+      clearTimeout(blessingTimerRef.current);
+    }
     setIsBlessingModalOpen(false);
     setGameState('CUSTOMIZE');
   }, []);

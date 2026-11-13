@@ -11,6 +11,7 @@ import {
   Xmark,
 } from 'iconoir-react';
 import { KrathongConfig } from '@/types/krathong';
+import { getActiveOfferings, THAI_NUMERALS } from '@/components/RiverCanvas';
 
 interface MaeKhongkhaModalProps {
   isOpen: boolean;
@@ -29,12 +30,10 @@ const SPRING_TRANSITION = {
 function GoddessMaeKhongkhaIllustration() {
   return (
     <div className="relative mx-auto flex h-56 w-56 items-center justify-center">
-      {/* Subtle architectural Thai Lotus Arch (ซุ้มเรือนแก้วเส้นทองมินิมอล) */}
       <svg
         viewBox="0 0 240 230"
         className="relative z-10 h-full w-full overflow-visible"
       >
-        {/* Outer Arch Frame */}
         <path
           d="M34,205 L34,96 Q34,20 120,8 Q206,20 206,96 L206,205"
           fill="none"
@@ -51,16 +50,13 @@ function GoddessMaeKhongkhaIllustration() {
           opacity="0.35"
         />
 
-        {/* Celestial Moon Disc */}
         <circle cx="120" cy="92" r="56" fill="#D4AF37" opacity="0.14" />
         <circle cx="120" cy="92" r="42" fill="#FFF275" opacity="0.18" />
 
-        {/* Radiating Geometric Halo Petals */}
         <polygon points="120,16 130,42 110,42" fill="#D4AF37" opacity="0.5" />
         <polygon points="66,42 92,52 78,68" fill="#FF99C8" opacity="0.35" />
         <polygon points="174,42 148,52 162,68" fill="#FF99C8" opacity="0.35" />
 
-        {/* Flowing Midnight Silk Hair */}
         <path
           d="M84,68 Q58,109 54,174 L186,174 Q182,109 156,68 Z"
           fill="#0F1429"
@@ -70,7 +66,6 @@ function GoddessMaeKhongkhaIllustration() {
           fill="#161C38"
         />
 
-        {/* Golden Thai Chada / Lotus Crown */}
         <polygon points="96,62 144,62 136,46 104,46" fill="#D4AF37" />
         <polygon points="104,46 136,46 128,30 112,30" fill="#B83B2A" />
         <polygon points="120,10 128,30 112,30" fill="#FFF275" />
@@ -78,7 +73,6 @@ function GoddessMaeKhongkhaIllustration() {
         <polygon points="92,66 76,58 86,80" fill="#D4AF37" />
         <polygon points="148,66 164,58 154,80" fill="#D4AF37" />
 
-        {/* Serene 2D Paper-Cut Face */}
         <path
           d="M94,64 Q94,108 120,114 Q146,108 146,64 Z"
           fill="#F5E1C8"
@@ -89,7 +83,6 @@ function GoddessMaeKhongkhaIllustration() {
           opacity="0.65"
         />
 
-        {/* Gentle Closed Blessing Eyes & Brows */}
         <path
           d="M101,78 Q108,74 114,78"
           stroke="#1C1815"
@@ -126,33 +119,27 @@ function GoddessMaeKhongkhaIllustration() {
           strokeLinecap="round"
         />
 
-        {/* Golden Earrings */}
         <polygon points="91,86 95,96 91,106 87,96" fill="#D4AF37" />
         <polygon points="149,86 153,96 149,106 145,96" fill="#D4AF37" />
 
-        {/* Neck & Shoulders */}
         <rect x="112" y="110" width="16" height="14" rx="4" fill="#E8CBA8" />
         <path
           d="M72,174 Q82,122 120,122 Q158,122 168,174 Z"
           fill="#F5E1C8"
         />
 
-        {/* Royal Necklace */}
         <polygon points="104,122 136,122 128,134 112,134" fill="#D4AF37" />
         <polygon points="120,125 124,130 120,135 116,130" fill="#B83B2A" />
 
-        {/* Emerald & Vermilion-Gold Diagonal Sabai */}
         <polygon points="80,174 102,122 158,174" fill="#2D6A4F" />
         <polygon points="88,174 106,123 164,174" fill="#B83B2A" />
         <polygon points="106,123 116,125 148,174 134,174" fill="#D4AF37" />
 
-        {/* Sacred Lotus in Her Hands */}
         <polygon points="120,130 130,146 120,158 110,146" fill="#FF99C8" />
         <polygon points="120,134 125,146 120,154 115,146" fill="#FFF275" />
         <polygon points="107,162 118,142 120,162" fill="#F5E1C8" />
         <polygon points="133,162 122,142 120,162" fill="#E8CBA8" />
 
-        {/* Rising Water Ripples */}
         <ellipse cx="120" cy="180" rx="84" ry="14" fill="#131936" />
         <ellipse cx="120" cy="178" rx="68" ry="9" fill="#2D6A4F" opacity="0.55" />
         <ellipse cx="120" cy="176" rx="50" ry="6" fill="#D4AF37" opacity="0.5" />
@@ -175,6 +162,8 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
   const [reviewSubmitted, setReviewSubmitted] = useState<boolean>(false);
   const [shareCopied, setShareCopied] = useState<boolean>(false);
 
+  const slots = getActiveOfferings(config);
+
   useEffect(() => {
     if (!isOpen) return;
     try {
@@ -190,13 +179,19 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
     }
   }, [isOpen]);
 
-  const handleShare = async () => {
-    const names =
-      config.playerCount === 2 && config.partnerName?.trim()
-        ? `${config.authorName || 'เรา'} & ${config.partnerName}`
-        : config.authorName || 'ลอยกะเธอ';
+  const activeNames = slots
+    .map((s) => s.authorName.trim())
+    .filter((n) => n.length > 0);
+  const namesDisplay =
+    activeNames.length > 0
+      ? activeNames.join(', ')
+      : 'ผู้ฝากคำพร ณ ท่าน้ำพระนคร';
 
-    const shareText = `คืนเพ็ญเดือนสิบสอง ณ ท่าน้ำพระนคร "${names}" ได้ฝากคำพรลอยกะเธอ (Loikratur): “${config.wishText}” ขอเชิญมาร่วมลอยกระทงและปล่อยโคมทองด้วยกันเถิดหนา`;
+  const handleShare = async () => {
+    const firstWish =
+      slots[0]?.wishText ||
+      'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน';
+    const shareText = `คืนเพ็ญเดือนสิบสอง ณ ท่าน้ำพระนคร "${namesDisplay}" ได้ฝากคำพรลอยกะเธอ (Loikratur): “${firstWish}” ขอเชิญมาร่วมลอยกระทงและปล่อยโคมทองด้วยกันเถิดหนา`;
     const shareUrl =
       typeof window !== 'undefined' ? window.location.href : '';
 
@@ -219,13 +214,6 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
       setTimeout(() => setShareCopied(false), 3000);
     }
   };
-
-  const namesDisplay =
-    config.playerCount === 2
-      ? `${config.authorName.trim() || 'ผู้ฝากคำพร'} และ ${
-          config.partnerName?.trim() || 'คู่ขวัญเคียงกาย'
-        }`
-      : config.authorName.trim() || 'ผู้ฝากคำพร ณ ท่าน้ำพระนคร';
 
   return (
     <AnimatePresence>
@@ -280,7 +268,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                       สารอวยพรจากคุ้งน้ำเจ้าพระยา • คืนเพ็ญเดือนสิบสอง
                     </p>
                     <h2 className="font-display mt-0.5 text-xl font-normal text-[#FFF275] sm:text-2xl">
-                      “แม่รับคำพรของเจ้าไว้ในสายชลแล้วหนา”
+                      “แม่รับคำพรของพวกเจ้าไว้ในสายชลแล้วหนา”
                     </h2>
                   </div>
 
@@ -301,24 +289,40 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                     {namesDisplay}
                   </strong>{' '}
                   ที่มาร่วมลอยประทีปและโคมทองในค่ำคืนนี้
-                  ขอความปรารถนาอันงามของเจ้าจงสัมฤทธิ์ผลดั่งแสงจันทร์วันเพ็ญ
+                  ขอความปรารถนาอันงามทั้ง {releasedCount} ชิ้นจงสัมฤทธิ์ผลดั่งแสงจันทร์วันเพ็ญ
                   ไร้โรคาพยาธิและร่มเย็นเป็นสุขทุกทิวาราตรีเทอญ
                 </p>
 
-                {/* Inscribed Wishes in Framed Box */}
-                <div className="mt-3.5 border border-[#D4AF37]/35 border-l-2 border-l-[#F4D06F] bg-[#080B14]/90 py-2.5 pl-3.5 pr-3">
+                {/* Inscribed Wishes for All 1..5 Offerings */}
+                <div className="mt-3.5 max-h-36 space-y-2 overflow-y-auto border border-[#D4AF37]/35 border-l-2 border-l-[#F4D06F] bg-[#080B14]/90 py-2.5 pl-3.5 pr-3">
                   <p className="font-heading text-[10px] tracking-wider text-[#F4D06F]">
-                    ถ้อยคำอธิษฐานที่จารึกไว้ในคืนเพ็ญ
+                    ถ้อยคำอธิษฐานที่จารึกไว้ในคืนเพ็ญ ({slots.length} ชิ้น)
                   </p>
-                  <p className="font-wish mt-0.5 text-base text-[#FFFDF7]">
-                    “{config.wishText || 'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน'}”
-                  </p>
-                  {config.playerCount === 2 &&
-                    config.partnerWishText?.trim() && (
-                      <p className="font-wish mt-1 border-t border-dashed border-[#D4AF37]/25 pt-1 text-base text-[#FF99C8]">
-                        “{config.partnerWishText}”
+                  {slots.map((slot, idx) => (
+                    <div
+                      key={slot.id}
+                      className={
+                        idx > 0
+                          ? 'border-t border-dashed border-[#D4AF37]/20 pt-1.5'
+                          : ''
+                      }
+                    >
+                      <span className="font-heading text-[11px] text-[#F4D06F]">
+                        ชิ้นที่ {THAI_NUMERALS[idx]} (
+                        {slot.itemType === 'lantern' ? 'โคมลอย' : 'กระทง'}
+                        {slot.authorName.trim()
+                          ? ` • ${slot.authorName.trim()}`
+                          : ''}
+                        ):
+                      </span>
+                      <p className="font-wish text-sm text-[#FFFDF7]">
+                        “
+                        {slot.wishText.trim() ||
+                          'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน'}
+                        ”
                       </p>
-                    )}
+                    </div>
+                  ))}
                 </div>
 
                 {/* Handwritten Guestbook / Review Input Box */}
@@ -410,7 +414,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                   <span>
                     {shareCopied
                       ? 'คัดลอกสาส์นเชิญเรียบร้อยแล้ว'
-                      : 'ส่งสาส์นชวนหวานใจมาร่วมลอย'}
+                      : 'ส่งสาส์นชวนมิตรสหายมาร่วมลอย'}
                   </span>
                 </button>
 

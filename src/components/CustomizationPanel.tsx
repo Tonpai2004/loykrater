@@ -2,14 +2,16 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { PeaceHand, User, Group, Sparks, RefreshDouble } from 'iconoir-react';
+import { PeaceHand, Sparks, RefreshDouble } from 'iconoir-react';
 import {
   BaseStyle,
   ColorOption,
   KrathongConfig,
-  PlayerCount,
-  RitualMode,
+  OfferingCount,
+  OfferingSlotConfig,
+  RitualItemType,
 } from '@/types/krathong';
+import { getActiveOfferings, THAI_NUMERALS } from '@/components/RiverCanvas';
 
 interface CustomizationPanelProps {
   config: KrathongConfig;
@@ -29,39 +31,30 @@ const PHRA_NAKHON_WISH_COUPLETS: string[] = [
   'จันทร์เพ็ญส่องต้องผิวน้ำงามจับตา ขอชีวาร่มเย็นเป็นสุขศรี',
   'ลอยประทีปทองส่องทางสว่างไสว คิดสิ่งใดสมถวิลสิ้นหมองศรี',
   'สายน้ำไหลพัดพาความเศร้าหมอง ให้เรืองรองดั่งทองทาบนภาลัย',
+  'โคมทองลอยลิ่วล่องสู่ฟากฟ้า ปรารถนาสิ่งใดได้สมหมาย',
+  'ลอยกระทงเคียงกันชมจันทร์ฉาย ให้มิตรภาพมิรู้คลายดั่งสายชล',
   'ขอขมาพระแม่คงคาด้วยใจภักดิ์ ให้ประจักษ์พบพานแต่สิ่งดี',
 ];
 
-const COUPLE_WISH_COUPLETS: string[] = [
-  'ลอยกระทงเคียงคู่ดูจันทร์ฉาย ให้รักเรามิรู้คลายดั่งสายชล',
-  'โคมทองลอยลิ่วล่องสู่ฟากฟ้า ขอสัญญาเคียงคู่เธอไม่เสื่อมคลาย',
-  'อธิษฐานข้างกายใต้แสงจันทร์ ให้สองเราผูกพันนิรันดร์กาล',
-  'คุ้งน้ำพระนครเป็นสักขี ขอรักนี้หวานชื่นทุกคืนวัน',
-];
+const OFFERING_COUNTS: OfferingCount[] = [1, 2, 3, 4, 5];
 
-const RITUAL_MODES: {
-  id: RitualMode;
+const ITEM_TYPE_OPTIONS: {
+  id: RitualItemType;
   numeral: string;
   label: string;
   sub: string;
 }[] = [
   {
-    id: 'both',
+    id: 'krathong',
     numeral: '๑',
-    label: 'ประทีปคู่ฟ้าและสายชล',
-    sub: 'ลอยทั้งกระทงและโคมลอย',
-  },
-  {
-    id: 'krathong-only',
-    numeral: '๒',
     label: 'ล่องนาวาฝากแม่คงคา',
-    sub: 'ลอยกระทงลงสายน้ำ',
+    sub: 'กระทงลอยสายน้ำ',
   },
   {
-    id: 'lantern-only',
-    numeral: '๓',
+    id: 'lantern',
+    numeral: '๒',
     label: 'ลอยโคมทองท่องเวหา',
-    sub: 'ปล่อยโคมลอยขึ้นฟากฟ้า',
+    sub: 'โคมลอยปล่อยขึ้นฟ้า',
   },
 ];
 
@@ -169,28 +162,69 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
   onChange,
   onStartInteract,
 }) => {
-  const currentMode: RitualMode = config.ritualMode ?? 'both';
-  const currentPlayers: PlayerCount = config.playerCount ?? 1;
+  const currentCount: OfferingCount = config.offeringCount ?? 1;
+  const slots = getActiveOfferings(config);
+  const selectedIdx = Math.min(
+    slots.length - 1,
+    Math.max(0, config.selectedSlotIndex ?? 0)
+  );
+  const currentSlot = slots[selectedIdx];
   const [poemIdx, setPoemIdx] = useState<number>(0);
-  const [couplePoemIdx, setCouplePoemIdx] = useState<number>(0);
 
-  const updateField = <K extends keyof KrathongConfig>(
-    key: K,
-    value: KrathongConfig[K]
-  ) => {
-    onChange({ ...config, [key]: value });
+  const handleSelectCount = (newCount: OfferingCount) => {
+    const nextConfig: KrathongConfig = {
+      ...config,
+      offeringCount: newCount,
+      selectedSlotIndex: Math.min(selectedIdx, newCount - 1),
+    };
+    const nextSlots = getActiveOfferings(nextConfig);
+    onChange({
+      ...nextConfig,
+      offerings: nextSlots,
+    });
   };
 
-  const handleCycleSoloPoem = () => {
+  const handleSelectSlot = (idx: number) => {
+    const targetSlot = slots[idx];
+    if (!targetSlot) return;
+    onChange({
+      ...config,
+      selectedSlotIndex: idx,
+      offerings: slots,
+      baseColor: targetSlot.baseColor,
+      flowerColor: targetSlot.flowerColor,
+      candleColor: targetSlot.candleColor,
+      baseStyle: targetSlot.baseStyle,
+      wishText: targetSlot.wishText,
+      authorName: targetSlot.authorName,
+    });
+  };
+
+  const updateCurrentSlot = <K extends keyof OfferingSlotConfig>(
+    key: K,
+    value: OfferingSlotConfig[K]
+  ) => {
+    const updatedSlots = slots.map((s, idx) =>
+      idx === selectedIdx ? { ...s, [key]: value } : s
+    );
+    const active = updatedSlots[selectedIdx];
+    onChange({
+      ...config,
+      offerings: updatedSlots,
+      selectedSlotIndex: selectedIdx,
+      baseColor: active.baseColor,
+      flowerColor: active.flowerColor,
+      candleColor: active.candleColor,
+      baseStyle: active.baseStyle,
+      wishText: active.wishText,
+      authorName: active.authorName,
+    });
+  };
+
+  const handleCyclePoem = () => {
     const nextIdx = (poemIdx + 1) % PHRA_NAKHON_WISH_COUPLETS.length;
     setPoemIdx(nextIdx);
-    updateField('wishText', PHRA_NAKHON_WISH_COUPLETS[nextIdx]);
-  };
-
-  const handleCycleCouplePoem = () => {
-    const nextIdx = (couplePoemIdx + 1) % COUPLE_WISH_COUPLETS.length;
-    setCouplePoemIdx(nextIdx);
-    updateField('partnerWishText', COUPLE_WISH_COUPLETS[nextIdx]);
+    updateCurrentSlot('wishText', PHRA_NAKHON_WISH_COUPLETS[nextIdx]);
   };
 
   return (
@@ -201,14 +235,14 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
       transition={SPRING_TRANSITION}
       className="pointer-events-auto mx-auto flex w-full max-w-5xl flex-col items-stretch gap-4 lg:flex-row lg:items-stretch"
     >
-      {/* Left: Black-Gold Lacquer Craft Atelier Tray (โรงพับใบตองและโคมประทีป ท่าน้ำพระนคร) */}
+      {/* Left: Black-Gold Lacquer Craft Atelier Tray */}
       <div className="thai-chamfer relative flex flex-1 flex-col justify-between border border-[#D4AF37]/45 bg-[#0E1222]/95 p-4 text-[#FFFDF7] shadow-[0_22px_55px_rgba(4,6,14,0.88)] backdrop-blur-xl sm:p-5">
         <span className="pointer-events-none absolute top-2.5 left-3 h-2.5 w-2.5 border-t border-l border-[#D4AF37]/70" />
         <span className="pointer-events-none absolute top-2.5 right-3 h-2.5 w-2.5 border-t border-r border-[#D4AF37]/70" />
         <span className="pointer-events-none absolute bottom-2.5 left-3 h-2.5 w-2.5 border-b border-l border-[#D4AF37]/70" />
         <span className="pointer-events-none absolute right-3 bottom-2.5 h-2.5 w-2.5 border-r border-b border-[#D4AF37]/70" />
 
-        {/* Header Row: Phra Nakhon Atelier + Solo/Duet Switch */}
+        {/* Header Row: Phra Nakhon Atelier + Offering Quantity Selector (1-5) */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D4AF37]/25 pb-3">
           <div>
             <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
@@ -219,44 +253,76 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
             </h2>
           </div>
 
-          <div className="flex items-center border border-[#D4AF37]/45 bg-[#080B14] p-0.5">
-            <button
-              type="button"
-              onClick={() => updateField('playerCount', 1)}
-              className={`font-heading flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors ${
-                currentPlayers === 1
-                  ? 'bg-[#D4AF37] font-semibold text-[#0B0E17]'
-                  : 'text-[#FFFDF7]/70 hover:text-[#FFF275]'
-              }`}
-            >
-              <User width={13} height={13} strokeWidth={2} />
-              <span>ลอยเดี่ยวชมจันทร์</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => updateField('playerCount', 2)}
-              className={`font-heading flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors ${
-                currentPlayers === 2
-                  ? 'bg-[#B83B2A] font-semibold text-[#FFFDF7]'
-                  : 'text-[#FFFDF7]/70 hover:text-[#FF99C8]'
-              }`}
-            >
-              <Group width={14} height={14} strokeWidth={2} />
-              <span>ลอยคู่เคียงขวัญ (๒ คน)</span>
-            </button>
+          {/* Quantity Selector: 1 to 5 Offerings */}
+          <div className="flex items-center gap-2">
+            <span className="font-heading text-xs text-[#F4D06F]">
+              จำนวนเครื่องลอย:
+            </span>
+            <div className="flex items-center border border-[#D4AF37]/45 bg-[#080B14] p-0.5">
+              {OFFERING_COUNTS.map((num) => {
+                const active = currentCount === num;
+                return (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => handleSelectCount(num)}
+                    className={`font-heading min-w-[32px] px-2.5 py-1 text-xs transition-colors ${
+                      active
+                        ? 'bg-[#D4AF37] font-semibold text-[#0B0E17]'
+                        : 'text-[#FFFDF7]/70 hover:text-[#FFF275]'
+                    }`}
+                  >
+                    {THAI_NUMERALS[num - 1]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Row 1: Offering Mode Tabs */}
-        <div className="mt-3 grid grid-cols-3 border border-[#D4AF37]/30 bg-[#080B14]/90">
-          {RITUAL_MODES.map((m, idx) => {
-            const active = currentMode === m.id;
+        {/* Per-Item Slot Selector Tabs (ชิ้นที่ ๑ .. ชิ้นที่ ๕) */}
+        {currentCount > 1 && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            <span className="font-heading mr-1 text-[11px] text-[#FFFDF7]/70">
+              เลือกปรับแต่งรายชิ้น:
+            </span>
+            {slots.map((slot, idx) => {
+              const isSelected = idx === selectedIdx;
+              return (
+                <button
+                  key={slot.id}
+                  type="button"
+                  onClick={() => handleSelectSlot(idx)}
+                  className={`font-heading flex items-center gap-1.5 border px-2.5 py-1 text-xs transition-colors ${
+                    isSelected
+                      ? 'border-[#FFF275] bg-[#D4AF37]/25 font-semibold text-[#FFF275]'
+                      : 'border-[#D4AF37]/30 bg-[#080B14]/80 text-[#FFFDF7]/70 hover:border-[#D4AF37]/60'
+                  }`}
+                >
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: slot.flowerColor }}
+                  />
+                  <span>
+                    ชิ้นที่ {THAI_NUMERALS[idx]} (
+                    {slot.itemType === 'lantern' ? 'โคมลอย' : 'กระทง'})
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Row 1: Offering Type for the Currently Selected Item */}
+        <div className="mt-2.5 grid grid-cols-2 border border-[#D4AF37]/30 bg-[#080B14]/90">
+          {ITEM_TYPE_OPTIONS.map((opt, idx) => {
+            const active = currentSlot.itemType === opt.id;
             return (
               <button
-                key={m.id}
+                key={opt.id}
                 type="button"
-                onClick={() => updateField('ritualMode', m.id)}
-                className={`relative flex flex-col items-start px-3 py-2 text-left transition-colors ${
+                onClick={() => updateCurrentSlot('itemType', opt.id)}
+                className={`relative flex flex-col items-start px-3.5 py-2 text-left transition-colors ${
                   idx > 0 ? 'border-l border-[#D4AF37]/25' : ''
                 } ${
                   active
@@ -266,32 +332,33 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               >
                 <div className="flex w-full items-baseline justify-between">
                   <span className="font-display text-xs text-[#F4D06F]">
-                    ลำดับที่ {m.numeral}
+                    ประเภทที่ {opt.numeral} (สำหรับชิ้นที่{' '}
+                    {THAI_NUMERALS[selectedIdx]})
                   </span>
                   {active && (
                     <span className="h-1.5 w-1.5 rotate-45 bg-[#FFF275]" />
                   )}
                 </div>
                 <span className="font-heading mt-0.5 text-xs font-medium">
-                  {m.label}
+                  {opt.label}
                 </span>
                 <span className="font-wish text-[11px] text-[#FFFDF7]/60">
-                  {m.sub}
+                  {opt.sub}
                 </span>
               </button>
             );
           })}
         </div>
 
-        {/* Row 2: Banana Leaf Fold Architecture */}
-        <div className="mt-3 grid grid-cols-3 gap-2">
+        {/* Row 2: Banana Leaf Fold Architecture for Current Item */}
+        <div className="mt-2.5 grid grid-cols-3 gap-2">
           {BASE_STYLES.map((style) => {
-            const isSelected = config.baseStyle === style.id;
+            const isSelected = currentSlot.baseStyle === style.id;
             return (
               <button
                 key={style.id}
                 type="button"
-                onClick={() => updateField('baseStyle', style.id)}
+                onClick={() => updateCurrentSlot('baseStyle', style.id)}
                 className={`flex items-center gap-2.5 border px-2.5 py-2 text-left transition-all ${
                   isSelected
                     ? 'border-[#F4D06F] bg-[#D4AF37]/18 text-[#FFF275]'
@@ -300,8 +367,8 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               >
                 <StyleCollageThumbnail
                   style={style.id}
-                  baseColor={config.baseColor}
-                  flowerColor={config.flowerColor}
+                  baseColor={currentSlot.baseColor}
+                  flowerColor={currentSlot.flowerColor}
                 />
                 <div className="min-w-0">
                   <div className="font-heading truncate text-xs font-medium">
@@ -316,21 +383,21 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
           })}
         </div>
 
-        {/* Row 3: Unified Pigment Palette Bar */}
-        <div className="mt-3 grid grid-cols-1 gap-2.5 border-t border-[#D4AF37]/25 pt-3 sm:grid-cols-3">
+        {/* Row 3: Unified Pigment Palette Bar for Current Item */}
+        <div className="mt-2.5 grid grid-cols-1 gap-2.5 border-t border-[#D4AF37]/25 pt-2.5 sm:grid-cols-3">
           <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
             <span className="font-heading text-[11px] text-[#F4D06F]">
               ๐๑ สีใบตองและขอบโคม
             </span>
             <div className="flex items-center gap-2.5">
               {LEAF_COLORS.map((color) => {
-                const active = config.baseColor === color.value;
+                const active = currentSlot.baseColor === color.value;
                 return (
                   <button
                     key={color.value}
                     type="button"
                     title={color.label}
-                    onClick={() => updateField('baseColor', color.value)}
+                    onClick={() => updateCurrentSlot('baseColor', color.value)}
                     className={`h-5 w-5 transition-transform ${
                       active
                         ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
@@ -349,13 +416,15 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
             </span>
             <div className="flex items-center gap-2">
               {FLOWER_COLORS.map((color) => {
-                const active = config.flowerColor === color.value;
+                const active = currentSlot.flowerColor === color.value;
                 return (
                   <button
                     key={color.value}
                     type="button"
                     title={color.label}
-                    onClick={() => updateField('flowerColor', color.value)}
+                    onClick={() =>
+                      updateCurrentSlot('flowerColor', color.value)
+                    }
                     className={`h-5 w-5 rounded-full transition-transform ${
                       active
                         ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
@@ -374,13 +443,15 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
             </span>
             <div className="flex items-center gap-2.5">
               {CANDLE_COLORS.map((color) => {
-                const active = config.candleColor === color.value;
+                const active = currentSlot.candleColor === color.value;
                 return (
                   <button
                     key={color.value}
                     type="button"
                     title={color.label}
-                    onClick={() => updateField('candleColor', color.value)}
+                    onClick={() =>
+                      updateCurrentSlot('candleColor', color.value)
+                    }
                     className={`h-5 w-3.5 transition-transform ${
                       active
                         ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
@@ -395,7 +466,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
         </div>
       </div>
 
-      {/* Right: Royal Indigo & Gold-Leaf Wish Inscription Box (สมุดข่อยจารึกคำพรคล้องจอง) */}
+      {/* Right: Royal Indigo & Gold-Leaf Wish Inscription Box for Current Item */}
       <div
         style={{
           background:
@@ -408,12 +479,12 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
         <span className="pointer-events-none absolute bottom-2.5 left-3 h-2.5 w-2.5 border-b border-l border-[#D4AF37]/80" />
         <span className="pointer-events-none absolute right-3 bottom-2.5 h-2.5 w-2.5 border-r border-b border-[#D4AF37]/80" />
 
-        {/* Header with Thai Vermilion & Gold Seal */}
         <div>
           <div className="mb-3 flex items-center justify-between border-b border-[#D4AF37]/30 pb-2.5">
             <div>
               <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
-                สมุดข่อยจารึกคำพร • วรรณศิลป์แห่งสายน้ำ
+                สมุดข่อยจารึกคำพร • ชิ้นที่ {THAI_NUMERALS[selectedIdx]} จาก{' '}
+                {THAI_NUMERALS[currentCount - 1]} ชิ้น
               </p>
               <h3 className="font-display text-lg font-normal text-[#FFFDF7]">
                 ฝากถ้อยคำคล้องจองล่องธารา
@@ -425,93 +496,73 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
             </div>
           </div>
 
-          {/* Solid Framed Input Wells */}
-          <div className="space-y-3">
-            <div className="border border-[#D4AF37]/35 bg-[#080B16]/95 p-3">
-              <div className="mb-1.5 flex items-center justify-between gap-2">
-                <label className="font-heading text-xs font-medium text-[#F4D06F]">
-                  ถ้อยคำอธิษฐานแห่งใจ
-                </label>
-                <button
-                  type="button"
-                  onClick={handleCycleSoloPoem}
-                  className="font-heading flex items-center gap-1 border border-[#D4AF37]/40 bg-[#141932] px-2 py-0.5 text-[10px] text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/20"
-                >
-                  <RefreshDouble width={11} height={11} />
-                  <span>สุ่มกลอนคำพรพระนคร</span>
-                </button>
-              </div>
-
-              <input
-                type="text"
-                maxLength={70}
-                value={config.wishText}
-                onChange={(e) => updateField('wishText', e.target.value)}
-                placeholder="จารึกคำอธิษฐานหรือกดสุ่มบทกลอนด้านบน..."
-                className="font-wish w-full border border-[#D4AF37]/45 bg-[#12172B] px-3 py-2 text-base text-[#FFFDF7] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
-              />
-
-              <div className="mt-2.5 flex items-center gap-2.5">
-                <span className="font-heading shrink-0 text-xs text-[#F4D06F]/90">
-                  นามผู้ฝากคำพร:
-                </span>
-                <input
-                  type="text"
-                  maxLength={24}
-                  value={config.authorName}
-                  onChange={(e) => updateField('authorName', e.target.value)}
-                  placeholder="เช่น คุณชายพุฒิภัทร, แม่หญิงจันทร์วาด..."
-                  className="font-heading flex-1 border border-[#D4AF37]/35 bg-[#12172B] px-3 py-1.5 text-xs text-[#FFF275] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
-                />
+          {currentCount > 1 && (
+            <div className="mb-2.5 flex items-center justify-between border border-[#D4AF37]/30 bg-[#080B16]/80 px-2.5 py-1.5 text-xs">
+              <span className="font-heading text-[#F4D06F]">
+                กำลังเขียนคำพรของ:
+              </span>
+              <div className="flex items-center gap-1">
+                {slots.map((s, idx) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => handleSelectSlot(idx)}
+                    className={`font-heading px-2 py-0.5 text-[11px] transition-colors ${
+                      idx === selectedIdx
+                        ? 'bg-[#D4AF37] font-semibold text-[#0B0E17]'
+                        : 'bg-[#141932] text-[#FFFDF7]/70 hover:text-[#FFF275]'
+                    }`}
+                  >
+                    #{THAI_NUMERALS[idx]}
+                  </button>
+                ))}
               </div>
             </div>
+          )}
 
-            {currentPlayers === 2 && (
-              <div className="border border-[#FF99C8]/40 bg-[#080B16]/95 p-3">
-                <div className="mb-1.5 flex items-center justify-between gap-2">
-                  <label className="font-heading text-xs font-medium text-[#FF99C8]">
-                    ถ้อยคำพรของหวานใจ (ลอยคู่เคียงขวัญ)
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleCycleCouplePoem}
-                    className="font-heading flex items-center gap-1 border border-[#FF99C8]/40 bg-[#141932] px-2 py-0.5 text-[10px] text-[#FF99C8] transition-colors hover:border-[#FF99C8] hover:bg-[#FF99C8]/20"
-                  >
-                    <RefreshDouble width={11} height={11} />
-                    <span>สุ่มกลอนคู่รัก</span>
-                  </button>
-                </div>
+          <div className="border border-[#D4AF37]/35 bg-[#080B16]/95 p-3.5">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <label className="font-heading text-xs font-medium text-[#F4D06F]">
+                ถ้อยคำอธิษฐาน (ชิ้นที่ {THAI_NUMERALS[selectedIdx]} •{' '}
+                {currentSlot.itemType === 'lantern' ? 'โคมลอย' : 'กระทง'})
+              </label>
+              <button
+                type="button"
+                onClick={handleCyclePoem}
+                className="font-heading flex items-center gap-1 border border-[#D4AF37]/40 bg-[#141932] px-2 py-0.5 text-[10px] text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/20"
+              >
+                <RefreshDouble width={11} height={11} />
+                <span>สุ่มกลอนคำพรพระนคร</span>
+              </button>
+            </div>
 
-                <input
-                  type="text"
-                  maxLength={70}
-                  value={config.partnerWishText ?? ''}
-                  onChange={(e) =>
-                    updateField('partnerWishText', e.target.value)
-                  }
-                  placeholder="จารึกคำอธิษฐานของคนข้างกาย (หรือเว้นว่างไว้)..."
-                  className="font-wish w-full border border-[#FF99C8]/40 bg-[#12172B] px-3 py-2 text-base text-[#FFFDF7] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FF99C8] focus:bg-[#171E38] focus:outline-none"
-                />
+            <input
+              type="text"
+              maxLength={70}
+              value={currentSlot.wishText}
+              onChange={(e) => updateCurrentSlot('wishText', e.target.value)}
+              placeholder="จารึกคำอธิษฐานหรือกดสุ่มบทกลอนด้านบน..."
+              className="font-wish w-full border border-[#D4AF37]/45 bg-[#12172B] px-3 py-2 text-base text-[#FFFDF7] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
+            />
 
-                <div className="mt-2.5 flex items-center gap-2.5">
-                  <span className="font-heading shrink-0 text-xs text-[#FF99C8]">
-                    นามคู่ขวัญเคียงกาย:
-                  </span>
-                  <input
-                    type="text"
-                    maxLength={24}
-                    value={config.partnerName ?? ''}
-                    onChange={(e) => updateField('partnerName', e.target.value)}
-                    placeholder="ระบุนามหวานใจที่ร่วมลอย..."
-                    className="font-heading flex-1 border border-[#FF99C8]/35 bg-[#12172B] px-3 py-1.5 text-xs text-[#FF99C8] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FF99C8] focus:bg-[#171E38] focus:outline-none"
-                  />
-                </div>
-              </div>
-            )}
+            <div className="mt-3 flex items-center gap-2.5">
+              <span className="font-heading shrink-0 text-xs text-[#F4D06F]/90">
+                นามผู้ฝากคำพร:
+              </span>
+              <input
+                type="text"
+                maxLength={24}
+                value={currentSlot.authorName}
+                onChange={(e) =>
+                  updateCurrentSlot('authorName', e.target.value)
+                }
+                placeholder={`ระบุชื่อเจ้าของชิ้นที่ ${THAI_NUMERALS[selectedIdx]}...`}
+                className="font-heading flex-1 border border-[#D4AF37]/35 bg-[#12172B] px-3 py-1.5 text-xs text-[#FFF275] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Gold-Leaf & Vermilion Stamp Action Button */}
         <motion.button
           type="button"
           whileHover={{ y: -2 }}
@@ -528,11 +579,8 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               className="text-[#0B0E17] transition-transform duration-300 group-hover:rotate-12"
             />
             <span>
-              {currentMode === 'both'
-                ? 'เยื้องย่างสู่ท่าน้ำ อัญเชิญกระทงและโคมทอง'
-                : currentMode === 'lantern-only'
-                ? 'เยื้องย่างสู่ลานเวหา ปล่อยโคมลอยขึ้นฟ้า'
-                : 'เยื้องย่างสู่ท่าน้ำพระนคร ประคองกระทงลงชล'}
+              เยื้องย่างสู่ท่าน้ำ — อัญเชิญเครื่องลอยทั้ง{' '}
+              {THAI_NUMERALS[currentCount - 1]} ชิ้น
             </span>
           </span>
           <span className="font-display text-xs font-medium text-[#0B0E17]">

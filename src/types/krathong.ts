@@ -6,7 +6,18 @@ export type RitualItemType = 'krathong' | 'lantern';
 
 export type RitualMode = 'krathong-only' | 'lantern-only' | 'both';
 
-export type PlayerCount = 1 | 2;
+export type OfferingCount = 1 | 2 | 3 | 4 | 5;
+
+export interface OfferingSlotConfig {
+  id: string;
+  itemType: RitualItemType;
+  baseColor: string;
+  flowerColor: string;
+  candleColor: string;
+  baseStyle: BaseStyle;
+  wishText: string;
+  authorName: string;
+}
 
 export interface KrathongConfig {
   baseColor: string;
@@ -15,10 +26,9 @@ export interface KrathongConfig {
   baseStyle: BaseStyle;
   wishText: string;
   authorName: string;
-  partnerName?: string;
-  partnerWishText?: string;
-  ritualMode?: RitualMode;
-  playerCount?: PlayerCount;
+  offeringCount?: OfferingCount;
+  selectedSlotIndex?: number;
+  offerings?: OfferingSlotConfig[];
 }
 
 export interface FloatingKrathong {

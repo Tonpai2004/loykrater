@@ -11,16 +11,18 @@ export const RIVER_DROP_ZONE_MIN_Y = 0.54;
 export const RIVER_DROP_ZONE_MAX_Y = 0.92;
 
 export const RIVER_SPOT_TARGETS: NormalizedPoint[] = [
-  { x: 0.22, y: 0.73 },
-  { x: 0.41, y: 0.81 },
-  { x: 0.61, y: 0.79 },
-  { x: 0.79, y: 0.72 },
+  { x: 0.16, y: 0.72 },
+  { x: 0.33, y: 0.8 },
+  { x: 0.5, y: 0.76 },
+  { x: 0.67, y: 0.81 },
+  { x: 0.84, y: 0.73 },
 ];
 
 export const SKY_LANTERN_TARGETS: NormalizedPoint[] = [
-  { x: 0.34, y: 0.22 },
-  { x: 0.5, y: 0.19 },
-  { x: 0.66, y: 0.22 },
+  { x: 0.24, y: 0.22 },
+  { x: 0.42, y: 0.19 },
+  { x: 0.58, y: 0.19 },
+  { x: 0.76, y: 0.22 },
 ];
 
 export const SPOT_HIT_RADIUS_RATIO = 0.095;
@@ -1088,6 +1090,14 @@ const FINGER_CHAINS: number[][] = [
   [17, 18, 19, 20], // Pinky
 ];
 
+const HAND_PALETTES = [
+  { skin: '#FFE5B4', accent: '#F4D06F', joint: '#FF99C8', label: 'มือที่ ๑' },
+  { skin: '#FFD6E8', accent: '#FF99C8', joint: '#FF8C42', label: 'มือที่ ๒' },
+  { skin: '#D8F3DC', accent: '#52B788', joint: '#F4D06F', label: 'มือที่ ๓' },
+  { skin: '#EDE0D4', accent: '#E0AAFF', joint: '#FF99C8', label: 'มือที่ ๔' },
+  { skin: '#FFF3B0', accent: '#FF8C42', joint: '#F4D06F', label: 'มือที่ ๕' },
+];
+
 function drawSingleIllustratedHand(
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -1095,10 +1105,10 @@ function drawSingleIllustratedHand(
   hand: TrackedHand,
   totalHands: number
 ): void {
-  const isSecondHand = hand.handIndex === 1;
-  const primarySkin = isSecondHand ? '#FFD6E8' : '#FFE5B4';
-  const accentColor = isSecondHand ? '#FF99C8' : '#F4D06F';
-  const jointColor = isSecondHand ? '#FF8C42' : '#FF99C8';
+  const palette = HAND_PALETTES[hand.handIndex % HAND_PALETTES.length];
+  const primarySkin = palette.skin;
+  const accentColor = palette.accent;
+  const jointColor = palette.joint;
 
   ctx.save();
 
@@ -1197,14 +1207,10 @@ function drawSingleIllustratedHand(
     ctx.fill();
 
     if (totalHands > 1) {
-      ctx.font = '600 11px Anuphan, sans-serif';
+      ctx.font = '600 11px "Bai Jamjuree", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillStyle = accentColor;
-      ctx.fillText(
-        isSecondHand ? 'มือที่ 2' : 'มือที่ 1',
-        wrist.x,
-        wrist.y + 20
-      );
+      ctx.fillText(palette.label, wrist.x, wrist.y + 20);
     }
   }
 

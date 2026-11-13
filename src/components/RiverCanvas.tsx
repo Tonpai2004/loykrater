@@ -7,6 +7,8 @@ import {
   HandGestureState,
   KrathongConfig,
   NormalizedPoint,
+  OfferingCount,
+  OfferingSlotConfig,
   StageItem,
 } from '@/types/krathong';
 import {
@@ -38,138 +40,136 @@ interface RiverCanvasProps {
   onAllItemsReleased: (totalCount: number) => void;
 }
 
-const GRAB_HIT_RADIUS_RATIO = 0.135;
+const GRAB_HIT_RADIUS_RATIO = 0.125;
 const FLOAT_CYCLE_DURATION_MS = 52000;
 const SPRING_STIFFNESS = 100;
 const SPRING_DAMPING = 15;
 
-export function buildStageItems(config: KrathongConfig): StageItem[] {
-  const mode = config.ritualMode ?? 'both';
-  const players = config.playerCount ?? 1;
+const DEFAULT_SLOT_PRESETS: Omit<OfferingSlotConfig, 'id'>[] = [
+  {
+    itemType: 'krathong',
+    baseColor: '#2D6A4F',
+    flowerColor: '#FF99C8',
+    candleColor: '#F4D06F',
+    baseStyle: 'classic-lotus',
+    wishText: 'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน',
+    authorName: '',
+  },
+  {
+    itemType: 'lantern',
+    baseColor: '#40916C',
+    flowerColor: '#F4D06F',
+    candleColor: '#FF8C42',
+    baseStyle: 'layered-star',
+    wishText: 'โคมทองลอยลิ่วล่องสู่ฟากฟ้า ปรารถนาสิ่งใดได้สมหมาย',
+    authorName: '',
+  },
+  {
+    itemType: 'krathong',
+    baseColor: '#52B788',
+    flowerColor: '#FFF275',
+    candleColor: '#F4D06F',
+    baseStyle: 'royal-pleat',
+    wishText: 'สิบห้าค่ำเดือนสิบสองน้ำนองตลิ่ง ขอพรพริ้งสมหวังดั่งใจหมาย',
+    authorName: '',
+  },
+  {
+    itemType: 'krathong',
+    baseColor: '#B5838D',
+    flowerColor: '#E0AAFF',
+    candleColor: '#FFF275',
+    baseStyle: 'classic-lotus',
+    wishText: 'จันทร์เพ็ญส่องต้องผิวน้ำงามจับตา ขอชีวาร่มเย็นเป็นสุขศรี',
+    authorName: '',
+  },
+  {
+    itemType: 'lantern',
+    baseColor: '#2D6A4F',
+    flowerColor: '#FF8C42',
+    candleColor: '#F4D06F',
+    baseStyle: 'royal-pleat',
+    wishText: 'ลอยประทีปทองส่องทางสว่างไสว คิดสิ่งใดสมถวิลสิ้นหมองศรี',
+    authorName: '',
+  },
+];
 
-  const p1Name = config.authorName.trim() || 'ผู้ลอยคนที่ 1';
-  const p1Wish =
-    config.wishText.trim() || 'ขอให้มีความสุขสมหวัง สุขภาพแข็งแรงตลอดปี';
-  const p2Name = config.partnerName?.trim() || 'คนพิเศษของเธอ';
-  const p2Wish =
-    config.partnerWishText?.trim() ||
-    config.wishText.trim() ||
-    'ขอให้เราสองคนพบเจอแต่ความสุขและรอยยิ้ม';
+export const THAI_NUMERALS = ['๑', '๒', '๓', '๔', '๕'];
 
-  const partnerConfig: KrathongConfig = {
-    ...config,
-    authorName: p2Name,
-    wishText: p2Wish,
-  };
+export function getActiveOfferings(config: KrathongConfig): OfferingSlotConfig[] {
+  const count: OfferingCount = config.offeringCount ?? 1;
+  const existing = config.offerings ?? [];
+  const result: OfferingSlotConfig[] = [];
 
-  const rawItems: Omit<
-    StageItem,
-    'x' | 'y' | 'targetX' | 'targetY' | 'vx' | 'vy' | 'scale' | 'released' | 'grabbedByHandIndex' | 'grabbedByPointerId'
-  >[] = [];
-
-  if (mode === 'krathong-only') {
-    rawItems.push({
-      id: 'stage-krathong-1',
-      itemType: 'krathong',
-      ownerName: p1Name,
-      wishText: p1Wish,
-      config,
-    });
-    if (players === 2) {
-      rawItems.push({
-        id: 'stage-krathong-2',
+  for (let i = 0; i < count; i++) {
+    if (existing[i]) {
+      result.push(existing[i]);
+    } else if (i === 0) {
+      result.push({
+        id: `slot-1`,
         itemType: 'krathong',
-        ownerName: p2Name,
-        wishText: p2Wish,
-        config: partnerConfig,
-      });
-    }
-  } else if (mode === 'lantern-only') {
-    rawItems.push({
-      id: 'stage-lantern-1',
-      itemType: 'lantern',
-      ownerName: p1Name,
-      wishText: p1Wish,
-      config,
-    });
-    if (players === 2) {
-      rawItems.push({
-        id: 'stage-lantern-2',
-        itemType: 'lantern',
-        ownerName: p2Name,
-        wishText: p2Wish,
-        config: partnerConfig,
-      });
-    }
-  } else {
-    // mode === 'both'
-    if (players === 1) {
-      rawItems.push({
-        id: 'stage-krathong-1',
-        itemType: 'krathong',
-        ownerName: p1Name,
-        wishText: p1Wish,
-        config,
-      });
-      rawItems.push({
-        id: 'stage-lantern-1',
-        itemType: 'lantern',
-        ownerName: p1Name,
-        wishText: p1Wish,
-        config,
+        baseColor: config.baseColor,
+        flowerColor: config.flowerColor,
+        candleColor: config.candleColor,
+        baseStyle: config.baseStyle,
+        wishText: config.wishText,
+        authorName: config.authorName,
       });
     } else {
-      // 2 players + both: 2 Krathongs + 1 Couple Sky Lantern (3 items total)
-      rawItems.push({
-        id: 'stage-krathong-1',
-        itemType: 'krathong',
-        ownerName: p1Name,
-        wishText: p1Wish,
-        config,
-      });
-      rawItems.push({
-        id: 'stage-lantern-couple',
-        itemType: 'lantern',
-        ownerName: `${p1Name} & ${p2Name}`,
-        wishText: p1Wish,
-        config,
-      });
-      rawItems.push({
-        id: 'stage-krathong-2',
-        itemType: 'krathong',
-        ownerName: p2Name,
-        wishText: p2Wish,
-        config: partnerConfig,
+      const preset = DEFAULT_SLOT_PRESETS[i % DEFAULT_SLOT_PRESETS.length];
+      result.push({
+        id: `slot-${i + 1}`,
+        ...preset,
       });
     }
   }
 
-  const total = rawItems.length;
-  return rawItems.map((item, idx) => {
-    const xPos =
-      total === 1
-        ? 0.5
-        : total === 2
-        ? idx === 0
-          ? 0.36
-          : 0.64
-        : idx === 0
-        ? 0.27
-        : idx === 1
-        ? 0.5
-        : 0.73;
+  return result;
+}
 
-    const yPos = item.itemType === 'lantern' ? 0.41 : 0.49;
+function getHorizontalRatio(index: number, total: number): number {
+  if (total <= 1) return 0.5;
+  if (total === 2) return index === 0 ? 0.36 : 0.64;
+  if (total === 3) return 0.26 + index * 0.24;
+  if (total === 4) return 0.2 + index * 0.2;
+  return 0.16 + index * 0.17;
+}
+
+export function buildStageItems(config: KrathongConfig): StageItem[] {
+  const slots = getActiveOfferings(config);
+  const total = slots.length;
+
+  return slots.map((slot, idx) => {
+    const xPos = getHorizontalRatio(idx, total);
+    const yPos = slot.itemType === 'lantern' ? 0.41 : 0.49;
+    const ownerName =
+      slot.authorName.trim() || `เครื่องลอยที่ ${THAI_NUMERALS[idx] ?? idx + 1}`;
+    const wishText =
+      slot.wishText.trim() ||
+      'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน';
+
+    const itemConfig: KrathongConfig = {
+      ...config,
+      baseColor: slot.baseColor,
+      flowerColor: slot.flowerColor,
+      candleColor: slot.candleColor,
+      baseStyle: slot.baseStyle,
+      wishText,
+      authorName: ownerName,
+    };
 
     return {
-      ...item,
+      id: `stage-${idx + 1}-${slot.itemType}`,
+      itemType: slot.itemType,
+      ownerName,
+      wishText,
+      config: itemConfig,
       x: xPos,
       y: yPos,
       targetX: xPos,
       targetY: yPos,
       vx: 0,
       vy: 0,
-      scale: 1.04,
+      scale: total >= 4 ? 0.92 : 1.02,
       released: false,
       grabbedByHandIndex: null,
       grabbedByPointerId: null,
@@ -254,7 +254,13 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
   }, []);
 
   const completeSingleItemRelease = useCallback(
-    (item: StageItem, spawnX: number, spawnY: number, width: number, height: number) => {
+    (
+      item: StageItem,
+      spawnX: number,
+      spawnY: number,
+      width: number,
+      height: number
+    ) => {
       if (item.released) return;
       item.released = true;
       item.grabbedByHandIndex = null;
@@ -275,7 +281,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
     [spawnCelebrationSparks]
   );
 
-  // Initialize stage items whenever entering INTERACT mode
   useEffect(() => {
     if (gameState === 'INTERACT') {
       const items = buildStageItems(activeConfig);
@@ -320,12 +325,10 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
       drawNightSkyAndMoon(ctx, width, height, time);
       drawRiverSurface(ctx, width, height, time);
 
-      // Multi-hand interaction in INTERACT mode
       if (currentMode === 'INTERACT') {
         const activeHands = handState.hands;
         const stageItems = stageItemsRef.current;
 
-        // Release any item whose grabbing hand disappeared
         stageItems.forEach((item) => {
           if (
             !item.released &&
@@ -346,7 +349,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             let activeItem = grabbedItem;
 
             if (!activeItem) {
-              // Find closest available item to pinch
               let closestDist = GRAB_HIT_RADIUS_RATIO;
               for (const candidate of stageItems) {
                 if (
@@ -380,7 +382,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
                 Math.min(0.9, trackedHand.cursor.y)
               );
 
-              // Auto-release Sky Lantern when dragged into any glowing sky target circle!
               if (activeItem.itemType === 'lantern') {
                 const skySpot = findNearestSpot(
                   { x: activeItem.x, y: activeItem.y },
@@ -399,7 +400,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               }
             }
           } else if (grabbedItem) {
-            // Hand un-pinched -> check if inside target spot or drop zone
             grabbedItem.grabbedByHandIndex = null;
 
             if (grabbedItem.itemType === 'krathong') {
@@ -452,7 +452,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
           }
         });
 
-        // Update spring physics for all stage items
+        const baseScale = stageItems.length >= 4 ? 0.9 : 1.02;
         stageItems.forEach((item) => {
           if (item.released) return;
           const ax =
@@ -468,16 +468,18 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
           const isGrabbed =
             item.grabbedByHandIndex !== null || item.grabbedByPointerId !== null;
-          const targetScale = isGrabbed ? 1.15 : 1.02;
+          const targetScale = isGrabbed ? baseScale + 0.14 : baseScale;
           item.scale += (targetScale - item.scale) * Math.min(1, dt * 10);
         });
       }
 
-      // Render released floating Krathongs (on the river) and Sky Lanterns (in the sky)
       const now = Date.now();
       const computedFloating = riverItems
         .map((item, idx) => {
-          const elapsed = Math.max(0, (now - item.createdAt) % FLOAT_CYCLE_DURATION_MS);
+          const elapsed = Math.max(
+            0,
+            (now - item.createdAt) % FLOAT_CYCLE_DURATION_MS
+          );
           const progress = elapsed / FLOAT_CYCLE_DURATION_MS;
           const isLantern = item.itemType === 'lantern';
 
@@ -568,7 +570,10 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             x: x + (Math.random() - 0.5) * 10 * scale,
             y: item.itemType === 'lantern' ? y + 28 * scale : y - 50 * scale,
             vx: (Math.random() - 0.5) * 0.45,
-            vy: item.itemType === 'lantern' ? 0.5 + Math.random() * 0.6 : -0.65 - Math.random() * 1.0,
+            vy:
+              item.itemType === 'lantern'
+                ? 0.5 + Math.random() * 0.6
+                : -0.65 - Math.random() * 1.0,
             size: (1.4 + Math.random() * 1.5) * scale,
             alpha: 0.85 * opacity,
             decay: 0.02,
@@ -577,56 +582,69 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
         }
       });
 
-      // CUSTOMIZE mode live preview
+      // CUSTOMIZE mode live preview of all 1..5 offerings
       if (currentMode === 'CUSTOMIZE') {
-        const mode = currentConfig.ritualMode ?? 'both';
-        if (mode === 'krathong-only') {
-          drawProceduralKrathong({
-            ctx,
-            x: width * 0.5,
-            y: height * 0.29,
-            scale: 1.2,
-            config: currentConfig,
-            time,
-            showWishTag: true,
-          });
-        } else if (mode === 'lantern-only') {
-          drawInteractiveSkyLantern({
-            ctx,
-            x: width * 0.5,
-            y: height * 0.26,
-            scale: 1.15,
-            config: currentConfig,
-            time,
-            showWishTag: true,
-          });
-        } else {
-          drawProceduralKrathong({
-            ctx,
-            x: width * 0.38,
-            y: height * 0.3,
-            scale: 1.08,
-            config: currentConfig,
-            time,
-            showWishTag: true,
-          });
-          drawInteractiveSkyLantern({
-            ctx,
-            x: width * 0.62,
-            y: height * 0.25,
-            scale: 1.04,
-            config: currentConfig,
-            time,
-            showWishTag: true,
-            ownerLabel:
-              currentConfig.playerCount === 2 && currentConfig.partnerName?.trim()
-                ? `${currentConfig.authorName || 'เรา'} & ${currentConfig.partnerName}`
-                : currentConfig.authorName,
-          });
-        }
+        const slots = getActiveOfferings(currentConfig);
+        const total = slots.length;
+        const selectedIdx = Math.min(
+          total - 1,
+          Math.max(0, currentConfig.selectedSlotIndex ?? 0)
+        );
+
+        slots.forEach((slot, idx) => {
+          const isSelected = idx === selectedIdx;
+          const xRatio = getHorizontalRatio(idx, total);
+          const yRatio = slot.itemType === 'lantern' ? 0.25 : 0.3;
+          const baseScale =
+            total === 1
+              ? 1.18
+              : total === 2
+              ? 1.02
+              : total === 3
+              ? 0.92
+              : 0.82;
+          const finalScale = isSelected ? baseScale * 1.12 : baseScale * 0.9;
+
+          const slotConfig: KrathongConfig = {
+            ...currentConfig,
+            baseColor: slot.baseColor,
+            flowerColor: slot.flowerColor,
+            candleColor: slot.candleColor,
+            baseStyle: slot.baseStyle,
+            wishText: slot.wishText,
+            authorName:
+              slot.authorName.trim() ||
+              `ชิ้นที่ ${THAI_NUMERALS[idx] ?? idx + 1}`,
+          };
+
+          if (slot.itemType === 'lantern') {
+            drawInteractiveSkyLantern({
+              ctx,
+              x: width * xRatio,
+              y: height * yRatio,
+              scale: finalScale,
+              config: slotConfig,
+              time,
+              isHighlighted: isSelected,
+              showWishTag: isSelected || total <= 3,
+              opacity: isSelected ? 1 : 0.82,
+            });
+          } else {
+            drawProceduralKrathong({
+              ctx,
+              x: width * xRatio,
+              y: height * yRatio,
+              scale: finalScale,
+              config: slotConfig,
+              time,
+              isHighlighted: isSelected,
+              showWishTag: isSelected || total <= 3,
+              opacity: isSelected ? 1 : 0.82,
+            });
+          }
+        });
       }
 
-      // INTERACT mode: draw glowing circular target spots + un-released stage items
       if (currentMode === 'INTERACT') {
         const stageItems = stageItemsRef.current;
         drawTargetSpotlights(ctx, width, height, stageItems, time);
@@ -668,7 +686,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
         });
       }
 
-      // Update & draw celebration sparks
       for (let i = sparksRef.current.length - 1; i >= 0; i--) {
         const p = sparksRef.current[i];
         p.x += p.vx;
@@ -689,7 +706,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
         ctx.restore();
       }
 
-      // Draw 2D Illustrated Hands on top when in INTERACT mode
       if (currentMode === 'INTERACT') {
         drawIllustratedHands(ctx, width, height, handState);
       }
@@ -750,7 +766,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
     grabbedItem.targetX = Math.max(0.08, Math.min(0.92, normX));
     grabbedItem.targetY = Math.max(0.08, Math.min(0.9, normY));
 
-    // Auto-release Sky Lantern when dragged into sky target circle
     if (grabbedItem.itemType === 'lantern') {
       const skySpot = findNearestSpot(
         { x: grabbedItem.targetX, y: grabbedItem.targetY },
