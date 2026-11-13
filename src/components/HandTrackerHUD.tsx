@@ -183,7 +183,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
         >
           <div>
             <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
-              เสร็จสิ้นพิธีลอยประทีป • ณ คุ้งน้ำพระนคร
+              เสร็จสิ้นพิธีลอยประทีป • ณ ท่าพระนคร
             </p>
             <h3 className="font-display text-base font-normal text-[#FFFDF7]">
               ประทีปน้อยลอยล่องลับคุ้งน้ำและผืนฟ้าแล้ว

@@ -1092,7 +1092,7 @@ export function drawTargetSpotlights(
         ctx.fillStyle = isHovered ? '#FFF275' : 'rgba(244, 208, 111, 0.88)';
         ctx.fillText(
           isHovered
-            ? '— ส่งโคมทองลอยลิ่วสู่ฟากฟ้าราตรี —'
+            ? 'ส่งโคมทองลอยลิ่วสู่ฟากฟ้าราตรี'
             : 'วงแสงเวหา • ลานปล่อยโคมประทีป',
           0,
           r + 20
@@ -1171,7 +1171,7 @@ export function drawTargetSpotlights(
         ctx.fillStyle = isHovered ? '#FFF275' : 'rgba(244, 208, 111, 0.88)';
         ctx.fillText(
           isHovered
-            ? '— คลายนิ้วส่งกระทงล่องสู่คุ้งน้ำพระนคร —'
+            ? 'คลายนิ้วส่งกระทงล่องสู่คุ้งน้ำ'
             : 'วงแสงจันทรา • ท่าน้ำวางกระทง',
           0,
           ry + 20

@@ -200,7 +200,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: 'ลอยกะเธอ — มหรสพสายน้ำคืนเพ็ญ',
+          title: 'ลอยกะเธอ มหรสพสายน้ำคืนเพ็ญ',
           text: shareText,
           url: shareUrl,
         });
@@ -434,7 +434,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                   className="thai-chamfer-sm font-heading flex items-center justify-center gap-2 border border-[#FFF275]/60 bg-[#D4AF37] px-4 py-2.5 text-xs font-semibold text-[#0B0E17] transition-colors hover:bg-[#FFF275]"
                 >
                   <RefreshDouble width={16} height={16} strokeWidth={2} />
-                  <span>หวนคืนท่าน้ำ — ลอยอีกรอบ</span>
+                  <span>ลอยอีกรอบ</span>
                 </button>
               </div>
             </div>

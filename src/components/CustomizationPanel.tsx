@@ -9,7 +9,6 @@ import {
   Eye,
   EyeClosed,
   ColorPicker,
-  Plus,
   Xmark,
   Check,
 } from 'iconoir-react';
@@ -104,7 +103,7 @@ const ITEM_TYPE_OPTIONS: {
 const BASE_STYLES: { id: BaseStyle; label: string; sub: string }[] = [
   { id: 'classic-lotus', label: 'กลีบบัวซ้อน', sub: 'สัตตบงกช' },
   { id: 'layered-star', label: 'ดาวเรขาคณิต', sub: 'ดารารัศมี' },
-  { id: 'royal-pleat', label: 'จีบพุ่มชาววัง', sub: 'พุ่มทองพระนคร' },
+  { id: 'royal-pleat', label: 'จีบพุ่มชาววัง', sub: 'พุ่มทอง' },
 ];
 
 const LEAF_COLORS: ColorOption[] = [
@@ -336,6 +335,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
   // Extended Color Modal state
   const [activeColorModal, setActiveColorModal] =
     useState<ColorFieldKey | null>(null);
+  const [isBookSubmerged, setIsBookSubmerged] = useState<boolean>(false);
   const nativeColorInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSelectCount = (newCount: OfferingCount) => {
@@ -436,439 +436,607 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
     nativeColorInputRef.current?.click();
   };
 
+  const isCustomBaseColor = !LEAF_COLORS.some(
+    (c) => c.value.toUpperCase() === currentSlot.baseColor.toUpperCase()
+  );
+  const isCustomFlowerColor = !FLOWER_COLORS.some(
+    (c) => c.value.toUpperCase() === currentSlot.flowerColor.toUpperCase()
+  );
+  const isCustomCandleColor = !CANDLE_COLORS.some(
+    (c) => c.value.toUpperCase() === currentSlot.candleColor.toUpperCase()
+  );
+
+  const RAINBOW_SWATCH_GRADIENT =
+    'conic-gradient(from 0deg, #FF595E, #FFCA3A, #8AC926, #00BBF9, #9D4EDD, #FF595E)';
+
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 28 }}
-        transition={SPRING_TRANSITION}
-        className="pointer-events-auto mx-auto flex w-full max-w-5xl flex-col items-stretch gap-4 lg:flex-row lg:items-stretch"
-      >
-        {/* Left: Black-Gold Lacquer Craft Atelier Tray */}
-        <div className="thai-chamfer relative flex flex-1 flex-col justify-between border border-[#D4AF37]/45 bg-[#0E1222]/95 p-4 text-[#FFFDF7] shadow-[0_22px_55px_rgba(4,6,14,0.88)] backdrop-blur-xl sm:p-5">
-          <span className="pointer-events-none absolute top-2.5 left-3 h-2.5 w-2.5 border-t border-l border-[#D4AF37]/70" />
-          <span className="pointer-events-none absolute top-2.5 right-3 h-2.5 w-2.5 border-t border-r border-[#D4AF37]/70" />
-          <span className="pointer-events-none absolute bottom-2.5 left-3 h-2.5 w-2.5 border-b border-l border-[#D4AF37]/70" />
-          <span className="pointer-events-none absolute right-3 bottom-2.5 h-2.5 w-2.5 border-r border-b border-[#D4AF37]/70" />
-
-          {/* Header Row: Phra Nakhon Atelier + Offering Quantity Selector (1-5) */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D4AF37]/25 pb-3">
-            <div>
-              <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
-                โรงพับใบตองและโคมประทีป • ศาลาท่าน้ำพระนคร
-              </p>
-              <h2 className="font-display text-lg font-normal tracking-wide text-[#FFFDF7] sm:text-xl">
-                ประดิษฐ์เครื่องลอยคืนวันเพ็ญ
-              </h2>
-            </div>
-
-            {/* Quantity Selector: 1 to 5 Offerings */}
-            <div className="flex items-center gap-2">
-              <span className="font-heading text-xs text-[#F4D06F]">
-                จำนวนเครื่องลอย:
-              </span>
-              <div className="flex items-center border border-[#D4AF37]/45 bg-[#080B14] p-0.5">
-                {OFFERING_COUNTS.map((num) => {
-                  const active = currentCount === num;
-                  return (
-                    <button
-                      key={num}
-                      type="button"
-                      onClick={() => handleSelectCount(num)}
-                      className={`font-heading min-w-[32px] px-2.5 py-1 text-xs transition-colors ${
-                        active
-                          ? 'bg-[#D4AF37] font-semibold text-[#0B0E17]'
-                          : 'text-[#FFFDF7]/70 hover:text-[#FFF275]'
-                      }`}
-                    >
-                      {THAI_NUMERALS[num - 1]}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Per-Item Slot Selector Tabs (๑ .. ๕) */}
-          {currentCount > 1 && (
-            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-              <span className="font-heading mr-1 text-[11px] text-[#FFFDF7]/70">
-                เลือกปรับแต่งรายชิ้น:
-              </span>
-              {slots.map((slot, idx) => {
-                const isSelected = idx === selectedIdx;
-                return (
-                  <button
-                    key={slot.id}
-                    type="button"
-                    onClick={() => handleSelectSlot(idx)}
-                    className={`font-heading flex items-center gap-1.5 border px-2.5 py-1 text-xs transition-colors ${
-                      isSelected
-                        ? 'border-[#FFF275] bg-[#D4AF37]/25 font-semibold text-[#FFF275]'
-                        : 'border-[#D4AF37]/30 bg-[#080B14]/80 text-[#FFFDF7]/70 hover:border-[#D4AF37]/60'
-                    }`}
-                  >
-                    <span
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: slot.flowerColor }}
-                    />
-                    <span>
-                      ดวงที่ {THAI_NUMERALS[idx]} (
-                      {slot.itemType === 'lantern' ? 'โคมลอย' : 'กระทง'})
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+      <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center">
+        {/* Top Toggle Button when Book is Open: Fold Book & Submerge into River */}
+        <AnimatePresence>
+          {!isBookSubmerged && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.25 }}
+              className="pointer-events-auto mb-2 flex items-center justify-end self-end"
+            >
+              <button
+                type="button"
+                onClick={() => setIsBookSubmerged(true)}
+                className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#D4AF37]/55 bg-[#0B0E17]/90 px-3.5 py-1.5 text-xs text-[#FFF275] shadow-[0_8px_22px_rgba(0,0,0,0.65)] backdrop-blur-md transition-colors hover:border-[#FFF275] hover:bg-[#141932]"
+              >
+                <Eye width={14} height={14} strokeWidth={2} />
+                <span>พับสมุดข่อยลงน้ำ • ชมผิวน้ำเต็มตา</span>
+              </button>
+            </motion.div>
           )}
+        </AnimatePresence>
 
-          {/* Row 1: Offering Type for the Currently Selected Item */}
-          <div className="mt-2.5 grid grid-cols-2 border border-[#D4AF37]/30 bg-[#080B14]/90">
-            {ITEM_TYPE_OPTIONS.map((opt, idx) => {
-              const active = currentSlot.itemType === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => updateCurrentSlot('itemType', opt.id)}
-                  className={`relative flex flex-col items-start px-3.5 py-2 text-left transition-colors ${
-                    idx > 0 ? 'border-l border-[#D4AF37]/25' : ''
-                  } ${
-                    active
-                      ? 'bg-[#D4AF37]/22 text-[#FFF275]'
-                      : 'text-[#FFFDF7]/75 hover:bg-white/[0.05]'
-                  }`}
-                >
-                  <div className="flex w-full items-baseline justify-between">
-                    <span className="font-display text-xs text-[#F4D06F]">
-                      ประเภทที่ {opt.numeral}
-                    </span>
-                    {active && (
-                      <span className="h-1.5 w-1.5 rotate-45 bg-[#FFF275]" />
-                    )}
-                  </div>
-                  <span className="font-heading mt-0.5 text-xs font-medium">
-                    {opt.label}
-                  </span>
-                  <span className="font-wish text-[11px] text-[#FFFDF7]/60">
-                    {opt.sub}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Row 2: Banana Leaf Fold Architecture for Current Item */}
-          <div className="mt-2.5 grid grid-cols-3 gap-2">
-            {BASE_STYLES.map((style) => {
-              const isSelected = currentSlot.baseStyle === style.id;
-              return (
-                <button
-                  key={style.id}
-                  type="button"
-                  onClick={() => updateCurrentSlot('baseStyle', style.id)}
-                  className={`flex items-center gap-2.5 border px-2.5 py-2 text-left transition-all ${
-                    isSelected
-                      ? 'border-[#F4D06F] bg-[#D4AF37]/18 text-[#FFF275]'
-                      : 'border-white/15 bg-[#080B14]/80 text-[#FFFDF7]/80 hover:border-[#D4AF37]/45'
-                  }`}
-                >
-                  <StyleCollageThumbnail
-                    style={style.id}
-                    baseColor={currentSlot.baseColor}
-                    flowerColor={currentSlot.flowerColor}
-                  />
-                  <div className="min-w-0">
-                    <div className="font-heading truncate text-xs font-medium">
-                      {style.label}
-                    </div>
-                    <div className="font-wish truncate text-[11px] text-[#F4D06F]/85">
-                      ทรง{style.sub}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Row 3: Unified Pigment Palette Bar + "สีอื่นๆ (+)" Modal Trigger for Every Part */}
-          <div className="mt-2.5 grid grid-cols-1 gap-2.5 border-t border-[#D4AF37]/25 pt-2.5 sm:grid-cols-3">
-            {/* 01 Base / Leaf Color */}
-            <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
-              <span className="font-heading text-[11px] text-[#F4D06F]">
-                ๐๑ สีใบตองและขอบโคม
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
-                {LEAF_COLORS.map((color) => {
-                  const active =
-                    currentSlot.baseColor.toUpperCase() ===
-                    color.value.toUpperCase();
-                  return (
-                    <button
-                      key={color.value}
-                      type="button"
-                      title={color.label}
-                      onClick={() =>
-                        updateCurrentSlot('baseColor', color.value)
-                      }
-                      className={`h-5 w-5 transition-transform ${
-                        active
-                          ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
-                          : 'opacity-80 hover:opacity-100'
-                      }`}
-                      style={{ backgroundColor: color.value }}
-                    />
-                  );
-                })}
-                <button
-                  type="button"
-                  title="เลือกสีอื่นๆ เพิ่มเติม / หลอดดูดสี"
-                  onClick={() => setActiveColorModal('baseColor')}
-                  className="font-heading flex h-5 items-center gap-0.5 border border-[#D4AF37]/60 bg-[#141932] px-1.5 text-[10px] text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/25"
-                >
-                  <Plus width={11} height={11} strokeWidth={2.2} />
-                  <span>สีอื่นๆ</span>
-                </button>
-              </div>
-            </div>
-
-            {/* 02 Flower / Emblem Color */}
-            <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
-              <span className="font-heading text-[11px] text-[#F4D06F]">
-                ๐๒ สีบุปผาและลวดลาย
-              </span>
-              <div className="flex flex-wrap items-center gap-1.5">
-                {FLOWER_COLORS.map((color) => {
-                  const active =
-                    currentSlot.flowerColor.toUpperCase() ===
-                    color.value.toUpperCase();
-                  return (
-                    <button
-                      key={color.value}
-                      type="button"
-                      title={color.label}
-                      onClick={() =>
-                        updateCurrentSlot('flowerColor', color.value)
-                      }
-                      className={`h-5 w-5 rounded-full transition-transform ${
-                        active
-                          ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
-                          : 'opacity-80 hover:opacity-100'
-                      }`}
-                      style={{ backgroundColor: color.value }}
-                    />
-                  );
-                })}
-                <button
-                  type="button"
-                  title="เลือกสีอื่นๆ เพิ่มเติม / หลอดดูดสี"
-                  onClick={() => setActiveColorModal('flowerColor')}
-                  className="font-heading flex h-5 items-center gap-0.5 rounded-full border border-[#D4AF37]/60 bg-[#141932] px-1.5 text-[10px] text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/25"
-                >
-                  <Plus width={11} height={11} strokeWidth={2.2} />
-                  <span>สีอื่นๆ</span>
-                </button>
-              </div>
-            </div>
-
-            {/* 03 Candle / Glow Color */}
-            <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
-              <span className="font-heading text-[11px] text-[#F4D06F]">
-                ๐๓ สีขี้ผึ้งเทียนและแสงโคม
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
-                {CANDLE_COLORS.map((color) => {
-                  const active =
-                    currentSlot.candleColor.toUpperCase() ===
-                    color.value.toUpperCase();
-                  return (
-                    <button
-                      key={color.value}
-                      type="button"
-                      title={color.label}
-                      onClick={() =>
-                        updateCurrentSlot('candleColor', color.value)
-                      }
-                      className={`h-5 w-3.5 transition-transform ${
-                        active
-                          ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
-                          : 'opacity-80 hover:opacity-100'
-                      }`}
-                      style={{ backgroundColor: color.value }}
-                    />
-                  );
-                })}
-                <button
-                  type="button"
-                  title="เลือกสีอื่นๆ เพิ่มเติม / หลอดดูดสี"
-                  onClick={() => setActiveColorModal('candleColor')}
-                  className="font-heading flex h-5 items-center gap-0.5 border border-[#D4AF37]/60 bg-[#141932] px-1.5 text-[10px] text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/25"
-                >
-                  <Plus width={11} height={11} strokeWidth={2.2} />
-                  <span>สีอื่นๆ</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Royal Indigo & Gold-Leaf Wish Inscription Box for Current Item */}
+        {/* Water-Surface Horizon Mask Container so the folded book submerges INTO the river water */}
         <div
-          style={{
-            background:
-              'linear-gradient(165deg, rgba(24, 29, 56, 0.97) 0%, rgba(12, 16, 33, 0.98) 100%)',
-          }}
-          className="thai-chamfer relative flex w-full flex-col justify-between border border-[#D4AF37]/65 bg-[#141932] p-5 text-[#FFFDF7] shadow-[0_22px_55px_rgba(4,6,14,0.92)] backdrop-blur-xl lg:w-[410px]"
+          style={{ perspective: '1600px' }}
+          className={`relative w-full overflow-hidden transition-all duration-700 ${
+            isBookSubmerged
+              ? 'pointer-events-none max-h-[84px] pb-2'
+              : 'pointer-events-auto max-h-[960px] pb-1'
+          }`}
         >
-          <span className="pointer-events-none absolute top-2.5 left-3 h-2.5 w-2.5 border-t border-l border-[#D4AF37]/80" />
-          <span className="pointer-events-none absolute top-2.5 right-3 h-2.5 w-2.5 border-t border-r border-[#D4AF37]/80" />
-          <span className="pointer-events-none absolute bottom-2.5 left-3 h-2.5 w-2.5 border-b border-l border-[#D4AF37]/80" />
-          <span className="pointer-events-none absolute right-3 bottom-2.5 h-2.5 w-2.5 border-r border-b border-[#D4AF37]/80" />
+          {/* Outer Book Body: Folds pages first, then sinks into the river water; Rises from water first, then unfolds pages */}
+          <motion.div
+            initial={false}
+            animate={
+              isBookSubmerged
+                ? {
+                    y: [0, 6, 260],
+                    scale: [1, 0.94, 0.72],
+                    opacity: [1, 0.95, 0],
+                  }
+                : {
+                    y: [260, 6, 0],
+                    scale: [0.72, 0.94, 1],
+                    opacity: [0, 0.95, 1],
+                  }
+            }
+            transition={{
+              duration: 0.95,
+              times: isBookSubmerged ? [0, 0.44, 1] : [0, 0.5, 1],
+              ease: 'easeInOut',
+            }}
+            style={{ transformStyle: 'preserve-3d' }}
+            className="mx-auto flex w-full flex-col items-stretch gap-4 lg:flex-row lg:items-stretch"
+          >
+            {/* Left Page (Hinged at Right Spine): Black-Gold Lacquer Craft Atelier Tray */}
+            <motion.div
+              initial={false}
+              animate={
+                isBookSubmerged
+                  ? {
+                      rotateY: [0, 82, 85],
+                      x: [0, 26, 34],
+                    }
+                  : {
+                      rotateY: [85, 76, 0],
+                      x: [34, 22, 0],
+                    }
+              }
+              transition={{
+                duration: 0.95,
+                times: isBookSubmerged ? [0, 0.45, 1] : [0, 0.48, 1],
+                ease: 'easeInOut',
+              }}
+              style={{ transformOrigin: 'right center' }}
+              className="thai-chamfer relative flex flex-1 flex-col justify-between border border-[#D4AF37]/45 bg-[#0E1222]/95 p-4 text-[#FFFDF7] shadow-[0_22px_55px_rgba(4,6,14,0.88)] backdrop-blur-xl sm:p-5"
+            >
+              <span className="pointer-events-none absolute top-2.5 left-3 h-2.5 w-2.5 border-t border-l border-[#D4AF37]/70" />
+              <span className="pointer-events-none absolute top-2.5 right-3 h-2.5 w-2.5 border-t border-r border-[#D4AF37]/70" />
+              <span className="pointer-events-none absolute bottom-2.5 left-3 h-2.5 w-2.5 border-b border-l border-[#D4AF37]/70" />
+              <span className="pointer-events-none absolute right-3 bottom-2.5 h-2.5 w-2.5 border-r border-b border-[#D4AF37]/70" />
 
-          <div>
-            <div className="mb-3 flex items-center justify-between border-b border-[#D4AF37]/30 pb-2.5">
-              <div>
-                <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
-                  สมุดข่อยจารึกคำพร • คืนเพ็ญเดือนสิบสอง
-                </p>
-                <h3 className="font-display text-lg font-normal text-[#FFFDF7]">
-                  ฝากถ้อยคำคล้องจองล่องธารา
-                </h3>
-              </div>
+              {/* Header Row: Phra Nakhon Atelier + Offering Quantity Selector (1-5) */}
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D4AF37]/25 pb-3">
+                <div>
+                  <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
+                    ลานพับใบตองและโคมประทีป ท่าพระนคร
+                  </p>
+                  <h2 className="font-display text-lg font-normal tracking-wide text-[#FFFDF7] sm:text-xl">
+                    ประดิษฐ์เครื่องลอยของท่าน
+                  </h2>
+                </div>
 
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#D4AF37]/70 bg-[#B83B2A] text-[#FFF275] shadow-sm">
-                <Sparks width={16} height={16} strokeWidth={1.8} />
-              </div>
-            </div>
-
-            {currentCount > 1 && (
-              <div className="mb-2.5 flex items-center justify-between border border-[#D4AF37]/30 bg-[#080B16]/80 px-2.5 py-1.5 text-xs">
-                <span className="font-heading text-[#F4D06F]">
-                  กำลังเขียนคำพรของดวงที่:
-                </span>
-                <div className="flex items-center gap-1">
-                  {slots.map((s, idx) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => handleSelectSlot(idx)}
-                      className={`font-heading px-2 py-0.5 text-[11px] transition-colors ${
-                        idx === selectedIdx
-                          ? 'bg-[#D4AF37] font-semibold text-[#0B0E17]'
-                          : 'bg-[#141932] text-[#FFFDF7]/70 hover:text-[#FFF275]'
-                      }`}
-                    >
-                      {THAI_NUMERALS[idx]}
-                    </button>
-                  ))}
+                {/* Quantity Selector: 1 to 5 Offerings */}
+                <div className="flex items-center gap-2">
+                  <span className="font-heading text-xs text-[#F4D06F]">
+                    จำนวนเครื่องลอย:
+                  </span>
+                  <div className="flex items-center border border-[#D4AF37]/45 bg-[#080B14] p-0.5">
+                    {OFFERING_COUNTS.map((num) => {
+                      const active = currentCount === num;
+                      return (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => handleSelectCount(num)}
+                          className={`font-heading min-w-[32px] px-2.5 py-1 text-xs transition-colors ${
+                            active
+                              ? 'bg-[#D4AF37] font-semibold text-[#0B0E17]'
+                              : 'text-[#FFFDF7]/70 hover:text-[#FFF275]'
+                          }`}
+                        >
+                          {THAI_NUMERALS[num - 1]}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
+
+              {/* Per-Item Slot Selector Tabs (๑ .. ๕) */}
+              {currentCount > 1 && (
+                <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                  <span className="font-heading mr-1 text-[11px] text-[#FFFDF7]/70">
+                    เลือกปรับแต่งรายชิ้น:
+                  </span>
+                  {slots.map((slot, idx) => {
+                    const isSelected = idx === selectedIdx;
+                    return (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        onClick={() => handleSelectSlot(idx)}
+                        className={`font-heading flex items-center gap-1.5 border px-2.5 py-1 text-xs transition-colors ${
+                          isSelected
+                            ? 'border-[#FFF275] bg-[#D4AF37]/25 font-semibold text-[#FFF275]'
+                            : 'border-[#D4AF37]/30 bg-[#080B14]/80 text-[#FFFDF7]/70 hover:border-[#D4AF37]/60'
+                        }`}
+                      >
+                        <span
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: slot.flowerColor }}
+                        />
+                        <span>
+                          ดวงที่ {THAI_NUMERALS[idx]} (
+                          {slot.itemType === 'lantern' ? 'โคมลอย' : 'กระทง'})
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Row 1: Offering Type for the Currently Selected Item */}
+              <div className="mt-2.5 grid grid-cols-2 border border-[#D4AF37]/30 bg-[#080B14]/90">
+                {ITEM_TYPE_OPTIONS.map((opt, idx) => {
+                  const active = currentSlot.itemType === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => updateCurrentSlot('itemType', opt.id)}
+                      className={`relative flex flex-col items-start px-3.5 py-2 text-left transition-colors ${
+                        idx > 0 ? 'border-l border-[#D4AF37]/25' : ''
+                      } ${
+                        active
+                          ? 'bg-[#D4AF37]/22 text-[#FFF275]'
+                          : 'text-[#FFFDF7]/75 hover:bg-white/[0.05]'
+                      }`}
+                    >
+                      <div className="flex w-full items-baseline justify-between">
+                        <span className="font-display text-xs text-[#F4D06F]">
+                          ประเภทที่ {opt.numeral}
+                        </span>
+                        {active && (
+                          <span className="h-1.5 w-1.5 rotate-45 bg-[#FFF275]" />
+                        )}
+                      </div>
+                      <span className="font-heading mt-0.5 text-xs font-medium">
+                        {opt.label}
+                      </span>
+                      <span className="font-wish text-[11px] text-[#FFFDF7]/60">
+                        {opt.sub}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Row 2: Banana Leaf Fold Architecture for Current Item */}
+              <div className="mt-2.5 grid grid-cols-3 gap-2">
+                {BASE_STYLES.map((style) => {
+                  const isSelected = currentSlot.baseStyle === style.id;
+                  return (
+                    <button
+                      key={style.id}
+                      type="button"
+                      onClick={() => updateCurrentSlot('baseStyle', style.id)}
+                      className={`flex items-center gap-2.5 border px-2.5 py-2 text-left transition-all ${
+                        isSelected
+                          ? 'border-[#F4D06F] bg-[#D4AF37]/18 text-[#FFF275]'
+                          : 'border-white/15 bg-[#080B14]/80 text-[#FFFDF7]/80 hover:border-[#D4AF37]/45'
+                      }`}
+                    >
+                      <StyleCollageThumbnail
+                        style={style.id}
+                        baseColor={currentSlot.baseColor}
+                        flowerColor={currentSlot.flowerColor}
+                      />
+                      <div className="min-w-0">
+                        <div className="font-heading truncate text-xs font-medium">
+                          {style.label}
+                        </div>
+                        <div className="font-wish truncate text-[11px] text-[#F4D06F]/85">
+                          ทรง{style.sub}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Row 3: Unified Pigment Palette Bar + Rainbow Gradient Swatch Trigger for Every Part */}
+              <div className="mt-2.5 grid grid-cols-1 gap-2.5 border-t border-[#D4AF37]/25 pt-2.5 sm:grid-cols-3">
+                {/* 01 Base / Leaf Color */}
+                <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
+                  <span className="font-heading text-[11px] text-[#F4D06F]">
+                    ๐๑ สีใบตองและขอบโคม
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {LEAF_COLORS.map((color) => {
+                      const active =
+                        currentSlot.baseColor.toUpperCase() ===
+                        color.value.toUpperCase();
+                      return (
+                        <button
+                          key={color.value}
+                          type="button"
+                          title={color.label}
+                          onClick={() =>
+                            updateCurrentSlot('baseColor', color.value)
+                          }
+                          className={`h-5 w-5 transition-transform ${
+                            active
+                              ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
+                              : 'opacity-80 hover:opacity-100'
+                          }`}
+                          style={{ backgroundColor: color.value }}
+                        />
+                      );
+                    })}
+                    {/* Rainbow Gradient Swatch for Other Colors */}
+                    <button
+                      type="button"
+                      title="เลือกสีอื่นๆ เพิ่มเติม / หลอดดูดสี"
+                      aria-label="เลือกสีใบตองอื่นๆ เพิ่มเติม"
+                      onClick={() => setActiveColorModal('baseColor')}
+                      style={{ background: RAINBOW_SWATCH_GRADIENT }}
+                      className={`h-5 w-5 border border-[#FFFDF7]/90 shadow-[0_0_8px_rgba(255,242,117,0.35)] transition-transform ${
+                        isCustomBaseColor
+                          ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
+                          : 'opacity-90 hover:scale-110 hover:opacity-100'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* 02 Flower / Emblem Color */}
+                <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
+                  <span className="font-heading text-[11px] text-[#F4D06F]">
+                    ๐๒ สีบุปผาและลวดลาย
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {FLOWER_COLORS.map((color) => {
+                      const active =
+                        currentSlot.flowerColor.toUpperCase() ===
+                        color.value.toUpperCase();
+                      return (
+                        <button
+                          key={color.value}
+                          type="button"
+                          title={color.label}
+                          onClick={() =>
+                            updateCurrentSlot('flowerColor', color.value)
+                          }
+                          className={`h-5 w-5 rounded-full transition-transform ${
+                            active
+                              ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
+                              : 'opacity-80 hover:opacity-100'
+                          }`}
+                          style={{ backgroundColor: color.value }}
+                        />
+                      );
+                    })}
+                    {/* Rainbow Gradient Circle Swatch for Other Colors */}
+                    <button
+                      type="button"
+                      title="เลือกสีอื่นๆ เพิ่มเติม / หลอดดูดสี"
+                      aria-label="เลือกสีบุปผาอื่นๆ เพิ่มเติม"
+                      onClick={() => setActiveColorModal('flowerColor')}
+                      style={{ background: RAINBOW_SWATCH_GRADIENT }}
+                      className={`h-5 w-5 rounded-full border border-[#FFFDF7]/90 shadow-[0_0_8px_rgba(255,242,117,0.35)] transition-transform ${
+                        isCustomFlowerColor
+                          ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
+                          : 'opacity-90 hover:scale-110 hover:opacity-100'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* 03 Candle / Glow Color */}
+                <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
+                  <span className="font-heading text-[11px] text-[#F4D06F]">
+                    ๐๓ สีขี้ผึ้งเทียนและแสงโคม
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {CANDLE_COLORS.map((color) => {
+                      const active =
+                        currentSlot.candleColor.toUpperCase() ===
+                        color.value.toUpperCase();
+                      return (
+                        <button
+                          key={color.value}
+                          type="button"
+                          title={color.label}
+                          onClick={() =>
+                            updateCurrentSlot('candleColor', color.value)
+                          }
+                          className={`h-5 w-3.5 transition-transform ${
+                            active
+                              ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
+                              : 'opacity-80 hover:opacity-100'
+                          }`}
+                          style={{ backgroundColor: color.value }}
+                        />
+                      );
+                    })}
+                    {/* Rainbow Gradient Candle Swatch for Other Colors */}
+                    <button
+                      type="button"
+                      title="เลือกสีอื่นๆ เพิ่มเติม / หลอดดูดสี"
+                      aria-label="เลือกสีขี้ผึ้งเทียนอื่นๆ เพิ่มเติม"
+                      onClick={() => setActiveColorModal('candleColor')}
+                      style={{ background: RAINBOW_SWATCH_GRADIENT }}
+                      className={`h-5 w-3.5 border border-[#FFFDF7]/90 shadow-[0_0_8px_rgba(255,242,117,0.35)] transition-transform ${
+                        isCustomCandleColor
+                          ? 'scale-115 ring-2 ring-[#FFF275] ring-offset-2 ring-offset-[#080B14]'
+                          : 'opacity-90 hover:scale-110 hover:opacity-100'
+                      }`}
+                    />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Right Page (Hinged at Left Spine): Royal Indigo & Gold-Leaf Wish Inscription Box */}
+            <motion.div
+              initial={false}
+              animate={
+                isBookSubmerged
+                  ? {
+                      rotateY: [0, -82, -85],
+                      x: [0, -26, -34],
+                    }
+                  : {
+                      rotateY: [-85, -76, 0],
+                      x: [-34, -22, 0],
+                    }
+              }
+              transition={{
+                duration: 0.95,
+                times: isBookSubmerged ? [0, 0.45, 1] : [0, 0.48, 1],
+                ease: 'easeInOut',
+              }}
+              style={{
+                transformOrigin: 'left center',
+                background:
+                  'linear-gradient(165deg, rgba(24, 29, 56, 0.97) 0%, rgba(12, 16, 33, 0.98) 100%)',
+              }}
+              className="thai-chamfer relative flex w-full flex-col justify-between border border-[#D4AF37]/65 bg-[#141932] p-5 text-[#FFFDF7] shadow-[0_22px_55px_rgba(4,6,14,0.92)] backdrop-blur-xl lg:w-[410px]"
+            >
+              <span className="pointer-events-none absolute top-2.5 left-3 h-2.5 w-2.5 border-t border-l border-[#D4AF37]/80" />
+              <span className="pointer-events-none absolute top-2.5 right-3 h-2.5 w-2.5 border-t border-r border-[#D4AF37]/80" />
+              <span className="pointer-events-none absolute bottom-2.5 left-3 h-2.5 w-2.5 border-b border-l border-[#D4AF37]/80" />
+              <span className="pointer-events-none absolute right-3 bottom-2.5 h-2.5 w-2.5 border-r border-b border-[#D4AF37]/80" />
+
+              <div>
+                <div className="mb-3 flex items-center justify-between border-b border-[#D4AF37]/30 pb-2.5">
+                  <div>
+                    <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
+                      สมุดข่อยจารึกคำพร • คืนเพ็ญเดือนสิบสอง
+                    </p>
+                    <h3 className="font-display text-lg font-normal text-[#FFFDF7]">
+                      ฝากถ้อยคำคล้องจองล่องธารา
+                    </h3>
+                  </div>
+
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#D4AF37]/70 bg-[#B83B2A] text-[#FFF275] shadow-sm">
+                    <Sparks width={16} height={16} strokeWidth={1.8} />
+                  </div>
+                </div>
+
+                {currentCount > 1 && (
+                  <div className="mb-2.5 flex items-center justify-between border border-[#D4AF37]/30 bg-[#080B16]/80 px-2.5 py-1.5 text-xs">
+                    <span className="font-heading text-[#F4D06F]">
+                      กำลังเขียนคำพรของดวงที่:
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {slots.map((s, idx) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => handleSelectSlot(idx)}
+                          className={`font-heading px-2 py-0.5 text-[11px] transition-colors ${
+                            idx === selectedIdx
+                              ? 'bg-[#D4AF37] font-semibold text-[#0B0E17]'
+                              : 'bg-[#141932] text-[#FFFDF7]/70 hover:text-[#FFF275]'
+                          }`}
+                        >
+                          {THAI_NUMERALS[idx]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="border border-[#D4AF37]/35 bg-[#080B16]/95 p-3.5">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <label className="font-heading text-xs font-medium text-[#F4D06F]">
+                      ถ้อยคำอธิษฐาน (
+                      {currentSlot.itemType === 'lantern' ? 'โคมลอย' : 'กระทง'})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleCyclePoem}
+                      className="font-heading flex items-center gap-1 border border-[#D4AF37]/40 bg-[#141932] px-2 py-0.5 text-[10px] text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/20"
+                    >
+                      <RefreshDouble width={11} height={11} />
+                      <span>สุ่มกลอนคำพร (๒๔ บท)</span>
+                    </button>
+                  </div>
+
+                  <input
+                    type="text"
+                    maxLength={70}
+                    value={currentSlot.wishText}
+                    onChange={(e) =>
+                      updateCurrentSlot('wishText', e.target.value)
+                    }
+                    placeholder="จารึกคำอธิษฐานหรือกดสุ่มบทกลอนด้านบน..."
+                    className="font-wish w-full border border-[#D4AF37]/45 bg-[#12172B] px-3 py-2 text-base text-[#FFFDF7] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
+                  />
+
+                  <div className="mt-3 flex items-center gap-2.5">
+                    <span className="font-heading shrink-0 text-xs text-[#F4D06F]/90">
+                      นามผู้ฝากคำพร:
+                    </span>
+                    <input
+                      type="text"
+                      maxLength={24}
+                      value={currentSlot.authorName}
+                      onChange={(e) =>
+                        updateCurrentSlot('authorName', e.target.value)
+                      }
+                      placeholder="เว้นว่างได้หากไม่ระบุชื่อ..."
+                      className="font-heading flex-1 border border-[#D4AF37]/35 bg-[#12172B] px-3 py-1.5 text-xs text-[#FFF275] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Hide Wish Privacy Toggle */}
+                  <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-[#D4AF37]/25 pt-2.5">
+                    <span className="font-heading text-[11px] text-[#FFFDF7]/75">
+                      {currentSlot.hideWish
+                        ? 'ซ่อนคำอธิษฐานไว้ในใจ (ไม่แสดงบนผิวน้ำ)'
+                        : 'แสดงคำพรชั่วครู่เมื่อลอยลงน้ำ'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateCurrentSlot(
+                          'hideWish',
+                          !(currentSlot.hideWish ?? false)
+                        )
+                      }
+                      className={`font-heading flex items-center gap-1.5 border px-2.5 py-1 text-[11px] transition-colors ${
+                        currentSlot.hideWish
+                          ? 'border-[#FFF275] bg-[#D4AF37]/25 font-semibold text-[#FFF275]'
+                          : 'border-[#D4AF37]/40 bg-[#12172B] text-[#FFFDF7]/80 hover:border-[#FFF275] hover:text-[#FFF275]'
+                      }`}
+                    >
+                      {currentSlot.hideWish ? (
+                        <>
+                          <EyeClosed width={13} height={13} strokeWidth={2} />
+                          <span>ซ่อนคำพรแล้ว</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye width={13} height={13} strokeWidth={2} />
+                          <span>ซ่อนคำพร</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <motion.button
+                type="button"
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                transition={SPRING_TRANSITION}
+                onClick={onStartInteract}
+                className="thai-chamfer-sm font-heading group mt-4 flex w-full items-center justify-between border border-[#FFF275]/60 bg-[#D4AF37] px-4 py-3 text-xs font-semibold tracking-wide text-[#0B0E17] shadow-[0_8px_24px_rgba(212,175,55,0.35)] transition-colors hover:bg-[#FFF275]"
+              >
+                <span className="flex items-center gap-2">
+                  <PeaceHand
+                    width={18}
+                    height={18}
+                    strokeWidth={2}
+                    className="text-[#0B0E17] transition-transform duration-300 group-hover:rotate-12"
+                  />
+                  <span>
+                    เยื้องย่างสู่ท่าน้ำ อัญเชิญเครื่องลอยทั้ง{' '}
+                    {THAI_NUMERALS[currentCount - 1]} ดวง
+                  </span>
+                </span>
+                <span className="font-display text-xs font-medium text-[#0B0E17]">
+                  เชิญลอย →
+                </span>
+              </motion.button>
+            </motion.div>
+          </motion.div>
+
+          {/* Golden Water-Line Shimmer Horizon where the folded book sinks into the river */}
+          <AnimatePresence>
+            {isBookSubmerged && (
+              <motion.div
+                initial={{ opacity: 0, scaleX: 0.4 }}
+                animate={{ opacity: 1, scaleX: 1 }}
+                exit={{ opacity: 0, scaleX: 0.5 }}
+                transition={{ duration: 0.55 }}
+                className="pointer-events-auto absolute inset-x-0 bottom-1 flex flex-col items-center justify-center"
+              >
+                {/* Glowing concentric water ripple rings on the river surface */}
+                <div className="relative flex items-center justify-center">
+                  <motion.div
+                    animate={{
+                      scaleX: [1, 1.35, 1],
+                      opacity: [0.65, 0.25, 0.65],
+                    }}
+                    transition={{
+                      duration: 2.8,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                    className="pointer-events-none absolute -bottom-2 h-6 w-80 rounded-full border border-[#FFF275]/55 bg-[#D4AF37]/15 blur-[1px]"
+                  />
+
+                  <div className="flex flex-wrap items-center justify-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsBookSubmerged(false)}
+                      className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#FFF275]/80 bg-[#0B0E17]/95 px-4 py-2.5 text-xs font-semibold text-[#FFF275] shadow-[0_0_26px_rgba(244,208,111,0.45)] backdrop-blur-md transition-all hover:bg-[#141932]"
+                    >
+                      <Sparks width={15} height={15} strokeWidth={2} />
+                      <span>
+                        ✦ อัญเชิญสมุดข่อยขึ้นจากสายน้ำ (กลับมาแต่งกระทง) ✦
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={onStartInteract}
+                      className="thai-chamfer-sm font-heading flex items-center gap-1.5 border border-[#FFF275]/70 bg-[#D4AF37] px-4 py-2.5 text-xs font-semibold text-[#0B0E17] shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-colors hover:bg-[#FFF275]"
+                    >
+                      <PeaceHand width={15} height={15} strokeWidth={2} />
+                      <span>เชิญลอยทันที →</span>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
             )}
-
-            <div className="border border-[#D4AF37]/35 bg-[#080B16]/95 p-3.5">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <label className="font-heading text-xs font-medium text-[#F4D06F]">
-                  ถ้อยคำอธิษฐาน ({currentSlot.itemType === 'lantern' ? 'โคมลอย' : 'กระทง'})
-                </label>
-                <button
-                  type="button"
-                  onClick={handleCyclePoem}
-                  className="font-heading flex items-center gap-1 border border-[#D4AF37]/40 bg-[#141932] px-2 py-0.5 text-[10px] text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/20"
-                >
-                  <RefreshDouble width={11} height={11} />
-                  <span>สุ่มกลอนคำพร (๒๔ บท)</span>
-                </button>
-              </div>
-
-              <input
-                type="text"
-                maxLength={70}
-                value={currentSlot.wishText}
-                onChange={(e) => updateCurrentSlot('wishText', e.target.value)}
-                placeholder="จารึกคำอธิษฐานหรือกดสุ่มบทกลอนด้านบน..."
-                className="font-wish w-full border border-[#D4AF37]/45 bg-[#12172B] px-3 py-2 text-base text-[#FFFDF7] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
-              />
-
-              <div className="mt-3 flex items-center gap-2.5">
-                <span className="font-heading shrink-0 text-xs text-[#F4D06F]/90">
-                  นามผู้ฝากคำพร:
-                </span>
-                <input
-                  type="text"
-                  maxLength={24}
-                  value={currentSlot.authorName}
-                  onChange={(e) =>
-                    updateCurrentSlot('authorName', e.target.value)
-                  }
-                  placeholder="เว้นว่างได้หากไม่ระบุชื่อ..."
-                  className="font-heading flex-1 border border-[#D4AF37]/35 bg-[#12172B] px-3 py-1.5 text-xs text-[#FFF275] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
-                />
-              </div>
-
-              {/* Hide Wish Privacy Toggle */}
-              <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-[#D4AF37]/25 pt-2.5">
-                <span className="font-heading text-[11px] text-[#FFFDF7]/75">
-                  {currentSlot.hideWish
-                    ? 'ซ่อนคำอธิษฐานไว้ในใจ (ไม่แสดงบนผิวน้ำ)'
-                    : 'แสดงคำพรชั่วครู่เมื่อลอยลงน้ำ'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateCurrentSlot(
-                      'hideWish',
-                      !(currentSlot.hideWish ?? false)
-                    )
-                  }
-                  className={`font-heading flex items-center gap-1.5 border px-2.5 py-1 text-[11px] transition-colors ${
-                    currentSlot.hideWish
-                      ? 'border-[#FFF275] bg-[#D4AF37]/25 font-semibold text-[#FFF275]'
-                      : 'border-[#D4AF37]/40 bg-[#12172B] text-[#FFFDF7]/80 hover:border-[#FFF275] hover:text-[#FFF275]'
-                  }`}
-                >
-                  {currentSlot.hideWish ? (
-                    <>
-                      <EyeClosed width={13} height={13} strokeWidth={2} />
-                      <span>ซ่อนคำพรแล้ว</span>
-                    </>
-                  ) : (
-                    <>
-                      <Eye width={13} height={13} strokeWidth={2} />
-                      <span>ซ่อนคำพร</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <motion.button
-            type="button"
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            transition={SPRING_TRANSITION}
-            onClick={onStartInteract}
-            className="thai-chamfer-sm font-heading group mt-4 flex w-full items-center justify-between border border-[#FFF275]/60 bg-[#D4AF37] px-4 py-3 text-xs font-semibold tracking-wide text-[#0B0E17] shadow-[0_8px_24px_rgba(212,175,55,0.35)] transition-colors hover:bg-[#FFF275]"
-          >
-            <span className="flex items-center gap-2">
-              <PeaceHand
-                width={18}
-                height={18}
-                strokeWidth={2}
-                className="text-[#0B0E17] transition-transform duration-300 group-hover:rotate-12"
-              />
-              <span>
-                เยื้องย่างสู่ท่าน้ำ — อัญเชิญเครื่องลอยทั้ง{' '}
-                {THAI_NUMERALS[currentCount - 1]} ดวง
-              </span>
-            </span>
-            <span className="font-display text-xs font-medium text-[#0B0E17]">
-              เชิญลอย →
-            </span>
-          </motion.button>
+          </AnimatePresence>
         </div>
-      </motion.div>
+      </div>
 
       {/* Compact Extended Color Picker Modal (All Color Pairs + Gradient Sliders + Eyedropper) */}
       <AnimatePresence>
