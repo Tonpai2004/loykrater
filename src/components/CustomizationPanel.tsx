@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { PeaceHand, Sparks, RefreshDouble } from 'iconoir-react';
+import { PeaceHand, Sparks, RefreshDouble, Eye, EyeClosed } from 'iconoir-react';
 import {
   BaseStyle,
   ColorOption,
@@ -197,6 +197,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
       baseStyle: targetSlot.baseStyle,
       wishText: targetSlot.wishText,
       authorName: targetSlot.authorName,
+      hideWish: targetSlot.hideWish ?? false,
     });
   };
 
@@ -218,6 +219,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
       baseStyle: active.baseStyle,
       wishText: active.wishText,
       authorName: active.authorName,
+      hideWish: active.hideWish ?? false,
     });
   };
 
@@ -559,6 +561,38 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 placeholder={`ระบุชื่อเจ้าของชิ้นที่ ${THAI_NUMERALS[selectedIdx]}...`}
                 className="font-heading flex-1 border border-[#D4AF37]/35 bg-[#12172B] px-3 py-1.5 text-xs text-[#FFF275] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
               />
+            </div>
+
+            {/* Hide Wish Privacy Toggle */}
+            <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-[#D4AF37]/25 pt-2.5">
+              <span className="font-heading text-[11px] text-[#FFFDF7]/75">
+                {currentSlot.hideWish
+                  ? 'ซ่อนคำอธิษฐานไว้ในใจ (ไม่แสดงบนผิวน้ำ)'
+                  : 'แสดงคำพรชั่วครู่เมื่อลอยลงน้ำ'}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  updateCurrentSlot('hideWish', !(currentSlot.hideWish ?? false))
+                }
+                className={`font-heading flex items-center gap-1.5 border px-2.5 py-1 text-[11px] transition-colors ${
+                  currentSlot.hideWish
+                    ? 'border-[#FFF275] bg-[#D4AF37]/25 font-semibold text-[#FFF275]'
+                    : 'border-[#D4AF37]/40 bg-[#12172B] text-[#FFFDF7]/80 hover:border-[#FFF275] hover:text-[#FFF275]'
+                }`}
+              >
+                {currentSlot.hideWish ? (
+                  <>
+                    <EyeClosed width={13} height={13} strokeWidth={2} />
+                    <span>ซ่อนคำพรแล้ว</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye width={13} height={13} strokeWidth={2} />
+                    <span>ซ่อนคำพร</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

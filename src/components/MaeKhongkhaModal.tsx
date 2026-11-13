@@ -188,9 +188,11 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
       : 'ผู้ฝากคำพร ณ ท่าน้ำพระนคร';
 
   const handleShare = async () => {
-    const firstWish =
-      slots[0]?.wishText ||
-      'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน';
+    const firstVisibleSlot = slots.find((s) => !s.hideWish);
+    const firstWish = firstVisibleSlot
+      ? firstVisibleSlot.wishText.trim() ||
+        'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน'
+      : 'อธิษฐานไว้ในใจใต้แสงจันทร์วันเพ็ญ';
     const shareText = `คืนเพ็ญเดือนสิบสอง ณ ท่าน้ำพระนคร "${namesDisplay}" ได้ฝากคำพรลอยกะเธอ (Loikratur): “${firstWish}” ขอเชิญมาร่วมลอยกระทงและปล่อยโคมทองด้วยกันเถิดหนา`;
     const shareUrl =
       typeof window !== 'undefined' ? window.location.href : '';
@@ -316,10 +318,18 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                         ):
                       </span>
                       <p className="font-wish text-sm text-[#FFFDF7]">
-                        “
-                        {slot.wishText.trim() ||
-                          'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน'}
-                        ”
+                        {slot.hideWish ? (
+                          <span className="text-[#FFF275]/80 italic">
+                            ✦ อธิษฐานไว้ในใจ (ซ่อนคำพรส่วนตัว) ✦
+                          </span>
+                        ) : (
+                          <>
+                            “
+                            {slot.wishText.trim() ||
+                              'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน'}
+                            ”
+                          </>
+                        )}
                       </p>
                     </div>
                   ))}

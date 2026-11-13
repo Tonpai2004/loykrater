@@ -5,7 +5,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CustomizationPanel } from '@/components/CustomizationPanel';
 import { HandTrackerHUD } from '@/components/HandTrackerHUD';
 import { MaeKhongkhaModal } from '@/components/MaeKhongkhaModal';
-import { buildStageItems, RiverCanvas } from '@/components/RiverCanvas';
+import {
+  buildStageItems,
+  FLOAT_LIFESPAN_MS,
+  RiverCanvas,
+} from '@/components/RiverCanvas';
 import { useHandTracking } from '@/hooks/useHandTracking';
 import {
   publishKrathong,
@@ -96,9 +100,26 @@ export default function LoiKrathongPage() {
 
   useEffect(() => {
     const unsubscribe = subscribeToGlobalRiver((items) => {
-      setFloatingKrathongs(items);
+      const now = Date.now();
+      setFloatingKrathongs(
+        items.filter((item) => now - item.createdAt < FLOAT_LIFESPAN_MS)
+      );
     });
     return () => unsubscribe();
+  }, []);
+
+  // Prune expired floating items after their 10-second lifespan so the counter stays accurate
+  useEffect(() => {
+    const pruneInterval = setInterval(() => {
+      const now = Date.now();
+      setFloatingKrathongs((prev) => {
+        const next = prev.filter(
+          (item) => now - item.createdAt < FLOAT_LIFESPAN_MS
+        );
+        return next.length === prev.length ? prev : next;
+      });
+    }, 1000);
+    return () => clearInterval(pruneInterval);
   }, []);
 
   const handleReleaseItem = useCallback(
@@ -107,6 +128,7 @@ export default function LoiKrathongPage() {
         ...item.config,
         authorName: item.ownerName,
         wishText: item.wishText,
+        hideWish: item.config.hideWish ?? false,
       };
 
       const published = await publishKrathong(

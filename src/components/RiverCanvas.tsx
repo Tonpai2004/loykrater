@@ -17,6 +17,7 @@ import {
   drawNightSkyAndMoon,
   drawProceduralKrathong,
   drawRiverSurface,
+  drawStageItemBeacon,
   drawTargetSpotlights,
   RIVER_DROP_ZONE_MIN_Y,
   RIVER_HORIZON_RATIO,
@@ -40,8 +41,10 @@ interface RiverCanvasProps {
   onAllItemsReleased: (totalCount: number) => void;
 }
 
-const GRAB_HIT_RADIUS_RATIO = 0.125;
-const FLOAT_CYCLE_DURATION_MS = 52000;
+const GRAB_HIT_RADIUS_RATIO = 0.135;
+export const FLOAT_LIFESPAN_MS = 10000;
+const WISH_TAG_VISIBLE_MS = 3200;
+const WISH_TAG_FADE_END_MS = 4500;
 const SPRING_STIFFNESS = 100;
 const SPRING_DAMPING = 15;
 
@@ -113,12 +116,14 @@ export function getActiveOfferings(config: KrathongConfig): OfferingSlotConfig[]
         baseStyle: config.baseStyle,
         wishText: config.wishText,
         authorName: config.authorName,
+        hideWish: config.hideWish ?? false,
       });
     } else {
       const preset = DEFAULT_SLOT_PRESETS[i % DEFAULT_SLOT_PRESETS.length];
       result.push({
         id: `slot-${i + 1}`,
         ...preset,
+        hideWish: false,
       });
     }
   }
@@ -155,6 +160,7 @@ export function buildStageItems(config: KrathongConfig): StageItem[] {
       baseStyle: slot.baseStyle,
       wishText,
       authorName: ownerName,
+      hideWish: slot.hideWish ?? false,
     };
 
     return {
@@ -169,7 +175,7 @@ export function buildStageItems(config: KrathongConfig): StageItem[] {
       targetY: yPos,
       vx: 0,
       vy: 0,
-      scale: total >= 4 ? 0.92 : 1.02,
+      scale: total >= 4 ? 0.98 : 1.12,
       released: false,
       grabbedByHandIndex: null,
       grabbedByPointerId: null,
@@ -452,7 +458,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
           }
         });
 
-        const baseScale = stageItems.length >= 4 ? 0.9 : 1.02;
+        const baseScale = stageItems.length >= 4 ? 0.98 : 1.12;
         stageItems.forEach((item) => {
           if (item.released) return;
           const ax =
@@ -468,20 +474,43 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
           const isGrabbed =
             item.grabbedByHandIndex !== null || item.grabbedByPointerId !== null;
-          const targetScale = isGrabbed ? baseScale + 0.14 : baseScale;
+          const targetScale = isGrabbed ? baseScale + 0.16 : baseScale;
           item.scale += (targetScale - item.scale) * Math.min(1, dt * 10);
         });
       }
 
       const now = Date.now();
-      const computedFloating = riverItems
+      const activeRiverItems = riverItems.filter((item) => {
+        const age = now - item.createdAt;
+        return age >= 0 && age < FLOAT_LIFESPAN_MS;
+      });
+
+      const computedFloating = activeRiverItems
         .map((item, idx) => {
-          const elapsed = Math.max(
-            0,
-            (now - item.createdAt) % FLOAT_CYCLE_DURATION_MS
-          );
-          const progress = elapsed / FLOAT_CYCLE_DURATION_MS;
+          const elapsed = Math.max(0, now - item.createdAt);
+          const progress = Math.min(1, elapsed / FLOAT_LIFESPAN_MS);
           const isLantern = item.itemType === 'lantern';
+
+          // Wish tag appears briefly (~3.2s) then fades out by 4.5s so the river stays clean
+          let wishTagOpacity = 0;
+          if (!item.config.hideWish && currentMode !== 'INTERACT') {
+            if (elapsed <= WISH_TAG_VISIBLE_MS) {
+              wishTagOpacity = 1;
+            } else if (elapsed < WISH_TAG_FADE_END_MS) {
+              wishTagOpacity =
+                1 -
+                (elapsed - WISH_TAG_VISIBLE_MS) /
+                  (WISH_TAG_FADE_END_MS - WISH_TAG_VISIBLE_MS);
+            }
+          }
+
+          // Smooth fade out of the Krathong/Lantern at the end of its 10s float
+          const lifeFadeOut = progress > 0.72 ? (1 - progress) / 0.28 : 1;
+          const interactDimFactor = currentMode === 'INTERACT' ? 0.34 : 1;
+          const finalOpacity = Math.max(
+            0,
+            Math.min(1, lifeFadeOut * interactDimFactor)
+          );
 
           if (isLantern) {
             const topLimitY = 0.04;
@@ -497,16 +526,16 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             );
             const perspectiveScale = Math.max(
               0.28,
-              0.96 * Math.pow(1 - progress * 0.72, 1.05)
+              0.94 * Math.pow(1 - progress * 0.68, 1.05)
             );
-            const fadeOut = progress > 0.88 ? (1 - progress) / 0.12 : 1;
 
             return {
               item,
               x: currentXRatio * width,
               y: currentYRatio * height,
               scale: perspectiveScale,
-              opacity: Math.max(0, Math.min(1, fadeOut)),
+              opacity: finalOpacity,
+              wishTagOpacity,
             };
           }
 
@@ -525,62 +554,66 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
           );
 
           const perspectiveScale = Math.max(
-            0.24,
-            1.02 * Math.pow(1 - progress * 0.78, 1.15)
+            0.26,
+            0.96 * Math.pow(1 - progress * 0.72, 1.1)
           );
-          const fadeOut = progress > 0.88 ? (1 - progress) / 0.12 : 1;
 
           return {
             item,
             x: currentXRatio * width,
             y: currentYRatio * height,
             scale: perspectiveScale,
-            opacity: Math.max(0, Math.min(1, fadeOut)),
+            opacity: finalOpacity,
+            wishTagOpacity,
           };
         })
         .sort((a, b) => a.y - b.y);
 
-      computedFloating.forEach(({ item, x, y, scale, opacity }) => {
-        if (item.itemType === 'lantern') {
-          drawInteractiveSkyLantern({
-            ctx,
-            x,
-            y,
-            scale,
-            config: item.config,
-            time,
-            showWishTag: true,
-            opacity,
-          });
-        } else {
-          drawProceduralKrathong({
-            ctx,
-            x,
-            y,
-            scale,
-            config: item.config,
-            time,
-            showWishTag: true,
-            opacity,
-          });
-        }
+      computedFloating.forEach(
+        ({ item, x, y, scale, opacity, wishTagOpacity }) => {
+          if (item.itemType === 'lantern') {
+            drawInteractiveSkyLantern({
+              ctx,
+              x,
+              y,
+              scale,
+              config: item.config,
+              time,
+              showWishTag: !item.config.hideWish && wishTagOpacity > 0.01,
+              wishTagOpacity,
+              opacity,
+            });
+          } else {
+            drawProceduralKrathong({
+              ctx,
+              x,
+              y,
+              scale,
+              config: item.config,
+              time,
+              showWishTag: !item.config.hideWish && wishTagOpacity > 0.01,
+              wishTagOpacity,
+              opacity,
+            });
+          }
 
-        if (sparksRef.current.length < 60 && Math.random() < 0.07 * scale) {
-          sparksRef.current.push({
-            x: x + (Math.random() - 0.5) * 10 * scale,
-            y: item.itemType === 'lantern' ? y + 28 * scale : y - 50 * scale,
-            vx: (Math.random() - 0.5) * 0.45,
-            vy:
-              item.itemType === 'lantern'
-                ? 0.5 + Math.random() * 0.6
-                : -0.65 - Math.random() * 1.0,
-            size: (1.4 + Math.random() * 1.5) * scale,
-            alpha: 0.85 * opacity,
-            decay: 0.02,
-            color: '#FFF275',
-          });
+          if (sparksRef.current.length < 60 && Math.random() < 0.07 * scale) {
+            sparksRef.current.push({
+              x: x + (Math.random() - 0.5) * 10 * scale,
+              y: item.itemType === 'lantern' ? y + 28 * scale : y - 50 * scale,
+              vx: (Math.random() - 0.5) * 0.45,
+              vy:
+                item.itemType === 'lantern'
+                  ? 0.5 + Math.random() * 0.6
+                  : -0.65 - Math.random() * 1.0,
+              size: (1.4 + Math.random() * 1.5) * scale,
+              alpha: 0.85 * opacity,
+              decay: 0.02,
+              color: '#FFF275',
+            });
+          }
         }
-      });
+      );
 
       // CUSTOMIZE mode live preview of all 1..5 offerings
       if (currentMode === 'CUSTOMIZE') {
@@ -615,6 +648,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             authorName:
               slot.authorName.trim() ||
               `ชิ้นที่ ${THAI_NUMERALS[idx] ?? idx + 1}`,
+            hideWish: slot.hideWish ?? false,
           };
 
           if (slot.itemType === 'lantern') {
@@ -626,7 +660,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               config: slotConfig,
               time,
               isHighlighted: isSelected,
-              showWishTag: isSelected || total <= 3,
+              showWishTag: (isSelected || total <= 3) && !slot.hideWish,
               opacity: isSelected ? 1 : 0.82,
             });
           } else {
@@ -638,7 +672,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               config: slotConfig,
               time,
               isHighlighted: isSelected,
-              showWishTag: isSelected || total <= 3,
+              showWishTag: (isSelected || total <= 3) && !slot.hideWish,
               opacity: isSelected ? 1 : 0.82,
             });
           }
@@ -656,6 +690,9 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
           const isGrabbed =
             item.grabbedByHandIndex !== null || item.grabbedByPointerId !== null;
 
+          // Bright unmistakable golden aura, spotlight pedestal, and callout badge
+          drawStageItemBeacon(ctx, ix, iy, item.scale, isGrabbed, time);
+
           if (item.itemType === 'lantern') {
             drawInteractiveSkyLantern({
               ctx,
@@ -664,8 +701,8 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               scale: item.scale,
               config: item.config,
               time,
-              isHighlighted: isGrabbed,
-              showWishTag: true,
+              isHighlighted: true,
+              showWishTag: !item.config.hideWish,
               ownerLabel: item.ownerName,
               wishOverride: item.wishText,
             });
@@ -677,8 +714,8 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               scale: item.scale,
               config: item.config,
               time,
-              isHighlighted: isGrabbed,
-              showWishTag: true,
+              isHighlighted: true,
+              showWishTag: !item.config.hideWish,
               ownerLabel: item.ownerName,
               wishOverride: item.wishText,
             });

@@ -114,7 +114,10 @@ export async function publishKrathong(
     itemType,
     config: {
       ...config,
-      wishText: config.wishText.trim() || 'ขอให้พบเจอแต่ความสุขความเจริญ',
+      hideWish: config.hideWish ?? false,
+      wishText: config.hideWish
+        ? ''
+        : config.wishText.trim() || 'ขอให้พบเจอแต่ความสุขความเจริญ',
       authorName: config.authorName.trim() || 'ผู้ร่วมลอยกะเธอ',
     },
     spawnXRatio: Math.max(0.08, Math.min(0.92, spawnXRatio)),
@@ -160,7 +163,7 @@ export function subscribeToGlobalRiver(
     let fallbackList: FloatingKrathong[] = INITIAL_COMMUNITY_KRATHONGS.map((item, idx) => ({
       ...item,
       id: `seed-${idx}`,
-      createdAt: now - (idx + 1) * 9000,
+      createdAt: now - idx * 1800,
     }));
 
     queueMicrotask(() => {

@@ -47,6 +47,7 @@ export interface RenderKrathongParams {
   time: number;
   isHighlighted?: boolean;
   showWishTag?: boolean;
+  wishTagOpacity?: number;
   opacity?: number;
   ownerLabel?: string;
   wishOverride?: string;
@@ -433,8 +434,13 @@ function drawWishSlipTag(
   ctx: CanvasRenderingContext2D,
   wishText: string,
   authorName: string,
-  slipY: number
+  slipY: number,
+  tagOpacity = 1
 ): void {
+  if (tagOpacity <= 0.02) return;
+  const prevAlpha = ctx.globalAlpha;
+  ctx.globalAlpha = prevAlpha * tagOpacity;
+
   const truncatedWish =
     wishText.length > 34 ? `${wishText.slice(0, 34)}...` : wishText;
   const authorLabel = authorName.trim() || 'ลอยกะเธอ • Loikratur';
@@ -486,6 +492,8 @@ function drawWishSlipTag(
   ctx.fillStyle = '#FFFDF7';
   ctx.font = '400 13.5px Charm, cursive, serif';
   ctx.fillText(`“${truncatedWish}”`, 0, slipY + 34);
+
+  ctx.globalAlpha = prevAlpha;
 }
 
 function drawCelShadedLantern(
@@ -759,6 +767,7 @@ export function drawProceduralKrathong({
   time,
   isHighlighted = false,
   showWishTag = true,
+  wishTagOpacity = 1,
   opacity = 1,
   ownerLabel,
   wishOverride,
@@ -834,8 +843,14 @@ export function drawProceduralKrathong({
   const effectiveWish = wishOverride ?? config.wishText;
   const effectiveAuthor = ownerLabel ?? config.authorName;
 
-  if (showWishTag && effectiveWish.trim().length > 0 && scale > 0.34) {
-    drawWishSlipTag(ctx, effectiveWish, effectiveAuthor, -114);
+  if (
+    showWishTag &&
+    !config.hideWish &&
+    wishTagOpacity > 0.02 &&
+    effectiveWish.trim().length > 0 &&
+    scale > 0.34
+  ) {
+    drawWishSlipTag(ctx, effectiveWish, effectiveAuthor, -114, wishTagOpacity);
   }
 
   ctx.restore();
@@ -850,6 +865,7 @@ export function drawInteractiveSkyLantern({
   time,
   isHighlighted = false,
   showWishTag = true,
+  wishTagOpacity = 1,
   opacity = 1,
   ownerLabel,
   wishOverride,
@@ -905,9 +921,87 @@ export function drawInteractiveSkyLantern({
   const effectiveWish = wishOverride ?? config.wishText;
   const effectiveAuthor = ownerLabel ?? config.authorName;
 
-  if (showWishTag && effectiveWish.trim().length > 0 && scale > 0.34) {
-    drawWishSlipTag(ctx, effectiveWish, effectiveAuthor, -104);
+  if (
+    showWishTag &&
+    !config.hideWish &&
+    wishTagOpacity > 0.02 &&
+    effectiveWish.trim().length > 0 &&
+    scale > 0.34
+  ) {
+    drawWishSlipTag(ctx, effectiveWish, effectiveAuthor, -104, wishTagOpacity);
   }
+
+  ctx.restore();
+}
+
+export function drawStageItemBeacon(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  isGrabbed: boolean,
+  time: number
+): void {
+  const pulse = 0.5 + 0.5 * Math.sin(time * 0.006);
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+
+  // 1. Bright outer golden spotlight aura so user's un-released item stands out vividly
+  ctx.fillStyle = isGrabbed
+    ? `rgba(255, 242, 117, ${0.32 + pulse * 0.14})`
+    : `rgba(244, 208, 111, ${0.22 + pulse * 0.1})`;
+  ctx.beginPath();
+  ctx.arc(0, -8, isGrabbed ? 84 : 74 + pulse * 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Luminous pedestal ring beneath the item
+  ctx.fillStyle = isGrabbed
+    ? 'rgba(255, 242, 117, 0.35)'
+    : 'rgba(244, 208, 111, 0.25)';
+  ctx.beginPath();
+  ctx.ellipse(0, 18, 68, 22, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = '#FFF275';
+  ctx.lineWidth = isGrabbed ? 2.8 : 2;
+  ctx.beginPath();
+  ctx.ellipse(0, 18, 66 + pulse * 5, 21 + pulse * 2, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // 3. Rotating star diamonds around the un-released item
+  for (let i = 0; i < 4; i++) {
+    const angle = (i / 4) * Math.PI * 2 + time * 0.0018;
+    const sx = Math.cos(angle) * 68;
+    const sy = Math.sin(angle) * 21 + 18;
+    ctx.fillStyle = '#FFF275';
+    ctx.beginPath();
+    ctx.moveTo(sx, sy - 4.5);
+    ctx.lineTo(sx + 4.5, sy);
+    ctx.lineTo(sx, sy + 4.5);
+    ctx.lineTo(sx - 4.5, sy);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // 4. High-contrast callout pill badge beneath the pedestal
+  const badgeW = 122;
+  const badgeH = 22;
+  const badgeY = 42;
+  ctx.fillStyle = isGrabbed ? '#FFF275' : '#D4AF37';
+  ctx.beginPath();
+  ctx.roundRect(-badgeW / 2, badgeY, badgeW, badgeH, 11);
+  ctx.fill();
+
+  ctx.fillStyle = '#0B0E17';
+  ctx.font = '600 11px "Bai Jamjuree", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(
+    isGrabbed ? '✦ กำลังประคองไปลอย ✦' : '✦ หยิบชิ้นนี้ไปลอย ✦',
+    0,
+    badgeY + 15
+  );
 
   ctx.restore();
 }

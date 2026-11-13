@@ -17,6 +17,7 @@ export interface OfferingSlotConfig {
   baseStyle: BaseStyle;
   wishText: string;
   authorName: string;
+  hideWish?: boolean;
 }
 
 export interface KrathongConfig {
@@ -26,6 +27,7 @@ export interface KrathongConfig {
   baseStyle: BaseStyle;
   wishText: string;
   authorName: string;
+  hideWish?: boolean;
   offeringCount?: OfferingCount;
   selectedSlotIndex?: number;
   offerings?: OfferingSlotConfig[];
