@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import { AudioVolumeController } from '@/components/AudioVolumeController';
 import { CustomizationPanel } from '@/components/CustomizationPanel';
 import { HandTrackerHUD } from '@/components/HandTrackerHUD';
 import { MaeKhongkhaModal } from '@/components/MaeKhongkhaModal';
@@ -179,7 +180,11 @@ export default function LoiKrathongPage() {
         onAllItemsReleased={handleAllItemsReleased}
       />
 
-      <div className="pointer-events-none relative z-10 flex h-full w-full flex-col justify-end p-4 sm:p-6">
+      <div className="pointer-events-none relative z-10 flex h-full w-full flex-col justify-between p-4 sm:p-6">
+        <header className="flex w-full justify-end">
+          <AudioVolumeController />
+        </header>
+
         <section className="flex flex-col justify-end gap-4">
           <AnimatePresence mode="wait">
             {gameState === 'CUSTOMIZE' && (
