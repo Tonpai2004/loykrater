@@ -2,15 +2,22 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { AudioVolumeController } from '@/components/AudioVolumeController';
 import { CustomizationPanel } from '@/components/CustomizationPanel';
 import { HandTrackerHUD } from '@/components/HandTrackerHUD';
-import { MaeKhongkhaModal } from '@/components/MaeKhongkhaModal';
+import { HomeLandingOverlay } from '@/components/home/HomeLandingOverlay';
+import { MaeKhongkhaModal } from '@/components/modals/MaeKhongkhaModal';
+import { HowToPlayModal } from '@/components/modals/HowToPlayModal';
+import { LoyKrathongLoreModal } from '@/components/modals/LoyKrathongLoreModal';
+import { TopBarControls } from '@/components/navigation/TopBarControls';
 import {
   buildStageItems,
-  FLOAT_LIFESPAN_MS,
   RiverCanvas,
 } from '@/components/RiverCanvas';
+import {
+  BLESSING_MODAL_DELAY_MS,
+  DEFAULT_KRATHONG_CONFIG,
+  FLOAT_LIFESPAN_MS,
+} from '@/constants/krathongDefaults';
 import { useHandTracking } from '@/hooks/useHandTracking';
 import {
   publishKrathong,
@@ -27,21 +34,8 @@ import {
   StageItem,
 } from '@/types/krathong';
 
-const DEFAULT_KRATHONG_CONFIG: KrathongConfig = {
-  baseColor: '#2D6A4F',
-  flowerColor: '#FF99C8',
-  candleColor: '#F4D06F',
-  baseStyle: 'classic-lotus',
-  wishText: 'ลอยทุกข์โศกโรคภัย ให้ไหลลับกับสายชล',
-  authorName: '',
-  offeringCount: 1,
-  selectedSlotIndex: 0,
-};
-
-const BLESSING_MODAL_DELAY_MS = 7800;
-
 export default function LoiKrathongPage() {
-  const [gameState, setGameState] = useState<GameState>('CUSTOMIZE');
+  const [gameState, setGameState] = useState<GameState>('HOME');
   const [krathongConfig, setKrathongConfig] = useState<KrathongConfig>(
     DEFAULT_KRATHONG_CONFIG
   );
@@ -50,6 +44,9 @@ export default function LoiKrathongPage() {
   const [releasedCount, setReleasedCount] = useState<number>(0);
   const [totalRoundCount, setTotalRoundCount] = useState<number>(1);
   const [isBlessingModalOpen, setIsBlessingModalOpen] = useState<boolean>(false);
+  const [isHowToPlayOpen, setIsHowToPlayOpen] = useState<boolean>(false);
+  const [isLoreModalOpen, setIsLoreModalOpen] = useState<boolean>(false);
+
   const blessingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gameStateRef = useRef<GameState>(gameState);
 
@@ -191,6 +188,14 @@ export default function LoiKrathongPage() {
     setGameState('CUSTOMIZE');
   }, []);
 
+  const handleGoHome = useCallback(() => {
+    if (blessingTimerRef.current) {
+      clearTimeout(blessingTimerRef.current);
+    }
+    setIsBlessingModalOpen(false);
+    setGameState('HOME');
+  }, []);
+
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-[#0D1321] select-none">
       <RiverCanvas
@@ -204,41 +209,68 @@ export default function LoiKrathongPage() {
       />
 
       <div className="pointer-events-none relative z-10 flex h-full w-full flex-col justify-between p-4 sm:p-6">
-        <header className="flex w-full justify-end">
-          <AudioVolumeController />
-        </header>
+        <TopBarControls
+          gameState={gameState}
+          onGoHome={handleGoHome}
+          onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
+        />
 
-        <section className="flex flex-col justify-end gap-4">
-          <AnimatePresence mode="wait">
-            {gameState === 'CUSTOMIZE' && (
-              <CustomizationPanel
-                key="customize-panel"
-                config={krathongConfig}
-                onChange={setKrathongConfig}
-                onStartInteract={() => {
-                  setIsBlessingModalOpen(false);
-                  setGameState('INTERACT');
-                }}
-              />
-            )}
-          </AnimatePresence>
+        <AnimatePresence mode="wait">
+          {gameState === 'HOME' && (
+            <HomeLandingOverlay
+              key="home-landing"
+              onEnterPier={() => setGameState('CUSTOMIZE')}
+              onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
+              onOpenLore={() => setIsLoreModalOpen(true)}
+            />
+          )}
+        </AnimatePresence>
 
-          <HandTrackerHUD
-            gameState={gameState}
-            videoRef={videoRef}
-            gestureState={gestureState}
-            cameraEnabled={cameraEnabled}
-            releasedCount={releasedCount}
-            totalCount={totalRoundCount}
-            onToggleCamera={() => setCameraEnabled((prev) => !prev)}
-            onRetryCamera={retryCamera}
-            onBackToCustomize={() => setGameState('CUSTOMIZE')}
-            onQuickLaunch={handleQuickLaunch}
-            onCreateAnother={handlePlayAgain}
-            onOpenBlessingModal={() => setIsBlessingModalOpen(true)}
-          />
-        </section>
+        {gameState !== 'HOME' && (
+          <section className="flex flex-col justify-end gap-4">
+            <AnimatePresence mode="wait">
+              {gameState === 'CUSTOMIZE' && (
+                <CustomizationPanel
+                  key="customize-panel"
+                  config={krathongConfig}
+                  onChange={setKrathongConfig}
+                  onStartInteract={() => {
+                    setIsBlessingModalOpen(false);
+                    setGameState('INTERACT');
+                  }}
+                />
+              )}
+            </AnimatePresence>
+
+            <HandTrackerHUD
+              gameState={gameState}
+              videoRef={videoRef}
+              gestureState={gestureState}
+              cameraEnabled={cameraEnabled}
+              releasedCount={releasedCount}
+              totalCount={totalRoundCount}
+              onToggleCamera={() => setCameraEnabled((prev) => !prev)}
+              onRetryCamera={retryCamera}
+              onBackToCustomize={() => setGameState('CUSTOMIZE')}
+              onQuickLaunch={handleQuickLaunch}
+              onCreateAnother={handlePlayAgain}
+              onOpenBlessingModal={() => setIsBlessingModalOpen(true)}
+            />
+          </section>
+        )}
       </div>
+
+      {/* Samut Khoi Modals & Blessing Modal */}
+      <HowToPlayModal
+        isOpen={isHowToPlayOpen}
+        onClose={() => setIsHowToPlayOpen(false)}
+        onEnterPier={() => setGameState('CUSTOMIZE')}
+      />
+
+      <LoyKrathongLoreModal
+        isOpen={isLoreModalOpen}
+        onClose={() => setIsLoreModalOpen(false)}
+      />
 
       <MaeKhongkhaModal
         isOpen={isBlessingModalOpen}

@@ -27,6 +27,15 @@ import {
   SparkParticle,
 } from '@/lib/canvasRenderer';
 
+import {
+  AMBIENT_CYCLE_MS,
+  DEFAULT_SLOT_PRESETS,
+  FLOAT_LIFESPAN_MS,
+  THAI_NUMERALS,
+} from '@/constants/krathongDefaults';
+
+export { FLOAT_LIFESPAN_MS, THAI_NUMERALS };
+
 interface RiverCanvasProps {
   gameState: GameState;
   activeConfig: KrathongConfig;
@@ -42,8 +51,6 @@ interface RiverCanvasProps {
 }
 
 const GRAB_HIT_RADIUS_RATIO = 0.135;
-export const FLOAT_LIFESPAN_MS = 24000;
-const AMBIENT_CYCLE_MS = 38000;
 const WISH_TAG_VISIBLE_MS = 5500;
 const WISH_TAG_FADE_END_MS = 7500;
 const SPRING_STIFFNESS = 100;
@@ -56,56 +63,6 @@ function getStableItemSeed(id: string): number {
   }
   return Math.abs(hash);
 }
-
-const DEFAULT_SLOT_PRESETS: Omit<OfferingSlotConfig, 'id'>[] = [
-  {
-    itemType: 'krathong',
-    baseColor: '#2D6A4F',
-    flowerColor: '#FF99C8',
-    candleColor: '#F4D06F',
-    baseStyle: 'classic-lotus',
-    wishText: 'ลอยทุกข์โศกโรคภัย ให้ไหลลับกับสายชล',
-    authorName: '',
-  },
-  {
-    itemType: 'lantern',
-    baseColor: '#40916C',
-    flowerColor: '#F4D06F',
-    candleColor: '#FF8C42',
-    baseStyle: 'layered-star',
-    wishText: 'โคมทองลอยขึ้นฟ้า ปรารถนาสิ่งใดสมหวัง',
-    authorName: '',
-  },
-  {
-    itemType: 'krathong',
-    baseColor: '#52B788',
-    flowerColor: '#FFF275',
-    candleColor: '#F4D06F',
-    baseStyle: 'royal-pleat',
-    wishText: 'คืนเพ็ญเดือนสิบสอง ขอชีวามีสุขศรี',
-    authorName: '',
-  },
-  {
-    itemType: 'krathong',
-    baseColor: '#B5838D',
-    flowerColor: '#E0AAFF',
-    candleColor: '#FFF275',
-    baseStyle: 'classic-lotus',
-    wishText: 'จันทร์กระจ่างกลางนภา ขอชีวาไร้โรคา',
-    authorName: '',
-  },
-  {
-    itemType: 'lantern',
-    baseColor: '#2D6A4F',
-    flowerColor: '#FF8C42',
-    candleColor: '#F4D06F',
-    baseStyle: 'royal-pleat',
-    wishText: 'ประทีปทองส่องนำทาง ให้สว่างทั้งกายใจ',
-    authorName: '',
-  },
-];
-
-export const THAI_NUMERALS = ['๑', '๒', '๓', '๔', '๕'];
 
 export function getActiveOfferings(config: KrathongConfig): OfferingSlotConfig[] {
   const count: OfferingCount = config.offeringCount ?? 1;

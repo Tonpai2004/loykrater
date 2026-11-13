@@ -1,4 +1,4 @@
-export type GameState = 'CUSTOMIZE' | 'INTERACT' | 'FLOATING';
+export type GameState = 'HOME' | 'CUSTOMIZE' | 'INTERACT' | 'FLOATING';
 
 export type BaseStyle = 'classic-lotus' | 'layered-star' | 'royal-pleat';
 
