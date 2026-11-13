@@ -244,7 +244,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
 
               <div className="w-full border-t border-[#D4AF37]/25 pt-3">
                 <p className="font-display text-sm text-[#F4D06F]">
-                  พระแม่คงคาเทวี • ศาลท่าน้ำพระนคร
+                  พระแม่คงคาเทวี ลุ่มน้ำเจ้าพระยา
                 </p>
                 <p className="font-wish mt-1 text-xs text-[#FFFDF7]/80">
                   “อันความทุกข์โศกเศร้าให้ไหลลับ ไปพร้อมกับสายชลคนทั้งหลาย”
@@ -400,7 +400,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                       />
                       <div>
                         <p className="font-heading text-xs font-semibold">
-                          ขึ้นทะเบียนคำชมในสมุดศาลาท่าน้ำ ({rating}/5 ดาว) เรียบร้อยแล้ว
+                          ขึ้นทะเบียนคำชมในสมุดศาลาท่าพระนคร ({rating}/5 ดาว) เรียบร้อยแล้ว
                         </p>
                         {reviewText.trim() && (
                           <p className="font-wish mt-0.5 text-sm text-[#FFFDF7]">

@@ -442,8 +442,9 @@ function drawWishSlipTag(
   ctx.globalAlpha = prevAlpha * tagOpacity;
 
   const truncatedWish =
-    wishText.length > 34 ? `${wishText.slice(0, 34)}...` : wishText;
-  const authorLabel = authorName.trim() || 'ลอยกะเธอ • Loikratur';
+    wishText.length > 46 ? `${wishText.slice(0, 46)}...` : wishText;
+  const authorLabel = authorName.trim();
+  const hasAuthor = authorLabel.length > 0;
 
   let textWidth = wishWidthCache.get(truncatedWish);
   if (textWidth === undefined) {
@@ -452,10 +453,10 @@ function drawWishSlipTag(
     wishWidthCache.set(truncatedWish, textWidth);
   }
 
-  const slipW = textWidth + 38;
-  const slipH = 44;
+  const slipW = textWidth + 36;
+  const slipH = hasAuthor ? 44 : 30;
   const halfW = slipW / 2;
-  const cut = 7;
+  const cut = 6;
 
   // Royal Indigo & Gold-Leaf slip with Thai chamfered corners
   ctx.fillStyle = 'rgba(16, 20, 42, 0.92)';
@@ -484,14 +485,20 @@ function drawWishSlipTag(
   ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = '#F4D06F';
-  ctx.font = '600 10.5px "Bai Jamjuree", sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(authorLabel, 0, slipY + 16);
+  if (hasAuthor) {
+    ctx.fillStyle = '#F4D06F';
+    ctx.font = '600 10.5px "Bai Jamjuree", sans-serif';
+    ctx.fillText(authorLabel, 0, slipY + 16);
 
-  ctx.fillStyle = '#FFFDF7';
-  ctx.font = '400 13.5px Charm, cursive, serif';
-  ctx.fillText(`“${truncatedWish}”`, 0, slipY + 34);
+    ctx.fillStyle = '#FFFDF7';
+    ctx.font = '400 13.5px Charm, cursive, serif';
+    ctx.fillText(`“${truncatedWish}”`, 0, slipY + 34);
+  } else {
+    ctx.fillStyle = '#FFFDF7';
+    ctx.font = '400 13.5px Charm, cursive, serif';
+    ctx.fillText(`“${truncatedWish}”`, 0, slipY + 20);
+  }
 
   ctx.globalAlpha = prevAlpha;
 }

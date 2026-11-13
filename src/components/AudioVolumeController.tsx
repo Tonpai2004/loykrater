@@ -5,20 +5,62 @@ import { motion } from 'framer-motion';
 import { SoundHigh, SoundLow, SoundOff } from 'iconoir-react';
 
 const AUDIO_SRC = '/audio/loy-krathong.mp3';
+const STORAGE_KEY = 'loikratur_audio_prefs_v1';
 const DEFAULT_VOLUME = 0.45;
+
+interface StoredAudioPrefs {
+  isMuted: boolean;
+  volume: number;
+}
+
+function loadAudioPrefs(): StoredAudioPrefs {
+  if (typeof window === 'undefined') {
+    return { isMuted: true, volume: DEFAULT_VOLUME };
+  }
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      // Default to OFF (muted) when visiting for the first time
+      return { isMuted: true, volume: DEFAULT_VOLUME };
+    }
+    const parsed = JSON.parse(raw) as Partial<StoredAudioPrefs>;
+    const volume =
+      typeof parsed.volume === 'number' && !Number.isNaN(parsed.volume)
+        ? Math.max(0, Math.min(1, parsed.volume))
+        : DEFAULT_VOLUME;
+    const isMuted =
+      typeof parsed.isMuted === 'boolean' ? parsed.isMuted : true;
+    return { isMuted, volume };
+  } catch {
+    return { isMuted: true, volume: DEFAULT_VOLUME };
+  }
+}
+
+function saveAudioPrefs(prefs: StoredAudioPrefs) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  } catch {
+    // Ignore storage quota errors
+  }
+}
 
 export const AudioVolumeController: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [volume, setVolume] = useState<number>(DEFAULT_VOLUME);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [volume, setVolume] = useState<number>(() => loadAudioPrefs().volume);
+  const [isMuted, setIsMuted] = useState<boolean>(() => loadAudioPrefs().isMuted);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const userMutedRef = useRef<boolean>(false);
+  const userMutedRef = useRef<boolean>(isMuted);
 
   useEffect(() => {
+    const initialPrefs = loadAudioPrefs();
+    userMutedRef.current = initialPrefs.isMuted;
+
     const audio = new Audio(AUDIO_SRC);
     audio.loop = true;
     audio.preload = 'auto';
-    audio.volume = DEFAULT_VOLUME;
+    audio.volume = initialPrefs.volume;
+    audio.muted = initialPrefs.isMuted;
     audioRef.current = audio;
 
     const handlePlay = () => setIsPlaying(true);
@@ -27,10 +69,12 @@ export const AudioVolumeController: React.FC = () => {
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
 
-    // Attempt autoplay on mount
-    audio.play().catch(() => {
-      // Browser blocked unmuted autoplay; will start on first user interaction
-    });
+    // Only attempt to play if user's last saved preference was unmuted
+    if (!initialPrefs.isMuted && initialPrefs.volume > 0.005) {
+      audio.play().catch(() => {
+        // Will unlock on first user interaction if browser blocked autoplay
+      });
+    }
 
     const unlockAudioOnFirstGesture = () => {
       if (!audioRef.current || userMutedRef.current) return;
@@ -62,11 +106,13 @@ export const AudioVolumeController: React.FC = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (isMuted || audio.paused || volume === 0) {
-      const restoredVol = volume === 0 ? DEFAULT_VOLUME : volume;
+    if (isMuted || audio.paused || volume <= 0.005) {
+      const restoredVol = volume <= 0.005 ? DEFAULT_VOLUME : volume;
       userMutedRef.current = false;
       setIsMuted(false);
       setVolume(restoredVol);
+      saveAudioPrefs({ isMuted: false, volume: restoredVol });
+
       audio.muted = false;
       audio.volume = restoredVol;
       audio.play().catch(() => {
@@ -75,7 +121,10 @@ export const AudioVolumeController: React.FC = () => {
     } else {
       userMutedRef.current = true;
       setIsMuted(true);
+      saveAudioPrefs({ isMuted: true, volume });
+
       audio.muted = true;
+      audio.pause();
     }
   }, [isMuted, volume]);
 
@@ -91,10 +140,13 @@ export const AudioVolumeController: React.FC = () => {
       if (nextVol <= 0.005) {
         userMutedRef.current = true;
         setIsMuted(true);
+        saveAudioPrefs({ isMuted: true, volume: 0 });
         audio.muted = true;
+        audio.pause();
       } else {
         userMutedRef.current = false;
         setIsMuted(false);
+        saveAudioPrefs({ isMuted: false, volume: nextVol });
         audio.muted = false;
         if (audio.paused) {
           audio.play().catch(() => {
@@ -107,7 +159,7 @@ export const AudioVolumeController: React.FC = () => {
   );
 
   const effectiveMuted = isMuted || volume <= 0.005 || !isPlaying;
-  const volumePercent = effectiveMuted ? 0 : Math.round(volume * 100);
+  const volumePercent = isMuted ? 0 : Math.round(volume * 100);
 
   return (
     <motion.div
@@ -126,15 +178,15 @@ export const AudioVolumeController: React.FC = () => {
       <button
         type="button"
         onClick={handleToggleMute}
-        title={effectiveMuted ? 'เปิดเสียงเพลงบรรเลง' : 'ปิดเสียงเพลงบรรเลง'}
-        aria-label={effectiveMuted ? 'เปิดเสียงเพลงบรรเลง' : 'ปิดเสียงเพลงบรรเลง'}
+        title={isMuted ? 'เปิดเสียงเพลงบรรเลง' : 'ปิดเสียงเพลงบรรเลง'}
+        aria-label={isMuted ? 'เปิดเสียงเพลงบรรเลง' : 'ปิดเสียงเพลงบรรเลง'}
         className={`flex h-9 w-9 shrink-0 items-center justify-center border transition-all ${
-          effectiveMuted
+          isMuted
             ? 'border-[#D4AF37]/35 bg-[#12172B] text-[#FFFDF7]/60 hover:border-[#FFF275] hover:text-[#FFF275]'
             : 'border-[#FFF275]/70 bg-[#D4AF37] text-[#0B0E17] shadow-[0_0_16px_rgba(244,208,111,0.35)] hover:bg-[#FFF275]'
         }`}
       >
-        {effectiveMuted ? (
+        {isMuted ? (
           <SoundOff width={18} height={18} strokeWidth={2} />
         ) : volume < 0.45 ? (
           <SoundLow width={18} height={18} strokeWidth={2} />
@@ -175,7 +227,7 @@ export const AudioVolumeController: React.FC = () => {
             </span>
 
             <span className="font-heading text-[11px] font-medium tracking-wide text-[#F4D06F]">
-              {effectiveMuted ? 'งดเสียงมโหรี' : 'มโหรีคืนเพ็ญ'}
+              {isMuted ? 'ปิดเสียงบรรเลง' : 'มโหรีคืนเพ็ญ'}
             </span>
           </div>
 
@@ -191,7 +243,7 @@ export const AudioVolumeController: React.FC = () => {
             min={0}
             max={1}
             step={0.01}
-            value={effectiveMuted ? 0 : volume}
+            value={isMuted ? 0 : volume}
             onChange={handleVolumeChange}
             aria-label="ระดับเสียงเพลงวันเพ็ญ"
             style={{

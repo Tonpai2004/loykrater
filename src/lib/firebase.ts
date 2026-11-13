@@ -37,7 +37,7 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
       candleColor: '#F4D06F',
       baseStyle: 'classic-lotus',
       wishText: 'จันทร์กระจ่างกลางนภา ณ ท่าน้ำ ขอความงามความสุขจงอยู่คู่ใจ',
-      authorName: 'แม่หญิงจันทร์วาด',
+      authorName: 'น้องแก้ว',
     },
   },
   {
@@ -50,7 +50,7 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
       candleColor: '#FF8C42',
       baseStyle: 'royal-pleat',
       wishText: 'ฝากทุกข์โศกลอยลับไปกับสายชล ให้แย้มยลแต่สิ่งดีตลอดปี',
-      authorName: 'คุณชายพุฒิภัทร',
+      authorName: 'ม.ร.ว.พุฒิภัทร จุฑาเทพ',
     },
   },
   {
@@ -63,7 +63,7 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
       candleColor: '#F4D06F',
       baseStyle: 'layered-star',
       wishText: 'โคมทองลอยลิ่วล่องสู่ฟากฟ้า ขอสัญญาเคียงคู่เธอไม่เสื่อมคลาย',
-      authorName: 'โกศล & พิกุลแก้ว',
+      authorName: 'พระอรรถคดีวิชัย & อนงค์',
     },
   },
   {
@@ -76,7 +76,7 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
       candleColor: '#F4D06F',
       baseStyle: 'layered-star',
       wishText: 'สิบห้าค่ำเดือนสิบสองน้ำนองตลิ่ง ขอพักพิงพบกัลยาณมิตรไมตรี',
-      authorName: 'บุหลัน พระนคร',
+      authorName: 'นางบุหลัน',
     },
   },
   {
@@ -89,7 +89,7 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
       candleColor: '#FFF275',
       baseStyle: 'classic-lotus',
       wishText: 'สายน้ำไหลพัดพาความเศร้าหมอง ให้เรืองรองดั่งทองทาบนภาลัย',
-      authorName: 'แม่หญิงเรไร',
+      authorName: 'นายทองก้อน',
     },
   },
   {
@@ -102,7 +102,7 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
       candleColor: '#FFF275',
       baseStyle: 'royal-pleat',
       wishText: 'ลอยประทีปทองส่องทางสว่างไสว คิดสิ่งใดสมถวิลสิ้นหมองศรี',
-      authorName: 'ขุนหลวงภักดี',
+      authorName: 'หลวงประดิษฐ์ฯ',
     },
   },
 ];

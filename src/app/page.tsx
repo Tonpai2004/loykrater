@@ -33,7 +33,7 @@ const DEFAULT_KRATHONG_CONFIG: KrathongConfig = {
   flowerColor: '#FF99C8',
   candleColor: '#F4D06F',
   baseStyle: 'classic-lotus',
-  wishText: 'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน',
+  wishText: 'ลอยทุกข์โศกโรคภัย ให้ไหลลับกับสายชล',
   authorName: '',
   offeringCount: 1,
   selectedSlotIndex: 0,

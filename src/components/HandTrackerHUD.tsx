@@ -160,7 +160,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
             className="thai-chamfer-sm font-heading flex items-center gap-1.5 border border-[#D4AF37]/40 bg-[#0B0E17]/90 px-4 py-2.5 text-xs font-medium text-[#FFFDF7] transition-colors hover:border-[#D4AF37]"
           >
             <Undo width={15} height={15} className="text-[#D4AF37]" />
-            <span>หวนคืนโรงพับใบตอง</span>
+            <span>หวนคืนลานลอยประทีป</span>
           </button>
 
           <button

@@ -55,7 +55,7 @@ const DEFAULT_SLOT_PRESETS: Omit<OfferingSlotConfig, 'id'>[] = [
     flowerColor: '#FF99C8',
     candleColor: '#F4D06F',
     baseStyle: 'classic-lotus',
-    wishText: 'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน',
+    wishText: 'ลอยทุกข์โศกโรคภัย ให้ไหลลับกับสายชล',
     authorName: '',
   },
   {
@@ -64,7 +64,7 @@ const DEFAULT_SLOT_PRESETS: Omit<OfferingSlotConfig, 'id'>[] = [
     flowerColor: '#F4D06F',
     candleColor: '#FF8C42',
     baseStyle: 'layered-star',
-    wishText: 'โคมทองลอยลิ่วล่องสู่ฟากฟ้า ปรารถนาสิ่งใดได้สมหมาย',
+    wishText: 'โคมทองลอยขึ้นฟ้า ปรารถนาสิ่งใดสมหวัง',
     authorName: '',
   },
   {
@@ -73,7 +73,7 @@ const DEFAULT_SLOT_PRESETS: Omit<OfferingSlotConfig, 'id'>[] = [
     flowerColor: '#FFF275',
     candleColor: '#F4D06F',
     baseStyle: 'royal-pleat',
-    wishText: 'สิบห้าค่ำเดือนสิบสองน้ำนองตลิ่ง ขอพรพริ้งสมหวังดั่งใจหมาย',
+    wishText: 'คืนเพ็ญเดือนสิบสอง ขอชีวามีสุขศรี',
     authorName: '',
   },
   {
@@ -82,7 +82,7 @@ const DEFAULT_SLOT_PRESETS: Omit<OfferingSlotConfig, 'id'>[] = [
     flowerColor: '#E0AAFF',
     candleColor: '#FFF275',
     baseStyle: 'classic-lotus',
-    wishText: 'จันทร์เพ็ญส่องต้องผิวน้ำงามจับตา ขอชีวาร่มเย็นเป็นสุขศรี',
+    wishText: 'จันทร์กระจ่างกลางนภา ขอชีวาไร้โรคา',
     authorName: '',
   },
   {
@@ -91,7 +91,7 @@ const DEFAULT_SLOT_PRESETS: Omit<OfferingSlotConfig, 'id'>[] = [
     flowerColor: '#FF8C42',
     candleColor: '#F4D06F',
     baseStyle: 'royal-pleat',
-    wishText: 'ลอยประทีปทองส่องทางสว่างไสว คิดสิ่งใดสมถวิลสิ้นหมองศรี',
+    wishText: 'ประทีปทองส่องนำทาง ให้สว่างทั้งกายใจ',
     authorName: '',
   },
 ];
@@ -146,11 +146,9 @@ export function buildStageItems(config: KrathongConfig): StageItem[] {
   return slots.map((slot, idx) => {
     const xPos = getHorizontalRatio(idx, total);
     const yPos = slot.itemType === 'lantern' ? 0.41 : 0.49;
-    const ownerName =
-      slot.authorName.trim() || `เครื่องลอยที่ ${THAI_NUMERALS[idx] ?? idx + 1}`;
+    const ownerName = slot.authorName.trim();
     const wishText =
-      slot.wishText.trim() ||
-      'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน';
+      slot.wishText.trim() || 'ลอยทุกข์โศกโรคภัย ให้ไหลลับกับสายชล';
 
     const itemConfig: KrathongConfig = {
       ...config,
@@ -646,9 +644,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             candleColor: slot.candleColor,
             baseStyle: slot.baseStyle,
             wishText: slot.wishText,
-            authorName:
-              slot.authorName.trim() ||
-              `ชิ้นที่ ${THAI_NUMERALS[idx] ?? idx + 1}`,
+            authorName: slot.authorName.trim(),
             hideWish: slot.hideWish ?? false,
           };
 
