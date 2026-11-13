@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { CustomizationPanel } from '@/components/CustomizationPanel';
 import { HandTrackerHUD } from '@/components/HandTrackerHUD';
@@ -11,6 +11,7 @@ import { LoyKrathongLoreModal } from '@/components/modals/LoyKrathongLoreModal';
 import { TopBarControls } from '@/components/navigation/TopBarControls';
 import {
   buildStageItems,
+  getActiveOfferings,
   RiverCanvas,
 } from '@/components/RiverCanvas';
 import {
@@ -18,14 +19,16 @@ import {
   DEFAULT_KRATHONG_CONFIG,
   FLOAT_LIFESPAN_MS,
 } from '@/constants/krathongDefaults';
+import { localizeWish } from '@/constants/translations';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useHandTracking } from '@/hooks/useHandTracking';
 import {
   publishKrathong,
   subscribeToGlobalRiver,
 } from '@/lib/firebase';
 import {
-  RIVER_SPOT_TARGETS,
-  SKY_LANTERN_TARGETS,
+  getRiverSpotTargets,
+  getSkyLanternTargets,
 } from '@/lib/canvasRenderer';
 import {
   FloatingKrathong,
@@ -46,6 +49,21 @@ export default function LoiKrathongPage() {
   const [isBlessingModalOpen, setIsBlessingModalOpen] = useState<boolean>(false);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState<boolean>(false);
   const [isLoreModalOpen, setIsLoreModalOpen] = useState<boolean>(false);
+  const [isPracticeActive, setIsPracticeActive] = useState<boolean>(false);
+
+  const { locale } = useLanguage();
+  // Stock couplets follow the active language; anything the player typed stays as written
+  const displayConfig = useMemo<KrathongConfig>(
+    () => ({
+      ...krathongConfig,
+      wishText: localizeWish(krathongConfig.wishText, locale),
+      offerings: getActiveOfferings(krathongConfig).map((slot) => ({
+        ...slot,
+        wishText: localizeWish(slot.wishText, locale),
+      })),
+    }),
+    [krathongConfig, locale]
+  );
 
   const blessingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gameStateRef = useRef<GameState>(gameState);
@@ -63,7 +81,9 @@ export default function LoiKrathongPage() {
     }, BLESSING_MODAL_DELAY_MS);
   }, []);
 
-  const shouldTrackHand = gameState === 'INTERACT' && cameraEnabled;
+  // Camera runs at the pier, and inside the How-to-Play practice folio (reachable from HOME too)
+  const shouldTrackHand =
+    cameraEnabled && (gameState === 'INTERACT' || isPracticeActive);
   const { videoRef, gestureState, gestureRef, retryCamera } = useHandTracking({
     enabled: shouldTrackHand,
   });
@@ -152,18 +172,20 @@ export default function LoiKrathongPage() {
   );
 
   const handleQuickLaunch = useCallback(async () => {
-    const items = buildStageItems(krathongConfig);
+    const items = buildStageItems(displayConfig);
     setGameState('FLOATING');
     setReleasedCount(items.length);
     setTotalRoundCount(items.length);
 
+    const skyTargets = getSkyLanternTargets(window.innerWidth, window.innerHeight);
+    const riverTargets = getRiverSpotTargets(window.innerWidth, window.innerHeight);
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       if (item.itemType === 'lantern') {
-        const spot = SKY_LANTERN_TARGETS[i % SKY_LANTERN_TARGETS.length];
+        const spot = skyTargets[i % skyTargets.length];
         await handleReleaseItem(item, spot.x, spot.y);
       } else {
-        const spot = RIVER_SPOT_TARGETS[(i + 1) % RIVER_SPOT_TARGETS.length];
+        const spot = riverTargets[(i + 1) % riverTargets.length];
         await handleReleaseItem(item, spot.x, spot.y);
       }
     }
@@ -175,7 +197,7 @@ export default function LoiKrathongPage() {
       )
     );
     scheduleBlessingModal();
-  }, [krathongConfig, handleReleaseItem, scheduleBlessingModal]);
+  }, [displayConfig, handleReleaseItem, scheduleBlessingModal]);
 
   const handlePlayAgain = useCallback(() => {
     if (blessingTimerRef.current) {
@@ -197,10 +219,10 @@ export default function LoiKrathongPage() {
   }, []);
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-[#0D1321] select-none">
+    <main className="relative h-dvh w-full overflow-hidden bg-[#0D1321] select-none">
       <RiverCanvas
         gameState={gameState}
-        activeConfig={krathongConfig}
+        activeConfig={displayConfig}
         floatingKrathongs={floatingKrathongs}
         gestureRef={gestureRef}
         onReleaseItem={handleReleaseItem}
@@ -208,56 +230,61 @@ export default function LoiKrathongPage() {
         onAllItemsReleased={handleAllItemsReleased}
       />
 
-      <div className="pointer-events-none relative z-10 flex h-full w-full flex-col justify-between p-4 sm:p-6">
+      <div className="pointer-events-none relative z-10 flex h-full w-full flex-col gap-3 [zoom:var(--ui-zoom,1)] pt-[max(0.75rem,env(safe-area-inset-top))] pr-[max(0.75rem,env(safe-area-inset-right))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] sm:pt-[max(1.25rem,env(safe-area-inset-top))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] sm:pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pl-[max(1.5rem,env(safe-area-inset-left))]">
         <TopBarControls
           gameState={gameState}
           onGoHome={handleGoHome}
           onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
         />
 
-        <AnimatePresence mode="wait">
-          {gameState === 'HOME' && (
-            <HomeLandingOverlay
-              key="home-landing"
-              onEnterPier={() => setGameState('CUSTOMIZE')}
-              onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
-              onOpenLore={() => setIsLoreModalOpen(true)}
-            />
-          )}
-        </AnimatePresence>
-
-        {gameState !== 'HOME' && (
-          <section className="flex flex-col justify-end gap-4">
+        {/* Scrolls only when a screen is taller than the device (phones, landscape) */}
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+          <div className="flex min-h-full flex-col">
             <AnimatePresence mode="wait">
-              {gameState === 'CUSTOMIZE' && (
-                <CustomizationPanel
-                  key="customize-panel"
-                  config={krathongConfig}
-                  onChange={setKrathongConfig}
-                  onStartInteract={() => {
-                    setIsBlessingModalOpen(false);
-                    setGameState('INTERACT');
-                  }}
+              {gameState === 'HOME' && (
+                <HomeLandingOverlay
+                  key="home-landing"
+                  onEnterPier={() => setGameState('CUSTOMIZE')}
+                  onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
+                  onOpenLore={() => setIsLoreModalOpen(true)}
                 />
               )}
             </AnimatePresence>
 
-            <HandTrackerHUD
-              gameState={gameState}
-              videoRef={videoRef}
-              gestureState={gestureState}
-              cameraEnabled={cameraEnabled}
-              releasedCount={releasedCount}
-              totalCount={totalRoundCount}
-              onToggleCamera={() => setCameraEnabled((prev) => !prev)}
-              onRetryCamera={retryCamera}
-              onBackToCustomize={() => setGameState('CUSTOMIZE')}
-              onQuickLaunch={handleQuickLaunch}
-              onCreateAnother={handlePlayAgain}
-              onOpenBlessingModal={() => setIsBlessingModalOpen(true)}
-            />
-          </section>
-        )}
+            {gameState !== 'HOME' && (
+              <section className="flex flex-1 flex-col justify-end gap-3 sm:gap-4">
+                <AnimatePresence mode="wait">
+                  {gameState === 'CUSTOMIZE' && (
+                    <CustomizationPanel
+                      key="customize-panel"
+                      config={displayConfig}
+                      onChange={setKrathongConfig}
+                      onStartInteract={() => {
+                        setIsBlessingModalOpen(false);
+                        setGameState('INTERACT');
+                      }}
+                    />
+                  )}
+                </AnimatePresence>
+
+                <HandTrackerHUD
+                  gameState={gameState}
+                  videoRef={videoRef}
+                  gestureState={gestureState}
+                  cameraEnabled={cameraEnabled}
+                  releasedCount={releasedCount}
+                  totalCount={totalRoundCount}
+                  onToggleCamera={() => setCameraEnabled((prev) => !prev)}
+                  onRetryCamera={retryCamera}
+                  onBackToCustomize={() => setGameState('CUSTOMIZE')}
+                  onQuickLaunch={handleQuickLaunch}
+                  onCreateAnother={handlePlayAgain}
+                  onOpenBlessingModal={() => setIsBlessingModalOpen(true)}
+                />
+              </section>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Samut Khoi Modals & Blessing Modal */}
@@ -265,6 +292,12 @@ export default function LoiKrathongPage() {
         isOpen={isHowToPlayOpen}
         onClose={() => setIsHowToPlayOpen(false)}
         onEnterPier={() => setGameState('CUSTOMIZE')}
+        videoRef={videoRef}
+        gestureState={gestureState}
+        gestureRef={gestureRef}
+        cameraEnabled={cameraEnabled}
+        onToggleCamera={() => setCameraEnabled((prev) => !prev)}
+        onPracticeActiveChange={setIsPracticeActive}
       />
 
       <LoyKrathongLoreModal
@@ -274,7 +307,7 @@ export default function LoiKrathongPage() {
 
       <MaeKhongkhaModal
         isOpen={isBlessingModalOpen}
-        config={krathongConfig}
+        config={displayConfig}
         releasedCount={totalRoundCount}
         onPlayAgain={handlePlayAgain}
         onDismiss={() => setIsBlessingModalOpen(false)}

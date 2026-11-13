@@ -1,8 +1,15 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { motion } from 'framer-motion';
 import { SoundHigh, SoundLow, SoundOff } from 'iconoir-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const AUDIO_SRC = '/audio/loy-krathong.mp3';
 const STORAGE_KEY = 'loikratur_audio_prefs_v1';
@@ -45,10 +52,38 @@ function saveAudioPrefs(prefs: StoredAudioPrefs) {
   }
 }
 
+// Saved prefs live in a tiny external store so the server HTML (always muted) and the
+// first client render agree; the visitor's saved choice is applied right after hydration.
+const SERVER_PREFS: StoredAudioPrefs = { isMuted: true, volume: DEFAULT_VOLUME };
+let cachedPrefs: StoredAudioPrefs | null = null;
+const prefListeners = new Set<() => void>();
+
+function readPrefsSnapshot(): StoredAudioPrefs {
+  if (!cachedPrefs) cachedPrefs = loadAudioPrefs();
+  return cachedPrefs;
+}
+
+function writePrefs(next: StoredAudioPrefs) {
+  cachedPrefs = next;
+  saveAudioPrefs(next);
+  prefListeners.forEach((notify) => notify());
+}
+
+function subscribePrefs(notify: () => void) {
+  prefListeners.add(notify);
+  return () => {
+    prefListeners.delete(notify);
+  };
+}
+
 export const AudioVolumeController: React.FC = () => {
+  const { t } = useLanguage();
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [volume, setVolume] = useState<number>(() => loadAudioPrefs().volume);
-  const [isMuted, setIsMuted] = useState<boolean>(() => loadAudioPrefs().isMuted);
+  const { volume, isMuted } = useSyncExternalStore(
+    subscribePrefs,
+    readPrefsSnapshot,
+    () => SERVER_PREFS
+  );
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const userMutedRef = useRef<boolean>(isMuted);
 
@@ -109,9 +144,7 @@ export const AudioVolumeController: React.FC = () => {
     if (isMuted || audio.paused || volume <= 0.005) {
       const restoredVol = volume <= 0.005 ? DEFAULT_VOLUME : volume;
       userMutedRef.current = false;
-      setIsMuted(false);
-      setVolume(restoredVol);
-      saveAudioPrefs({ isMuted: false, volume: restoredVol });
+      writePrefs({ isMuted: false, volume: restoredVol });
 
       audio.muted = false;
       audio.volume = restoredVol;
@@ -120,8 +153,7 @@ export const AudioVolumeController: React.FC = () => {
       });
     } else {
       userMutedRef.current = true;
-      setIsMuted(true);
-      saveAudioPrefs({ isMuted: true, volume });
+      writePrefs({ isMuted: true, volume });
 
       audio.muted = true;
       audio.pause();
@@ -131,22 +163,21 @@ export const AudioVolumeController: React.FC = () => {
   const handleVolumeChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const nextVol = parseFloat(e.target.value);
-      setVolume(nextVol);
-
       const audio = audioRef.current;
-      if (!audio) return;
+      if (!audio) {
+        writePrefs({ isMuted: nextVol <= 0.005, volume: nextVol });
+        return;
+      }
 
       audio.volume = nextVol;
       if (nextVol <= 0.005) {
         userMutedRef.current = true;
-        setIsMuted(true);
-        saveAudioPrefs({ isMuted: true, volume: 0 });
+        writePrefs({ isMuted: true, volume: 0 });
         audio.muted = true;
         audio.pause();
       } else {
         userMutedRef.current = false;
-        setIsMuted(false);
-        saveAudioPrefs({ isMuted: false, volume: nextVol });
+        writePrefs({ isMuted: false, volume: nextVol });
         audio.muted = false;
         if (audio.paused) {
           audio.play().catch(() => {
@@ -166,21 +197,21 @@ export const AudioVolumeController: React.FC = () => {
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 100, damping: 16 }}
-      className="thai-chamfer-sm pointer-events-auto relative flex items-center gap-3 border border-[#D4AF37]/55 bg-[#0B0E17]/92 px-3.5 py-2 text-[#FFFDF7] shadow-[0_14px_34px_rgba(0,0,0,0.75)] backdrop-blur-md"
+      className="thai-chamfer-sm pointer-events-auto relative flex items-center gap-3 border border-[#D4AF37]/55 bg-[#0B0E17]/92 p-0 text-[#FFFDF7] shadow-[0_14px_34px_rgba(0,0,0,0.75)] backdrop-blur-md sm:px-3.5 sm:py-2"
     >
       {/* Decorative Phra Nakhon Gold Corner Accents */}
-      <span className="pointer-events-none absolute top-1.5 left-1.5 h-1.5 w-1.5 border-t border-l border-[#D4AF37]/75" />
-      <span className="pointer-events-none absolute top-1.5 right-1.5 h-1.5 w-1.5 border-t border-r border-[#D4AF37]/75" />
-      <span className="pointer-events-none absolute bottom-1.5 left-1.5 h-1.5 w-1.5 border-b border-l border-[#D4AF37]/75" />
-      <span className="pointer-events-none absolute right-1.5 bottom-1.5 h-1.5 w-1.5 border-r border-b border-[#D4AF37]/75" />
+      <span className="pointer-events-none absolute top-1.5 left-1.5 hidden h-1.5 w-1.5 border-t border-l border-[#D4AF37]/75 sm:block" />
+      <span className="pointer-events-none absolute top-1.5 right-1.5 hidden h-1.5 w-1.5 border-t border-r border-[#D4AF37]/75 sm:block" />
+      <span className="pointer-events-none absolute bottom-1.5 left-1.5 hidden h-1.5 w-1.5 border-b border-l border-[#D4AF37]/75 sm:block" />
+      <span className="pointer-events-none absolute right-1.5 bottom-1.5 hidden h-1.5 w-1.5 border-r border-b border-[#D4AF37]/75 sm:block" />
 
       {/* One-Click Mute / Unmute Seal Button */}
       <button
         type="button"
         onClick={handleToggleMute}
-        title={isMuted ? 'เปิดเสียงเพลงบรรเลง' : 'ปิดเสียงเพลงบรรเลง'}
-        aria-label={isMuted ? 'เปิดเสียงเพลงบรรเลง' : 'ปิดเสียงเพลงบรรเลง'}
-        className={`flex h-9 w-9 shrink-0 items-center justify-center border transition-all ${
+        title={isMuted ? t.nav.unmute : t.nav.mute}
+        aria-label={isMuted ? t.nav.unmute : t.nav.mute}
+        className={`flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center border transition-all ${
           isMuted
             ? 'border-[#D4AF37]/35 bg-[#12172B] text-[#FFFDF7]/60 hover:border-[#FFF275] hover:text-[#FFF275]'
             : 'border-[#FFF275]/70 bg-[#D4AF37] text-[#0B0E17] shadow-[0_0_16px_rgba(244,208,111,0.35)] hover:bg-[#FFF275]'
@@ -196,7 +227,7 @@ export const AudioVolumeController: React.FC = () => {
       </button>
 
       {/* Label + Animated Chime Equalizer + Gold-Leaf Volume Slider */}
-      <div className="flex flex-col gap-1 pr-1">
+      <div className="hidden flex-col gap-1 pr-1 sm:flex">
         <div className="flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-1.5">
             {/* Animated Golden Equalizer Bars */}
@@ -226,8 +257,8 @@ export const AudioVolumeController: React.FC = () => {
               ))}
             </span>
 
-            <span className="font-heading text-[11px] font-medium tracking-wide text-[#F4D06F]">
-              {isMuted ? 'ปิดเสียงบรรเลง' : 'มโหรีคืนเพ็ญ'}
+            <span className="font-heading text-[11px] font-medium tracking-wide whitespace-nowrap text-[#F4D06F]">
+              {isMuted ? t.nav.soundOff : t.nav.soundOn}
             </span>
           </div>
 
@@ -245,7 +276,7 @@ export const AudioVolumeController: React.FC = () => {
             step={0.01}
             value={isMuted ? 0 : volume}
             onChange={handleVolumeChange}
-            aria-label="ระดับเสียงเพลงวันเพ็ญ"
+            aria-label={t.nav.volume}
             style={{
               background: `linear-gradient(to right, #F4D06F 0%, #D4AF37 ${volumePercent}%, rgba(255, 253, 247, 0.16) ${volumePercent}%, rgba(255, 253, 247, 0.16) 100%)`,
             }}

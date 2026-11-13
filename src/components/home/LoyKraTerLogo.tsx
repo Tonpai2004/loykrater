@@ -2,8 +2,11 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-export const LoikraturLogo: React.FC = () => {
+export const LoyKraTerLogo: React.FC = () => {
+  const { t } = useLanguage();
+
   return (
     <div className="flex flex-col items-center text-center">
       {/* Traditional Thai Geometric Emblem (ตราสัญลักษณ์ประทีปคู่สายชลและจันทรา) */}
@@ -11,7 +14,7 @@ export const LoikraturLogo: React.FC = () => {
         initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="relative mb-4 flex h-32 w-32 items-center justify-center sm:h-36 sm:w-36"
+        className="relative mb-[clamp(0.25rem,1.5dvh,0.75rem)] flex size-[clamp(4.5rem,15dvh,9rem)] items-center justify-center [@media(max-height:440px)]:hidden"
       >
         {/* Outer soft golden aura */}
         <motion.div
@@ -122,47 +125,34 @@ export const LoikraturLogo: React.FC = () => {
         </svg>
       </motion.div>
 
-      {/* Ornamental Tag */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.12, duration: 0.5 }}
-        className="mb-2 inline-flex items-center gap-2.5 border border-[#D4AF37]/45 bg-[#0B0E17]/80 px-4 py-1 backdrop-blur-md"
-      >
-        <span className="h-1.5 w-1.5 rotate-45 bg-[#F4D06F]" />
-        <span className="h-1.5 w-1.5 rotate-45 bg-[#F4D06F]" />
-      </motion.div>
-
       {/* Main Title */}
       <motion.h1
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.55 }}
-        className="font-display bg-gradient-to-b from-[#FFFDF7] via-[#FFF275] to-[#D4AF37] bg-clip-text text-5xl font-semibold tracking-wide text-transparent drop-shadow-[0_6px_24px_rgba(244,208,111,0.28)] sm:text-6xl md:text-7xl"
+        transition={{ delay: 0.16, duration: 0.55 }}
+        className="font-display bg-gradient-to-b from-[#FFFDF7] via-[#FFF275] to-[#D4AF37] bg-clip-text pl-[0.22em] text-[clamp(1.75rem,min(7.5vw,9dvh),4.5rem)] leading-tight font-semibold tracking-[0.22em] whitespace-nowrap [word-spacing:0.3em] text-transparent drop-shadow-[0_6px_24px_rgba(244,208,111,0.28)]"
       >
-        ลอยกะเธอ
+        {t.home.title}
       </motion.h1>
 
-      {/* English Editorial Subtitle */}
+      {/* Editorial Subtitle */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.28, duration: 0.5 }}
-        className="font-editorial mt-1 text-sm tracking-[0.3em] text-[#F4D06F]/85 uppercase sm:text-base"
+        transition={{ delay: 0.24, duration: 0.5 }}
+        className="font-editorial mt-1 pl-[0.26em] text-[clamp(0.6rem,2.6vw,1rem)] tracking-[0.26em] whitespace-nowrap text-[#F4D06F]/85 uppercase"
       >
-        LOIKRATUR • WATERFRONT &amp; SKY SANCTUARY
+        {t.home.subtitle}
       </motion.p>
 
       {/* Poetic Description */}
       <motion.p
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35, duration: 0.5 }}
-        className="font-heading mt-3 max-w-lg text-xs leading-relaxed text-[#FFFDF7]/85 sm:text-sm"
+        transition={{ delay: 0.32, duration: 0.5 }}
+        className="font-heading mt-[clamp(0.5rem,1.6dvh,0.75rem)] max-w-[34rem] text-[13px] [@media(max-height:440px)]:hidden leading-relaxed text-balance text-[#FFFDF7]/85 sm:text-sm"
       >
-        ร่วมประดิษฐ์กระทงใบตองและโคมลอย จารึกคำอธิษฐานลงบนกระดาษสา
-        <br className="hidden sm:inline" />
-        แล้วหยิบปล่อยสู่สายชลและผืนฟ้าคืนเพ็ญด้วยมือของคุณเอง
+        {t.home.descriptionLine1} {t.home.descriptionLine2}
       </motion.p>
     </div>
   );

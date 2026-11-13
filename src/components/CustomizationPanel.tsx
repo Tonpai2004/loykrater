@@ -19,7 +19,12 @@ import {
   OfferingSlotConfig,
   RitualItemType,
 } from '@/types/krathong';
-import { getActiveOfferings, THAI_NUMERALS } from '@/components/RiverCanvas';
+import { getActiveOfferings } from '@/components/RiverCanvas';
+import {
+  BILINGUAL_WISH_COUPLETS,
+  COLOR_NAMES_EN,
+} from '@/constants/translations';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CustomizationPanelProps {
   config: KrathongConfig;
@@ -49,61 +54,11 @@ const SPRING_TRANSITION = {
   damping: 16,
 };
 
-// 24 Short, Rhythmic, Rhyming Thai Loy Krathong Blessing Couplets
-const PHRA_NAKHON_WISH_COUPLETS: string[] = [
-  'ลอยทุกข์โศกโรคภัย ให้ไหลลับกับสายชล',
-  'คืนเพ็ญเดือนสิบสอง ขอชีวามีสุขศรี',
-  'อธิษฐานผ่านสายน้ำ ขอพรงามสมดั่งใจ',
-  'ประทีปทองส่องนำทาง ให้สว่างทั้งกายใจ',
-  'ฝากความเศร้าเข้าสายน้ำ รับความงามความร่มเย็น',
-  'จันทร์กระจ่างกลางนภา ขอชีวาไร้โรคา',
-  'น้ำนองตลิ่งงามตา ขอโชคลาภไหลมาเทมา',
-  'ลอยกระทงเคียงข้างเธอ ขอพบเจอแต่สิ่งดี',
-  'โคมทองลอยขึ้นฟ้า ปรารถนาสิ่งใดสมหวัง',
-  'ขอขมาพระแม่คงคา ให้ชีวาเจริญรุ่งเรือง',
-  'แสงเทียนส่องต้องผิวน้ำ นำความสุขสู่ดวงใจ',
-  'คืนจันทร์เพ็ญเย็นสายลม ขอภิรมย์สมดั่งปอง',
-  'ปล่อยความหมองล่องนาวา ให้ชีวามีรอยยิ้ม',
-  'สายน้ำไหลใจร่มเย็น เป็นสุขศรีทุกคืนวัน',
-  'ดอกบัวบานขานรับพร ให้ขจรเกียรติคุณไกล',
-  'เพ็ญสิบสองผ่องอำไพ คิดสิ่งใดได้ดั่งใจ',
-  'ลอยประทีปเคียงคู่กัน ให้ผูกพันมั่นนิรันดร์',
-  'พระแม่คงคาคุ้มครอง ให้ผุดผ่องพ้นโพยภัย',
-  'ธูปเทียนหอมพร้อมมาลัย อธิษฐานใจให้ร่ำรวย',
-  'จันทร์ส่องหล้าฟ้าสว่าง ขอหนทางโรยด้วยทอง',
-  'สายชลไหลไม่ย้อนกลับ ให้เคราะห์ลับดับมลาย',
-  'คืนวันเพ็ญเด่นดวงเดือน ขอพบเพื่อนกัลยาณมิตร',
-  'ฝากคำพรล่องสายสินธุ์ ให้ชีวินอิ่มเอมใจ',
-  'ประทีปงามยามค่ำคืน ขอขวัญยืนหมื่นปีเทอญ',
-];
-
 const OFFERING_COUNTS: OfferingCount[] = [1, 2, 3, 4, 5];
 
-const ITEM_TYPE_OPTIONS: {
-  id: RitualItemType;
-  numeral: string;
-  label: string;
-  sub: string;
-}[] = [
-  {
-    id: 'krathong',
-    numeral: '๑',
-    label: 'ล่องนาวาฝากแม่คงคา',
-    sub: 'กระทงลอยสายน้ำ',
-  },
-  {
-    id: 'lantern',
-    numeral: '๒',
-    label: 'ลอยโคมทองท่องเวหา',
-    sub: 'โคมลอยปล่อยขึ้นฟ้า',
-  },
-];
+const ITEM_TYPE_OPTIONS: RitualItemType[] = ['krathong', 'lantern'];
 
-const BASE_STYLES: { id: BaseStyle; label: string; sub: string }[] = [
-  { id: 'classic-lotus', label: 'กลีบบัวซ้อน', sub: 'สัตตบงกช' },
-  { id: 'layered-star', label: 'ดาวเรขาคณิต', sub: 'ดารารัศมี' },
-  { id: 'royal-pleat', label: 'จีบพุ่มชาววัง', sub: 'พุ่มทอง' },
-];
+const BASE_STYLES: BaseStyle[] = ['classic-lotus', 'layered-star', 'royal-pleat'];
 
 const LEAF_COLORS: ColorOption[] = [
   { label: 'เขียวใบตองสด', value: '#2D6A4F', accent: '#40916C' },
@@ -145,21 +100,6 @@ const ALL_THAI_COLOR_PAIRS: ColorOption[] = [
   { label: 'เหลืองนวลจันทร์', value: '#FFF275', accent: '#FFFFFF' },
   { label: 'ขาวมุกสังข์ทอง', value: '#F8F9FA', accent: '#F4D06F' },
 ];
-
-const COLOR_FIELD_LABELS: Record<ColorFieldKey, { title: string; sub: string }> = {
-  baseColor: {
-    title: '๐๑ สีใบตองและขอบโคม',
-    sub: 'เลือกคู่สีมงคลหรือดูดสีสำหรับกลีบกระทงและโครงโคม',
-  },
-  flowerColor: {
-    title: '๐๒ สีบุปผาและลวดลาย',
-    sub: 'เลือกคู่สีมงคลหรือดูดสีสำหรับดอกไม้และลวดลายประดับ',
-  },
-  candleColor: {
-    title: '๐๓ สีขี้ผึ้งเทียนและแสงโคม',
-    sub: 'เลือกคู่สีมงคลหรือดูดสีสำหรับธูปเทียนและเปลวประทีป',
-  },
-};
 
 function hexToHsl(hex: string): { h: number; s: number; l: number } {
   const clean = hex.replace('#', '');
@@ -321,6 +261,15 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
   onChange,
   onStartInteract,
 }) => {
+  const { locale, t } = useLanguage();
+  const ct = t.customize;
+  const numerals = t.numerals;
+  const wishCouplets = BILINGUAL_WISH_COUPLETS[locale];
+  const colorName = (color: ColorOption) =>
+    locale === 'en' ? COLOR_NAMES_EN[color.value] ?? color.label : color.label;
+  const itemName = (type: RitualItemType) =>
+    type === 'lantern' ? ct.itemLantern : ct.itemKrathong;
+
   const currentCount: OfferingCount = config.offeringCount ?? 1;
   const slots = getActiveOfferings(config);
   const selectedIdx = Math.min(
@@ -389,9 +338,9 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
   };
 
   const handleCyclePoem = () => {
-    const nextIdx = (poemIdx + 1) % PHRA_NAKHON_WISH_COUPLETS.length;
+    const nextIdx = (poemIdx + 1) % wishCouplets.length;
     setPoemIdx(nextIdx);
-    updateCurrentSlot('wishText', PHRA_NAKHON_WISH_COUPLETS[nextIdx]);
+    updateCurrentSlot('wishText', wishCouplets[nextIdx]);
   };
 
   // Current color inside the Extended Color Modal
@@ -399,6 +348,9 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
     ? currentSlot[activeColorModal]
     : '#F4D06F';
   const modalHsl = hexToHsl(modalColorValue);
+  const modalColorPair = ALL_THAI_COLOR_PAIRS.find(
+    (pair) => pair.value.toUpperCase() === modalColorValue.toUpperCase()
+  );
 
   const handleHueGradientChange = (newHue: number) => {
     if (!activeColorModal) return;
@@ -466,7 +418,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#D4AF37]/55 bg-[#0B0E17]/90 px-3.5 py-1.5 text-xs text-[#FFF275] shadow-[0_8px_22px_rgba(0,0,0,0.65)] backdrop-blur-md transition-colors hover:border-[#FFF275] hover:bg-[#141932]"
               >
                 <Eye width={14} height={14} strokeWidth={2} />
-                <span>พับสมุดข่อยลงน้ำ • ชมผิวน้ำเต็มตา</span>
+                <span>{ct.submergeBtn}</span>
               </button>
             </motion.div>
           )}
@@ -533,20 +485,20 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               <span className="pointer-events-none absolute right-3 bottom-2.5 h-2.5 w-2.5 border-r border-b border-[#D4AF37]/70" />
 
               {/* Header Row: Phra Nakhon Atelier + Offering Quantity Selector (1-5) */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D4AF37]/25 pb-3">
-                <div>
-                  <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
-                    ลานพับใบตองและโคมประทีป ท่าพระนคร
+              <div className="flex flex-col gap-2.5 border-b border-[#D4AF37]/25 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="font-heading truncate text-[11px] tracking-wider text-[#F4D06F]">
+                    {ct.atelierTag}
                   </p>
-                  <h2 className="font-display text-lg font-normal tracking-wide text-[#FFFDF7] sm:text-xl">
-                    ประดิษฐ์เครื่องลอยของท่าน
+                  <h2 className="font-display text-lg font-normal tracking-wide whitespace-nowrap text-[#FFFDF7] sm:text-xl">
+                    {ct.atelierTitle}
                   </h2>
                 </div>
 
                 {/* Quantity Selector: 1 to 5 Offerings */}
-                <div className="flex items-center gap-2">
-                  <span className="font-heading text-xs text-[#F4D06F]">
-                    จำนวนเครื่องลอย:
+                <div className="flex items-center justify-between gap-2 sm:justify-end">
+                  <span className="font-heading text-xs whitespace-nowrap text-[#F4D06F]">
+                    {ct.countLabel}
                   </span>
                   <div className="flex items-center border border-[#D4AF37]/45 bg-[#080B14] p-0.5">
                     {OFFERING_COUNTS.map((num) => {
@@ -556,13 +508,13 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                           key={num}
                           type="button"
                           onClick={() => handleSelectCount(num)}
-                          className={`font-heading min-w-[32px] px-2.5 py-1 text-xs transition-colors ${
+                          className={`font-heading h-8 min-w-9 px-2.5 text-xs transition-colors sm:h-7 sm:min-w-8 ${
                             active
                               ? 'bg-[#D4AF37] font-semibold text-[#0B0E17]'
                               : 'text-[#FFFDF7]/70 hover:text-[#FFF275]'
                           }`}
                         >
-                          {THAI_NUMERALS[num - 1]}
+                          {numerals[num - 1]}
                         </button>
                       );
                     })}
@@ -572,10 +524,14 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
 
               {/* Per-Item Slot Selector Tabs (๑ .. ๕) */}
               {currentCount > 1 && (
-                <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                  <span className="font-heading mr-1 text-[11px] text-[#FFFDF7]/70">
-                    เลือกปรับแต่งรายชิ้น:
+                <div className="mt-2.5 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2.5">
+                  <span className="font-heading shrink-0 text-[11px] whitespace-nowrap text-[#FFFDF7]/70">
+                    {ct.selectSlotLabel}
                   </span>
+                  <div
+                    className="grid flex-1 gap-1.5"
+                    style={{ gridTemplateColumns: `repeat(${currentCount}, minmax(0, 1fr))` }}
+                  >
                   {slots.map((slot, idx) => {
                     const isSelected = idx === selectedIdx;
                     return (
@@ -583,35 +539,38 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                         key={slot.id}
                         type="button"
                         onClick={() => handleSelectSlot(idx)}
-                        className={`font-heading flex items-center gap-1.5 border px-2.5 py-1 text-xs transition-colors ${
+                        aria-label={`${ct.slotLabel(numerals[idx])} (${itemName(slot.itemType)})`}
+                        className={`font-heading flex h-8 min-w-0 items-center justify-center gap-1 border px-1.5 text-xs whitespace-nowrap transition-colors ${
                           isSelected
                             ? 'border-[#FFF275] bg-[#D4AF37]/25 font-semibold text-[#FFF275]'
                             : 'border-[#D4AF37]/30 bg-[#080B14]/80 text-[#FFFDF7]/70 hover:border-[#D4AF37]/60'
                         }`}
                       >
                         <span
-                          className="h-2.5 w-2.5 rounded-full"
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
                           style={{ backgroundColor: slot.flowerColor }}
                         />
-                        <span>
-                          ดวงที่ {THAI_NUMERALS[idx]} (
-                          {slot.itemType === 'lantern' ? 'โคมลอย' : 'กระทง'})
+                        <span>{numerals[idx]}</span>
+                        <span className="hidden truncate sm:inline lg:hidden xl:inline">
+                          {itemName(slot.itemType)}
                         </span>
                       </button>
                     );
                   })}
+                  </div>
                 </div>
               )}
 
               {/* Row 1: Offering Type for the Currently Selected Item */}
               <div className="mt-2.5 grid grid-cols-2 border border-[#D4AF37]/30 bg-[#080B14]/90">
-                {ITEM_TYPE_OPTIONS.map((opt, idx) => {
-                  const active = currentSlot.itemType === opt.id;
+                {ITEM_TYPE_OPTIONS.map((typeId, idx) => {
+                  const active = currentSlot.itemType === typeId;
+                  const opt = ct.types[typeId];
                   return (
                     <button
-                      key={opt.id}
+                      key={typeId}
                       type="button"
-                      onClick={() => updateCurrentSlot('itemType', opt.id)}
+                      onClick={() => updateCurrentSlot('itemType', typeId)}
                       className={`relative flex flex-col items-start px-3.5 py-2 text-left transition-colors ${
                         idx > 0 ? 'border-l border-[#D4AF37]/25' : ''
                       } ${
@@ -622,7 +581,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     >
                       <div className="flex w-full items-baseline justify-between">
                         <span className="font-display text-xs text-[#F4D06F]">
-                          ประเภทที่ {opt.numeral}
+                          {ct.typeLabel(numerals[idx])}
                         </span>
                         {active && (
                           <span className="h-1.5 w-1.5 rotate-45 bg-[#FFF275]" />
@@ -641,30 +600,31 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
 
               {/* Row 2: Banana Leaf Fold Architecture for Current Item */}
               <div className="mt-2.5 grid grid-cols-3 gap-2">
-                {BASE_STYLES.map((style) => {
-                  const isSelected = currentSlot.baseStyle === style.id;
+                {BASE_STYLES.map((styleId) => {
+                  const isSelected = currentSlot.baseStyle === styleId;
+                  const style = ct.styles[styleId];
                   return (
                     <button
-                      key={style.id}
+                      key={styleId}
                       type="button"
-                      onClick={() => updateCurrentSlot('baseStyle', style.id)}
-                      className={`flex items-center gap-2.5 border px-2.5 py-2 text-left transition-all ${
+                      onClick={() => updateCurrentSlot('baseStyle', styleId)}
+                      className={`flex min-w-0 flex-col items-center gap-1 border px-1.5 py-2 text-center transition-all sm:flex-row sm:gap-2.5 sm:px-2.5 sm:text-left ${
                         isSelected
                           ? 'border-[#F4D06F] bg-[#D4AF37]/18 text-[#FFF275]'
                           : 'border-white/15 bg-[#080B14]/80 text-[#FFFDF7]/80 hover:border-[#D4AF37]/45'
                       }`}
                     >
                       <StyleCollageThumbnail
-                        style={style.id}
+                        style={styleId}
                         baseColor={currentSlot.baseColor}
                         flowerColor={currentSlot.flowerColor}
                       />
-                      <div className="min-w-0">
+                      <div className="w-full min-w-0">
                         <div className="font-heading truncate text-xs font-medium">
                           {style.label}
                         </div>
                         <div className="font-wish truncate text-[11px] text-[#F4D06F]/85">
-                          ทรง{style.sub}
+                          {style.sub}
                         </div>
                       </div>
                     </button>
@@ -677,9 +637,9 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 {/* 01 Base / Leaf Color */}
                 <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
                   <span className="font-heading text-[11px] text-[#F4D06F]">
-                    ๐๑ สีใบตองและขอบโคม
+                    {ct.colorFields.baseColor.title}
                   </span>
-                  <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="flex flex-nowrap items-center gap-2 xl:gap-2.5">
                     {LEAF_COLORS.map((color) => {
                       const active =
                         currentSlot.baseColor.toUpperCase() ===
@@ -688,7 +648,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                         <button
                           key={color.value}
                           type="button"
-                          title={color.label}
+                          title={colorName(color)}
                           onClick={() =>
                             updateCurrentSlot('baseColor', color.value)
                           }
@@ -704,8 +664,8 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     {/* Rainbow Gradient Swatch for Other Colors */}
                     <button
                       type="button"
-                      title="เลือกสีอื่นๆ เพิ่มเติม / หลอดดูดสี"
-                      aria-label="เลือกสีใบตองอื่นๆ เพิ่มเติม"
+                      title={ct.moreColorsTitle}
+                      aria-label={ct.colorFields.baseColor.moreAria}
                       onClick={() => setActiveColorModal('baseColor')}
                       style={{ background: RAINBOW_SWATCH_GRADIENT }}
                       className={`h-5 w-5 border border-[#FFFDF7]/90 shadow-[0_0_8px_rgba(255,242,117,0.35)] transition-transform ${
@@ -720,9 +680,9 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 {/* 02 Flower / Emblem Color */}
                 <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
                   <span className="font-heading text-[11px] text-[#F4D06F]">
-                    ๐๒ สีบุปผาและลวดลาย
+                    {ct.colorFields.flowerColor.title}
                   </span>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-nowrap items-center gap-2 xl:gap-2.5">
                     {FLOWER_COLORS.map((color) => {
                       const active =
                         currentSlot.flowerColor.toUpperCase() ===
@@ -731,7 +691,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                         <button
                           key={color.value}
                           type="button"
-                          title={color.label}
+                          title={colorName(color)}
                           onClick={() =>
                             updateCurrentSlot('flowerColor', color.value)
                           }
@@ -747,8 +707,8 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     {/* Rainbow Gradient Circle Swatch for Other Colors */}
                     <button
                       type="button"
-                      title="เลือกสีอื่นๆ เพิ่มเติม / หลอดดูดสี"
-                      aria-label="เลือกสีบุปผาอื่นๆ เพิ่มเติม"
+                      title={ct.moreColorsTitle}
+                      aria-label={ct.colorFields.flowerColor.moreAria}
                       onClick={() => setActiveColorModal('flowerColor')}
                       style={{ background: RAINBOW_SWATCH_GRADIENT }}
                       className={`h-5 w-5 rounded-full border border-[#FFFDF7]/90 shadow-[0_0_8px_rgba(255,242,117,0.35)] transition-transform ${
@@ -763,9 +723,9 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 {/* 03 Candle / Glow Color */}
                 <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
                   <span className="font-heading text-[11px] text-[#F4D06F]">
-                    ๐๓ สีขี้ผึ้งเทียนและแสงโคม
+                    {ct.colorFields.candleColor.title}
                   </span>
-                  <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="flex flex-nowrap items-center gap-2 xl:gap-2.5">
                     {CANDLE_COLORS.map((color) => {
                       const active =
                         currentSlot.candleColor.toUpperCase() ===
@@ -774,7 +734,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                         <button
                           key={color.value}
                           type="button"
-                          title={color.label}
+                          title={colorName(color)}
                           onClick={() =>
                             updateCurrentSlot('candleColor', color.value)
                           }
@@ -790,8 +750,8 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     {/* Rainbow Gradient Candle Swatch for Other Colors */}
                     <button
                       type="button"
-                      title="เลือกสีอื่นๆ เพิ่มเติม / หลอดดูดสี"
-                      aria-label="เลือกสีขี้ผึ้งเทียนอื่นๆ เพิ่มเติม"
+                      title={ct.moreColorsTitle}
+                      aria-label={ct.colorFields.candleColor.moreAria}
                       onClick={() => setActiveColorModal('candleColor')}
                       style={{ background: RAINBOW_SWATCH_GRADIENT }}
                       className={`h-5 w-3.5 border border-[#FFFDF7]/90 shadow-[0_0_8px_rgba(255,242,117,0.35)] transition-transform ${
@@ -840,10 +800,10 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 <div className="mb-3 flex items-center justify-between border-b border-[#D4AF37]/30 pb-2.5">
                   <div>
                     <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
-                      สมุดข่อยจารึกคำพร • คืนเพ็ญเดือนสิบสอง
+                      {ct.wishBookTag}
                     </p>
                     <h3 className="font-display text-lg font-normal text-[#FFFDF7]">
-                      ฝากถ้อยคำคล้องจองล่องธารา
+                      {ct.wishBookTitle}
                     </h3>
                   </div>
                 </div>
@@ -851,7 +811,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 {currentCount > 1 && (
                   <div className="mb-2.5 flex items-center justify-between border border-[#D4AF37]/30 bg-[#080B16]/80 px-2.5 py-1.5 text-xs">
                     <span className="font-heading text-[#F4D06F]">
-                      กำลังเขียนคำพรของดวงที่:
+                      {ct.writingForSlot}
                     </span>
                     <div className="flex items-center gap-1">
                       {slots.map((s, idx) => (
@@ -865,7 +825,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                               : 'bg-[#141932] text-[#FFFDF7]/70 hover:text-[#FFF275]'
                           }`}
                         >
-                          {THAI_NUMERALS[idx]}
+                          {numerals[idx]}
                         </button>
                       ))}
                     </div>
@@ -874,17 +834,16 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
 
                 <div className="border border-[#D4AF37]/35 bg-[#080B16]/95 p-3.5">
                   <div className="mb-2 flex items-center justify-between gap-2">
-                    <label className="font-heading text-xs font-medium text-[#F4D06F]">
-                      ถ้อยคำอธิษฐาน (
-                      {currentSlot.itemType === 'lantern' ? 'โคมลอย' : 'กระทง'})
+                    <label className="font-heading text-xs font-medium whitespace-nowrap text-[#F4D06F]">
+                      {ct.wishLabel(itemName(currentSlot.itemType))}
                     </label>
                     <button
                       type="button"
                       onClick={handleCyclePoem}
-                      className="font-heading flex items-center gap-1 border border-[#D4AF37]/40 bg-[#141932] px-2 py-0.5 text-[10px] text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/20"
+                      className="font-heading flex shrink-0 items-center gap-1 border border-[#D4AF37]/40 bg-[#141932] px-2 py-1 text-[10px] whitespace-nowrap text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/20"
                     >
                       <RefreshDouble width={11} height={11} />
-                      <span>สุ่มกลอนคำพร (๒๔ บท)</span>
+                      <span>{ct.randomPoemBtn}</span>
                     </button>
                   </div>
 
@@ -895,13 +854,13 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     onChange={(e) =>
                       updateCurrentSlot('wishText', e.target.value)
                     }
-                    placeholder="จารึกคำอธิษฐานหรือกดสุ่มบทกลอนด้านบน..."
+                    placeholder={ct.wishPlaceholder}
                     className="font-wish w-full border border-[#D4AF37]/45 bg-[#12172B] px-3 py-2 text-base text-[#FFFDF7] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
                   />
 
                   <div className="mt-3 flex items-center gap-2.5">
                     <span className="font-heading shrink-0 text-xs text-[#F4D06F]/90">
-                      นามผู้ฝากคำพร:
+                      {ct.authorLabel}
                     </span>
                     <input
                       type="text"
@@ -910,7 +869,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                       onChange={(e) =>
                         updateCurrentSlot('authorName', e.target.value)
                       }
-                      placeholder="เว้นว่างได้หากไม่ระบุชื่อ..."
+                      placeholder={ct.authorPlaceholder}
                       className="font-heading flex-1 border border-[#D4AF37]/35 bg-[#12172B] px-3 py-1.5 text-xs text-[#FFF275] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
                     />
                   </div>
@@ -919,8 +878,8 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                   <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-[#D4AF37]/25 pt-2.5">
                     <span className="font-heading text-[11px] text-[#FFFDF7]/75">
                       {currentSlot.hideWish
-                        ? 'ซ่อนคำอธิษฐานไว้ในใจ (ไม่แสดงบนผิวน้ำ)'
-                        : 'แสดงคำพรชั่วครู่เมื่อลอยลงน้ำ'}
+                        ? ct.hideWishOnNote
+                        : ct.hideWishOffNote}
                     </span>
                     <button
                       type="button"
@@ -939,12 +898,12 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                       {currentSlot.hideWish ? (
                         <>
                           <EyeClosed width={13} height={13} strokeWidth={2} />
-                          <span>ซ่อนคำพรแล้ว</span>
+                          <span>{ct.hideWishOnBtn}</span>
                         </>
                       ) : (
                         <>
                           <Eye width={13} height={13} strokeWidth={2} />
-                          <span>ซ่อนคำพร</span>
+                          <span>{ct.hideWishOffBtn}</span>
                         </>
                       )}
                     </button>
@@ -958,7 +917,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 whileTap={{ scale: 0.98 }}
                 transition={SPRING_TRANSITION}
                 onClick={onStartInteract}
-                className="thai-chamfer-sm font-heading group mt-4 flex w-full items-center justify-between border border-[#FFF275]/60 bg-[#D4AF37] px-4 py-3 text-xs font-semibold tracking-wide text-[#0B0E17] shadow-[0_8px_24px_rgba(212,175,55,0.35)] transition-colors hover:bg-[#FFF275]"
+                className="thai-chamfer-sm font-heading group mt-4 flex w-full items-center justify-center gap-3 border border-[#FFF275]/60 bg-[#D4AF37] px-4 py-3 text-xs min-[480px]:justify-between font-semibold tracking-wide text-[#0B0E17] shadow-[0_8px_24px_rgba(212,175,55,0.35)] transition-colors hover:bg-[#FFF275]"
               >
                 <span className="flex items-center gap-2">
                   <PeaceHand
@@ -967,13 +926,10 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     strokeWidth={2}
                     className="text-[#0B0E17] transition-transform duration-300 group-hover:rotate-12"
                   />
-                  <span>
-                    เยื้องย่างสู่ท่าน้ำ อัญเชิญเครื่องลอยทั้ง{' '}
-                    {THAI_NUMERALS[currentCount - 1]} ดวง
-                  </span>
+                  <span className="whitespace-nowrap">{ct.startInteractBtn(numerals[currentCount - 1])}</span>
                 </span>
-                <span className="font-display text-xs font-medium text-[#0B0E17]">
-                  เชิญลอย →
+                <span className="font-display hidden text-xs font-medium whitespace-nowrap text-[#0B0E17] min-[480px]:inline">
+                  {ct.startInteractCta}
                 </span>
               </motion.button>
             </motion.div>
@@ -1001,27 +957,25 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                       repeat: Infinity,
                       ease: 'easeInOut',
                     }}
-                    className="pointer-events-none absolute -bottom-2 h-6 w-80 rounded-full border border-[#FFF275]/55 bg-[#D4AF37]/15 blur-[1px]"
+                    className="pointer-events-none absolute -bottom-2 h-6 w-[min(20rem,90vw)] rounded-full border border-[#FFF275]/55 bg-[#D4AF37]/15 blur-[1px]"
                   />
 
-                  <div className="flex flex-wrap items-center justify-center gap-2.5">
+                  <div className="flex items-center justify-center gap-2">
                     <button
                       type="button"
                       onClick={() => setIsBookSubmerged(false)}
-                      className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#FFF275]/80 bg-[#0B0E17]/95 px-4 py-2.5 text-xs font-semibold text-[#FFF275] shadow-[0_0_26px_rgba(244,208,111,0.45)] backdrop-blur-md transition-all hover:bg-[#141932]"
+                      className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#FFF275]/80 bg-[#0B0E17]/95 px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#FFF275] sm:px-4 shadow-[0_0_26px_rgba(244,208,111,0.45)] backdrop-blur-md transition-all hover:bg-[#141932]"
                     >
-                      <span>
-                        อัญเชิญสมุดข่อยขึ้นจากสายน้ำ (กลับมาแต่งกระทง)
-                      </span>
+                      <span>{ct.emergeBtn}</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={onStartInteract}
-                      className="thai-chamfer-sm font-heading flex items-center gap-1.5 border border-[#FFF275]/70 bg-[#D4AF37] px-4 py-2.5 text-xs font-semibold text-[#0B0E17] shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-colors hover:bg-[#FFF275]"
+                      className="thai-chamfer-sm font-heading flex items-center gap-1.5 border border-[#FFF275]/70 bg-[#D4AF37] px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#0B0E17] sm:px-4 shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-colors hover:bg-[#FFF275]"
                     >
                       <PeaceHand width={15} height={15} strokeWidth={2} />
-                      <span>เชิญลอยทันที →</span>
+                      <span>{ct.launchNowBtn}</span>
                     </button>
                   </div>
                 </div>
@@ -1039,7 +993,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setActiveColorModal(null)}
-            className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#060810]/75 p-4 backdrop-blur-sm"
+            className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#060810]/75 p-3 backdrop-blur-sm sm:p-4"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.94, y: 16 }}
@@ -1047,19 +1001,19 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               exit={{ opacity: 0, scale: 0.94, y: 16 }}
               transition={SPRING_TRANSITION}
               onClick={(e) => e.stopPropagation()}
-              className="thai-chamfer relative w-full max-w-md border border-[#D4AF37]/65 bg-[#0E1222] p-5 text-[#FFFDF7] shadow-[0_26px_70px_rgba(0,0,0,0.92)]"
+              className="thai-chamfer relative max-h-[calc((100dvh-1.5rem)/var(--ui-zoom,1))] w-full max-w-md overflow-y-auto [zoom:var(--ui-zoom,1)] border border-[#D4AF37]/65 bg-[#0E1222] p-4 text-[#FFFDF7] sm:p-5 shadow-[0_26px_70px_rgba(0,0,0,0.92)]"
             >
               {/* Modal Header */}
               <div className="flex items-start justify-between gap-2 border-b border-[#D4AF37]/30 pb-3">
                 <div>
                   <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
-                    ถาดผสมรงควัตถุพระนคร • เลือกเฉดสีเพิ่มเติม
+                    {ct.colorModalTag}
                   </p>
                   <h3 className="font-display text-lg font-normal text-[#FFFDF7]">
-                    {COLOR_FIELD_LABELS[activeColorModal].title}
+                    {ct.colorFields[activeColorModal].title}
                   </h3>
                   <p className="font-heading text-[11px] text-[#FFFDF7]/65">
-                    {COLOR_FIELD_LABELS[activeColorModal].sub}
+                    {ct.colorFields[activeColorModal].sub}
                   </p>
                 </div>
                 <button
@@ -1074,9 +1028,9 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               {/* Section 1: All Curated Thai Color Pairs */}
               <div className="mt-3.5">
                 <p className="font-heading mb-2 text-xs font-medium text-[#F4D06F]">
-                  คลังคู่สีไทยมงคล (๑๖ คู่สี)
+                  {ct.colorModalPresets}
                 </p>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-8 gap-1.5 sm:grid-cols-4 sm:gap-2">
                   {ALL_THAI_COLOR_PAIRS.map((pair) => {
                     const isSelected =
                       modalColorValue.toUpperCase() ===
@@ -1088,14 +1042,16 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                         onClick={() =>
                           updateCurrentSlot(activeColorModal, pair.value)
                         }
-                        className={`flex items-center gap-2 border p-1.5 text-left transition-all ${
+                        title={colorName(pair)}
+                        aria-label={colorName(pair)}
+                        className={`flex aspect-square items-center justify-center gap-2 border p-1 text-left transition-all sm:aspect-auto sm:justify-start sm:p-1.5 ${
                           isSelected
                             ? 'border-[#FFF275] bg-[#D4AF37]/22 text-[#FFF275]'
                             : 'border-[#D4AF37]/25 bg-[#080B14]/90 text-[#FFFDF7]/80 hover:border-[#D4AF37]/60'
                         }`}
                       >
                         {/* Dual-Tone Color Pair Swatch */}
-                        <span className="relative flex h-5 w-5 shrink-0 overflow-hidden border border-white/20">
+                        <span className="relative flex size-full shrink-0 overflow-hidden border border-white/20 sm:size-5">
                           <span
                             className="h-full w-2/3"
                             style={{ backgroundColor: pair.value }}
@@ -1105,8 +1061,8 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                             style={{ backgroundColor: pair.accent }}
                           />
                         </span>
-                        <span className="font-heading truncate text-[10px]">
-                          {pair.label}
+                        <span className="font-heading hidden truncate text-[10px] sm:inline">
+                          {colorName(pair)}
                         </span>
                       </button>
                     );
@@ -1119,7 +1075,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 <div>
                   <div className="mb-1 flex items-center justify-between">
                     <span className="font-heading text-xs text-[#F4D06F]">
-                      หลอดไล่เฉดสีรุ้ง (Hue Gradient)
+                      {ct.colorModalHue}
                     </span>
                     <span className="font-heading text-[10px] text-[#FFFDF7]/65">
                       {modalHsl.h}°
@@ -1138,14 +1094,14 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                       background:
                         'linear-gradient(to right, #FF0000 0%, #FFFF00 17%, #00FF00 33%, #00FFFF 50%, #0000FF 67%, #FF00FF 83%, #FF0000 100%)',
                     }}
-                    className="h-3 w-full cursor-pointer appearance-none border border-[#D4AF37]/50 outline-none [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]: rounded-none [&::-moz-range-thumb]:border [&::-moz-range-thumb]:border-[#0B0E17] [&::-moz-range-thumb]:bg-[#FFFDF7] [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#0B0E17] [&::-webkit-slider-thumb]:bg-[#FFFDF7] [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(0,0,0,0.85)]"
+                    className="h-3 w-full cursor-pointer appearance-none border border-[#D4AF37]/50 outline-none [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-none [&::-moz-range-thumb]:border [&::-moz-range-thumb]:border-[#0B0E17] [&::-moz-range-thumb]:bg-[#FFFDF7] [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#0B0E17] [&::-webkit-slider-thumb]:bg-[#FFFDF7] [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(0,0,0,0.85)]"
                   />
                 </div>
 
                 <div>
                   <div className="mb-1 flex items-center justify-between">
                     <span className="font-heading text-xs text-[#F4D06F]">
-                      หลอดปรับความสว่างและน้ำหนักสี (Tone Gradient)
+                      {ct.colorModalTone}
                     </span>
                     <span className="font-heading text-[10px] text-[#FFFDF7]/65">
                       {modalHsl.l}%
@@ -1179,15 +1135,20 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                   />
                   <div>
                     <p className="font-heading text-[10px] text-[#FFFDF7]/65">
-                      สีที่เลือกปัจจุบัน
+                      {ct.colorModalCurrent}
                     </p>
                     <p className="font-heading text-xs font-semibold text-[#FFF275]">
                       {modalColorValue.toUpperCase()}
+                      {modalColorPair && (
+                        <span className="ml-1.5 font-normal text-[#FFFDF7]/70">
+                          {colorName(modalColorPair)}
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="grid w-full grid-cols-2 gap-2 min-[400px]:flex min-[400px]:w-auto min-[400px]:items-center">
                   {/* Hidden fallback native color input */}
                   <input
                     ref={nativeColorInputRef}
@@ -1205,19 +1166,19 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                   <button
                     type="button"
                     onClick={handleEyedropperPick}
-                    className="font-heading flex items-center gap-1.5 border border-[#D4AF37]/60 bg-[#141932] px-3 py-2 text-xs text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/20"
+                    className="font-heading flex items-center justify-center gap-1.5 border border-[#D4AF37]/60 bg-[#141932] px-3 py-2 text-xs whitespace-nowrap text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/20"
                   >
                     <ColorPicker width={14} height={14} strokeWidth={2} />
-                    <span>หลอดดูดสี</span>
+                    <span>{ct.colorModalEyedropper}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setActiveColorModal(null)}
-                    className="font-heading flex items-center gap-1.5 border border-[#FFF275]/60 bg-[#D4AF37] px-3.5 py-2 text-xs font-semibold text-[#0B0E17] transition-colors hover:bg-[#FFF275]"
+                    className="font-heading flex items-center justify-center gap-1.5 border border-[#FFF275]/60 bg-[#D4AF37] px-3.5 py-2 text-xs font-semibold whitespace-nowrap text-[#0B0E17] transition-colors hover:bg-[#FFF275]"
                   >
                     <Check width={14} height={14} strokeWidth={2.2} />
-                    <span>ใช้สีนี้</span>
+                    <span>{ct.colorModalDone}</span>
                   </button>
                 </div>
               </div>

@@ -25,7 +25,51 @@ export const SKY_LANTERN_TARGETS: NormalizedPoint[] = [
   { x: 0.76, y: 0.22 },
 ];
 
+// Portrait phones/tablets: a staggered layout so rings never overlap each other or the bottom HUD
+const RIVER_SPOT_TARGETS_PORTRAIT: NormalizedPoint[] = [
+  { x: 0.22, y: 0.63 },
+  { x: 0.5, y: 0.6 },
+  { x: 0.78, y: 0.63 },
+  { x: 0.34, y: 0.72 },
+  { x: 0.66, y: 0.72 },
+];
+
+const SKY_LANTERN_TARGETS_PORTRAIT: NormalizedPoint[] = [
+  { x: 0.2, y: 0.22 },
+  { x: 0.4, y: 0.15 },
+  { x: 0.6, y: 0.22 },
+  { x: 0.8, y: 0.15 },
+];
+
+export function isPortraitView(width: number, height: number): boolean {
+  return height > width * 1.15;
+}
+
+export function getRiverSpotTargets(width: number, height: number): NormalizedPoint[] {
+  return isPortraitView(width, height) ? RIVER_SPOT_TARGETS_PORTRAIT : RIVER_SPOT_TARGETS;
+}
+
+export function getSkyLanternTargets(width: number, height: number): NormalizedPoint[] {
+  return isPortraitView(width, height) ? SKY_LANTERN_TARGETS_PORTRAIT : SKY_LANTERN_TARGETS;
+}
+
 export const SPOT_HIT_RADIUS_RATIO = 0.095;
+
+// Scene-prop scale for the current viewport: 1 at 1440×900, eased down for phones/tablets and up for large displays
+export function getViewScale(width: number, height: number): number {
+  const fit = Math.min(width / 1440, height / 900);
+  return Math.max(0.55, Math.min(1.35, Math.pow(fit, 0.75)));
+}
+
+// Localized strings painted onto the canvas (supplied from translations.canvas)
+export interface CanvasLabels {
+  beaconIdle: string;
+  beaconGrabbed: string;
+  skyIdle: string;
+  skyHover: string;
+  waterIdle: string;
+  waterHover: string;
+}
 
 export interface SparkParticle {
   x: number;
@@ -947,7 +991,9 @@ export function drawStageItemBeacon(
   y: number,
   scale: number,
   isGrabbed: boolean,
-  time: number
+  time: number,
+  labels: CanvasLabels,
+  showBadge = true
 ): void {
   const pulse = 0.5 + 0.5 * Math.sin(time * 0.006);
 
@@ -992,7 +1038,11 @@ export function drawStageItemBeacon(
     ctx.fill();
   }
 
-  // 4. High-contrast callout pill badge beneath the pedestal
+  // 4. High-contrast callout pill badge beneath the pedestal (skipped when items sit too close together)
+  if (!showBadge) {
+    ctx.restore();
+    return;
+  }
   const badgeW = 122;
   const badgeH = 22;
   const badgeY = 42;
@@ -1005,7 +1055,7 @@ export function drawStageItemBeacon(
   ctx.font = '600 11px "Bai Jamjuree", sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(
-    isGrabbed ? 'กำลังประคองไปลอย' : 'หยิบชิ้นนี้ไปลอย',
+    isGrabbed ? labels.beaconGrabbed : labels.beaconIdle,
     0,
     badgeY + 15
   );
@@ -1018,7 +1068,8 @@ export function drawTargetSpotlights(
   width: number,
   height: number,
   stageItems: StageItem[],
-  time: number
+  time: number,
+  labels: CanvasLabels
 ): void {
   const unReleasedKrathongs = stageItems.filter(
     (item) => !item.released && item.itemType === 'krathong'
@@ -1031,14 +1082,14 @@ export function drawTargetSpotlights(
 
   // 1. Draw glowing circular sky release spots for Sky Lanterns
   if (unReleasedLanterns.length > 0) {
-    SKY_LANTERN_TARGETS.forEach((spot, idx) => {
+    getSkyLanternTargets(width, height).forEach((spot, idx) => {
       const sx = spot.x * width;
       const sy = spot.y * height;
       const isHovered = unReleasedLanterns.some(
         (item) => Math.hypot(item.x - spot.x, item.y - spot.y) < SPOT_HIT_RADIUS_RATIO * 1.15
       );
 
-      const baseRadius = Math.max(36, Math.min(width, height) * 0.068);
+      const baseRadius = 60 * getViewScale(width, height);
       const r = baseRadius * (isHovered ? 1.14 : 0.96 + pulse * 0.08);
 
       ctx.save();
@@ -1091,9 +1142,7 @@ export function drawTargetSpotlights(
         ctx.textAlign = 'center';
         ctx.fillStyle = isHovered ? '#FFF275' : 'rgba(244, 208, 111, 0.88)';
         ctx.fillText(
-          isHovered
-            ? 'ส่งโคมทองลอยลิ่วสู่ฟากฟ้าราตรี'
-            : 'วงแสงเวหา • ลานปล่อยโคมประทีป',
+          isHovered ? labels.skyHover : labels.skyIdle,
           0,
           r + 20
         );
@@ -1105,14 +1154,14 @@ export function drawTargetSpotlights(
 
   // 2. Draw glowing circular water-lily spots on the river for Krathongs
   if (unReleasedKrathongs.length > 0) {
-    RIVER_SPOT_TARGETS.forEach((spot, idx) => {
+    getRiverSpotTargets(width, height).forEach((spot, idx) => {
       const sx = spot.x * width;
       const sy = spot.y * height;
       const isHovered = unReleasedKrathongs.some(
         (item) => Math.hypot(item.x - spot.x, item.y - spot.y) < SPOT_HIT_RADIUS_RATIO * 1.2
       );
 
-      const rx = Math.max(44, Math.min(width, height) * 0.078) * (isHovered ? 1.15 : 1);
+      const rx = 70 * getViewScale(width, height) * (isHovered ? 1.15 : 1);
       const ry = rx * 0.44;
       const ripplePulse = ( (time * 0.0008 + idx * 0.25) % 1 );
 
@@ -1170,9 +1219,7 @@ export function drawTargetSpotlights(
         ctx.textAlign = 'center';
         ctx.fillStyle = isHovered ? '#FFF275' : 'rgba(244, 208, 111, 0.88)';
         ctx.fillText(
-          isHovered
-            ? 'คลายนิ้วส่งกระทงล่องสู่คุ้งน้ำ'
-            : 'วงแสงจันทรา • ท่าน้ำวางกระทง',
+          isHovered ? labels.waterHover : labels.waterIdle,
           0,
           ry + 20
         );
@@ -1192,11 +1239,11 @@ const FINGER_CHAINS: number[][] = [
 ];
 
 const HAND_PALETTES = [
-  { skin: '#FFE5B4', accent: '#F4D06F', joint: '#FF99C8', label: 'มือที่ ๑' },
-  { skin: '#FFD6E8', accent: '#FF99C8', joint: '#FF8C42', label: 'มือที่ ๒' },
-  { skin: '#D8F3DC', accent: '#52B788', joint: '#F4D06F', label: 'มือที่ ๓' },
-  { skin: '#EDE0D4', accent: '#E0AAFF', joint: '#FF99C8', label: 'มือที่ ๔' },
-  { skin: '#FFF3B0', accent: '#FF8C42', joint: '#F4D06F', label: 'มือที่ ๕' },
+  { skin: '#FFE5B4', accent: '#F4D06F', joint: '#FF99C8' },
+  { skin: '#FFD6E8', accent: '#FF99C8', joint: '#FF8C42' },
+  { skin: '#D8F3DC', accent: '#52B788', joint: '#F4D06F' },
+  { skin: '#EDE0D4', accent: '#E0AAFF', joint: '#FF99C8' },
+  { skin: '#FFF3B0', accent: '#FF8C42', joint: '#F4D06F' },
 ];
 
 function drawSingleIllustratedHand(
@@ -1204,7 +1251,8 @@ function drawSingleIllustratedHand(
   width: number,
   height: number,
   hand: TrackedHand,
-  totalHands: number
+  totalHands: number,
+  label: string
 ): void {
   const palette = HAND_PALETTES[hand.handIndex % HAND_PALETTES.length];
   const primarySkin = palette.skin;
@@ -1311,7 +1359,7 @@ function drawSingleIllustratedHand(
       ctx.font = '600 11px "Bai Jamjuree", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillStyle = accentColor;
-      ctx.fillText(palette.label, wrist.x, wrist.y + 20);
+      ctx.fillText(label, wrist.x, wrist.y + 20);
     }
   }
 
@@ -1353,7 +1401,8 @@ export function drawIllustratedHands(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  gestureState: HandGestureState
+  gestureState: HandGestureState,
+  handLabels: readonly string[]
 ): void {
   if (!gestureState.isTracking || !gestureState.hands.length) return;
 
@@ -1363,7 +1412,8 @@ export function drawIllustratedHands(
       width,
       height,
       hand,
-      gestureState.hands.length
+      gestureState.hands.length,
+      handLabels[hand.handIndex % handLabels.length]
     );
   });
 }

@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Bai_Jamjuree,
   Charm,
   Cormorant_Garamond,
   Pridi,
 } from "next/font/google";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import "./globals.css";
 
 const baiJamjureeFont = Bai_Jamjuree({
@@ -32,17 +33,42 @@ const cormorantFont = Cormorant_Garamond({
   weight: ["400", "600"],
 });
 
+const SITE_TITLE = "ลอยกะใคร อ๋อ ลอยกระทง";
+const SITE_DESCRIPTION =
+  "ประดิษฐ์กระทงใบตองและโคมลอย จารึกคำอธิษฐาน แล้วใช้นิ้วมือหยิบปล่อยลงสายน้ำผ่านกล้องเว็บแคม ลอยกระทงออนไลน์คืนวันเพ็ญเดือน ๑๒ ไปพร้อมคนที่คุณรัก";
+
 export const metadata: Metadata = {
-  title: "ลอยกะเธอ — Loikratur | Nocturnal Water & Sky Ritual",
-  description:
-    "ลอยกะเธอ (Loikratur) — ร่วมพับกระทงและปล่อยโคมลอยคอลลาจเรขาคณิต จารึกคำอธิษฐานลงบนกระดาษสา และล่องสู่สายน้ำยามค่ำคืนไปพร้อมกัน",
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  applicationName: "ลอย กะ เธอ",
   keywords: [
-    "ลอยกะเธอ",
-    "Loikratur",
+    "ลอย กะ เธอ",
+    "Loy Kra Ter",
     "ลอยกระทงออนไลน์",
+    "ลอยกระทง",
     "ปล่อยโคมลอย",
-    "Interactive Loy Krathong",
+    "Loy Krathong online",
   ],
+  openGraph: {
+    type: "website",
+    locale: "th_TH",
+    alternateLocale: ["en_US"],
+    siteName: "ลอย กะ เธอ",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0D1321",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -51,8 +77,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="th"
       className={`${baiJamjureeFont.variable} ${charmFont.variable} ${pridiFont.variable} ${cormorantFont.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0D1321] text-[#FFFDF7]">
-        {children}
+      <body className="flex h-full flex-col overscroll-none bg-[#0D1321] text-[#FFFDF7] [-webkit-tap-highlight-color:transparent]">
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );

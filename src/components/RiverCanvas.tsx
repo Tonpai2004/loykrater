@@ -19,13 +19,16 @@ import {
   drawRiverSurface,
   drawStageItemBeacon,
   drawTargetSpotlights,
+  getViewScale,
   RIVER_DROP_ZONE_MIN_Y,
   RIVER_HORIZON_RATIO,
-  RIVER_SPOT_TARGETS,
-  SKY_LANTERN_TARGETS,
+  getRiverSpotTargets,
+  getSkyLanternTargets,
+  isPortraitView,
   SPOT_HIT_RADIUS_RATIO,
   SparkParticle,
 } from '@/lib/canvasRenderer';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 import {
   AMBIENT_CYCLE_MS,
@@ -111,7 +114,18 @@ export function buildStageItems(config: KrathongConfig): StageItem[] {
 
   return slots.map((slot, idx) => {
     const xPos = getHorizontalRatio(idx, total);
-    const yPos = slot.itemType === 'lantern' ? 0.41 : 0.49;
+    // Zig-zag rows on portrait screens so 4-5 offerings don't stack on top of each other
+    const portrait =
+      typeof window !== 'undefined' &&
+      isPortraitView(window.innerWidth, window.innerHeight);
+    const yPos =
+      portrait && total >= 4
+        ? idx % 2 === 0
+          ? 0.4
+          : 0.53
+        : slot.itemType === 'lantern'
+          ? 0.41
+          : 0.49;
     const ownerName = slot.authorName.trim();
     const wishText =
       slot.wishText.trim() || 'ลอยทุกข์โศกโรคภัย ให้ไหลลับกับสายชล';
@@ -173,6 +187,14 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
   onProgressChange,
   onAllItemsReleased,
 }) => {
+  const { t } = useLanguage();
+  const canvasLabelsRef = useRef(t.canvas);
+  const handLabelsRef = useRef<string[]>([]);
+  useEffect(() => {
+    canvasLabelsRef.current = t.canvas;
+    handLabelsRef.current = t.numerals.map((n) => `${t.canvas.handLabel} ${n}`);
+  }, [t]);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stageItemsRef = useRef<StageItem[]>([]);
   const roundCompletedRef = useRef<boolean>(false);
@@ -285,6 +307,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
       const width = window.innerWidth;
       const height = window.innerHeight;
+      const viewScale = getViewScale(width, height);
       const {
         gameState: currentMode,
         activeConfig: currentConfig,
@@ -358,7 +381,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             if (grabbedItem.itemType === 'krathong') {
               const riverSpot = findNearestSpot(
                 { x: grabbedItem.x, y: grabbedItem.y },
-                RIVER_SPOT_TARGETS,
+                getRiverSpotTargets(width, height),
                 SPOT_HIT_RADIUS_RATIO * 1.45
               );
               if (riverSpot) {
@@ -381,7 +404,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             } else if (grabbedItem.itemType === 'lantern') {
               const skySpot = findNearestSpot(
                 { x: grabbedItem.x, y: grabbedItem.y },
-                SKY_LANTERN_TARGETS,
+                getSkyLanternTargets(width, height),
                 SPOT_HIT_RADIUS_RATIO * 1.45
               );
               if (skySpot) {
@@ -405,7 +428,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
           }
         });
 
-        const baseScale = stageItems.length >= 4 ? 0.98 : 1.12;
+        const baseScale = (stageItems.length >= 4 ? 0.98 : 1.12) * viewScale;
         stageItems.forEach((item) => {
           if (item.released) return;
           const ax =
@@ -421,7 +444,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
           const isGrabbed =
             item.grabbedByHandIndex !== null || item.grabbedByPointerId !== null;
-          const targetScale = isGrabbed ? baseScale + 0.16 : baseScale;
+          const targetScale = isGrabbed ? baseScale * 1.14 : baseScale;
           item.scale += (targetScale - item.scale) * Math.min(1, dt * 10);
         });
       }
@@ -447,7 +470,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
           let finalOpacity: number;
 
           if (isAmbient) {
-            // Continuous, seamless 38s loop for ambient background items — never jumps or refreshes
+            // Continuous, seamless 38s loop for ambient background items; never jumps or refreshes
             elapsed =
               (((now - item.createdAt) % AMBIENT_CYCLE_MS) + AMBIENT_CYCLE_MS) %
               AMBIENT_CYCLE_MS;
@@ -523,7 +546,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               item,
               x: currentXRatio * width,
               y: currentYRatio * height,
-              scale: perspectiveScale,
+              scale: perspectiveScale * viewScale,
               opacity: finalOpacity,
               wishTagOpacity,
             };
@@ -553,7 +576,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             item,
             x: currentXRatio * width,
             y: currentYRatio * height,
-            scale: perspectiveScale,
+            scale: perspectiveScale * viewScale,
             opacity: finalOpacity,
             wishTagOpacity,
           };
@@ -633,7 +656,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               : total === 3
               ? 0.92
               : 0.82;
-          const finalScale = isSelected ? baseScale * 1.12 : baseScale * 0.9;
+          const finalScale = (isSelected ? baseScale * 1.12 : baseScale * 0.9) * viewScale;
 
           const slotConfig: KrathongConfig = {
             ...currentConfig,
@@ -676,7 +699,9 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
       if (currentMode === 'INTERACT') {
         const stageItems = stageItemsRef.current;
-        drawTargetSpotlights(ctx, width, height, stageItems, time);
+        // Badges & wish slips only when each offering has room; otherwise just for the one in hand
+        const roomy = width / Math.max(1, stageItems.length) >= 150;
+        drawTargetSpotlights(ctx, width, height, stageItems, time, canvasLabelsRef.current);
 
         stageItems.forEach((item) => {
           if (item.released) return;
@@ -686,7 +711,16 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             item.grabbedByHandIndex !== null || item.grabbedByPointerId !== null;
 
           // Bright unmistakable golden aura, spotlight pedestal, and callout badge
-          drawStageItemBeacon(ctx, ix, iy, item.scale, isGrabbed, time);
+          drawStageItemBeacon(
+            ctx,
+            ix,
+            iy,
+            item.scale,
+            isGrabbed,
+            time,
+            canvasLabelsRef.current,
+            roomy
+          );
 
           if (item.itemType === 'lantern') {
             drawInteractiveSkyLantern({
@@ -697,7 +731,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               config: item.config,
               time,
               isHighlighted: true,
-              showWishTag: !item.config.hideWish,
+              showWishTag: !item.config.hideWish && (roomy || isGrabbed),
               ownerLabel: item.ownerName,
               wishOverride: item.wishText,
             });
@@ -710,7 +744,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               config: item.config,
               time,
               isHighlighted: true,
-              showWishTag: !item.config.hideWish,
+              showWishTag: !item.config.hideWish && (roomy || isGrabbed),
               ownerLabel: item.ownerName,
               wishOverride: item.wishText,
             });
@@ -739,7 +773,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
       }
 
       if (currentMode === 'INTERACT') {
-        drawIllustratedHands(ctx, width, height, handState);
+        drawIllustratedHands(ctx, width, height, handState, handLabelsRef.current);
       }
 
       animationFrameId = requestAnimationFrame(renderLoop);
@@ -813,7 +847,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
     if (grabbedItem.itemType === 'krathong') {
       const riverSpot = findNearestSpot(
         { x: grabbedItem.x, y: grabbedItem.y },
-        RIVER_SPOT_TARGETS,
+        getRiverSpotTargets(window.innerWidth, window.innerHeight),
         SPOT_HIT_RADIUS_RATIO * 1.45
       );
       if (riverSpot) {
@@ -836,7 +870,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
     } else if (grabbedItem.itemType === 'lantern') {
       const skySpot = findNearestSpot(
         { x: grabbedItem.x, y: grabbedItem.y },
-        SKY_LANTERN_TARGETS,
+        getSkyLanternTargets(window.innerWidth, window.innerHeight),
         SPOT_HIT_RADIUS_RATIO * 1.45
       );
       if (skySpot) {

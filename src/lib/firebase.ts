@@ -314,7 +314,7 @@ export async function publishKrathong(
       wishText: config.hideWish
         ? ''
         : config.wishText.trim() || 'ขอให้พบเจอแต่ความสุขความเจริญ',
-      authorName: config.authorName.trim() || 'ผู้ร่วมลอยกะเธอ',
+      authorName: config.authorName.trim() || 'ผู้ร่วมลอย กะ เธอ',
     },
     spawnXRatio: Math.max(0.08, Math.min(0.92, spawnXRatio)),
     spawnYRatio: clampedY,

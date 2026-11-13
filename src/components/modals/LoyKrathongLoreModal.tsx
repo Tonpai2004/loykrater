@@ -1,41 +1,37 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Xmark } from 'iconoir-react';
+import { NavArrowLeft, NavArrowRight, Xmark } from 'iconoir-react';
+import { LORE_CONTENT, LoreChapterId } from '@/constants/loreContent';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LoyKrathongLoreModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const UPCOMING_SCROLLS = [
-  {
-    numeral: '๑',
-    title: 'ปฐมบทแห่งวันเพ็ญเดือนสิบสอง',
-    desc: 'รากเหง้าและพัฒนาการของประเพณีลอยประทีปโคมไฟ ตั้งแต่ยุคโบราณจวบจนสมัยรัตนโกสินทร์',
-  },
-  {
-    numeral: '๒',
-    title: 'คติความเชื่อเรื่องพระแม่คงคา',
-    desc: 'ความกตัญญูต่อสายน้ำผู้หล่อเลี้ยงชีวิต การขอขมาลาโทษ และการลอยทุกข์โศกให้ไหลลับไปกับสายชล',
-  },
-  {
-    numeral: '๓',
-    title: 'โคมลอยยี่เป็งและประทีปบูชาฟากฟ้า',
-    desc: 'ธรรมเนียมการปล่อยโคมไฟขึ้นสู่นภากาศเพื่อบูชาพระเกตุแก้วจุฬามณีบนสวรรค์ชั้นดาวดึงส์',
-  },
-  {
-    numeral: '๔',
-    title: 'ภูมิปัญญางานใบตองและดอกไม้สดไทย',
-    desc: 'ความหมายอันเป็นมงคลของกลีบบัวสัตตบงกช ดอกดาวเรือง ดอกรัก และธูปเทียนเครื่องสักการะ',
-  },
-];
-
 export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { locale } = useLanguage();
+  const lr = LORE_CONTENT[locale];
+
+  const [activeId, setActiveId] = useState<LoreChapterId>('origins');
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+
+  const currentIdx = Math.max(
+    0,
+    lr.chapters.findIndex((chapter) => chapter.id === activeId)
+  );
+  const chapter = lr.chapters[currentIdx];
+
+  // Every folio opens at its first line
+  useEffect(() => {
+    bodyRef.current?.scrollTo({ top: 0 });
+  }, [activeId]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -43,27 +39,34 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#060911]/85 p-3 backdrop-blur-md sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060B]/88 p-2.5 backdrop-blur-md sm:p-6 [@media(max-height:500px)]:p-2!"
           onClick={onClose}
         >
+          {/* Royal Black Khoi Manuscript (สมุดไทยดำลงรักปิดทอง) */}
           <motion.div
-            initial={{ opacity: 0, y: 40, scaleY: 0.88 }}
+            initial={{ opacity: 0, y: 32, scaleY: 0.92 }}
             animate={{ opacity: 1, y: 0, scaleY: 1 }}
-            exit={{ opacity: 0, y: 30, scaleY: 0.92 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, y: 24, scaleY: 0.94 }}
+            transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="saa-paper-card thai-chamfer relative flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden border-2 border-[#D4AF37] shadow-[0_28px_80px_rgba(0,0,0,0.85)]"
+            className="thai-chamfer relative flex h-[calc(100dvh-1.25rem)] [@media(max-height:500px)]:h-[calc(100dvh-1rem)]! w-full max-w-3xl flex-col overflow-hidden lg:max-w-4xl border border-[#C5A059] bg-[#0D0B09] text-[#F5EFE4] shadow-[0_32px_90px_rgba(0,0,0,0.92)] [zoom:var(--ui-zoom,1)] sm:h-[calc(min(90dvh,56rem)/var(--ui-zoom,1))]"
           >
+            {/* Inner Gold Hairline Frame */}
+            <div className="pointer-events-none absolute inset-1.5 border border-[#C5A059]/30" />
+
             {/* Header */}
-            <div className="flex items-center justify-between border-b-2 border-[#8C6D3F] bg-[#1C1815] px-4 py-3 text-[#F5EFE4] sm:px-6">
-              <div className="flex items-center gap-2.5">
-                <span className="h-2.5 w-2.5 rotate-45 border border-[#FFF275] bg-[#D4AF37]" />
-                <div>
-                  <h2 className="font-display text-base font-semibold tracking-wide text-[#F4D06F] sm:text-lg">
-                    สมุดข่อยคลังความรู้ • ตำนานประเพณีลอยกระทง
+            <div className="relative flex items-center justify-between gap-3 border-b border-[#C5A059]/45 bg-gradient-to-r from-[#14100C] via-[#1C1610] to-[#14100C] px-4 py-3 sm:px-7 sm:py-4 [@media(max-height:500px)]:py-1.5!">
+              <div className="flex min-w-0 items-center gap-3.5">
+                <div className="hidden h-9 w-9 shrink-0 items-center justify-center border border-[#C5A059]/70 bg-[#0D0B09] sm:flex">
+                  <span className="h-2.5 w-2.5 rotate-45 bg-[#E6C77B]" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-display truncate text-base font-medium tracking-wider text-[#F4D06F] sm:text-lg">
+                    <span className="md:hidden">{lr.headerShort}</span>
+                    <span className="hidden md:inline">{lr.header}</span>
                   </h2>
-                  <p className="font-heading text-[11px] text-[#F5EFE4]/75">
-                    บันทึกประวัติศาสตร์ คติธรรม และภูมิปัญญาแห่งสายน้ำและโคมไฟ
+                  <p className="font-editorial hidden truncate text-xs tracking-[0.22em] text-[#C5A059]/80 uppercase sm:block">
+                    {lr.sub}
                   </p>
                 </div>
               </div>
@@ -71,85 +74,160 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex h-8 w-8 cursor-pointer items-center justify-center border border-[#D4AF37]/50 bg-[#2A241F] text-[#F4D06F] transition-colors hover:border-[#FFF275] hover:bg-[#3B322B]"
-                aria-label="ปิดสมุดข่อย"
+                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center border border-[#C5A059]/45 bg-[#16120E] text-[#E6C77B] transition-colors hover:border-[#FFF275] hover:text-[#FFF275]"
+                aria-label={lr.closeBtn}
               >
                 <Xmark width={18} height={18} />
               </button>
             </div>
 
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto p-5 sm:p-7">
-              {/* Coming Soon Centerpiece Banner */}
-              <div className="mb-5 flex flex-col items-center border-2 border-dashed border-[#B89047] bg-[#FFFDF7]/85 px-5 py-6 text-center">
-                {/* Ancient Scroll Illustration */}
-                <div className="mb-3 flex h-16 w-16 items-center justify-center border border-[#D4AF37] bg-[#1C1815] text-[#F4D06F]">
-                  <svg viewBox="0 0 40 40" className="h-9 w-9" fill="none">
-                    <path
-                      d="M6 10 L15 7 L25 10 L34 7 L34 30 L25 33 L15 30 L6 33 Z"
-                      stroke="#F4D06F"
-                      strokeWidth="1.8"
-                      strokeLinejoin="round"
-                    />
-                    <line x1="15" y1="7" x2="15" y2="30" stroke="#D4AF37" strokeWidth="1.2" />
-                    <line x1="25" y1="10" x2="25" y2="33" stroke="#D4AF37" strokeWidth="1.2" />
-                  </svg>
-                </div>
-
-                <span className="mb-2 inline-block border border-[#B83B2A] bg-[#B83B2A] px-3 py-0.5 text-xs font-semibold tracking-wider text-[#FFFDF7]">
-                  กำลังจารึกเนื้อหา • เร็วๆ นี้
-                </span>
-
-                <h3 className="font-display text-lg font-semibold text-[#1C1815] sm:text-xl">
-                  หอสมุดข่อยประเพณีลอยกระทงกำลังอยู่ระหว่างการจัดทำ
-                </h3>
-                <p className="font-heading mt-1.5 max-w-md text-xs leading-relaxed text-[#4A3B2C] sm:text-sm">
-                  ทีมงานกำลังรวบรวมเรื่องราวประวัติศาสตร์ ภาพประกอบ และเกร็ดความรู้เกี่ยวกับวันลอยกระทงและโคมยี่เป็ง เพื่อนำมาจัดแสดงในรูปแบบสมุดข่อยดิจิทัลเร็วๆ นี้
-                </p>
-              </div>
-
-              {/* Preview of Upcoming Chapters */}
-              <div className="mb-2 flex items-center gap-2">
-                <span className="h-2 w-2 rotate-45 bg-[#B83B2A]" />
-                <span className="font-display text-xs font-semibold tracking-wider text-[#1C1815] uppercase sm:text-sm">
-                  หัวข้อเนื้อหาที่กำลังจะเปิดให้อ่าน
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {UPCOMING_SCROLLS.map((scroll) => (
-                  <div
-                    key={scroll.numeral}
-                    className="border border-[#B89047]/55 bg-[#FFFDF7]/75 p-3.5 opacity-90"
+            {/* Folio Index (สารบัญผูก) */}
+            <div
+              role="tablist"
+              className="grid border-b border-[#C5A059]/40 bg-[#120E0B]"
+              style={{ gridTemplateColumns: `repeat(${lr.chapters.length}, minmax(0, 1fr))` }}
+            >
+              {lr.chapters.map((folio) => {
+                const isSelected = folio.id === chapter.id;
+                return (
+                  <button
+                    key={folio.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    title={folio.title}
+                    onClick={() => setActiveId(folio.id)}
+                    className={`min-w-0 cursor-pointer border-r border-[#C5A059]/25 px-1 py-2.5 text-center transition-all last:border-r-0 sm:px-2 sm:py-3 [@media(max-height:500px)]:flex [@media(max-height:500px)]:items-baseline [@media(max-height:500px)]:justify-center [@media(max-height:500px)]:gap-1.5 [@media(max-height:500px)]:py-1.5! ${
+                      isSelected
+                        ? 'bg-[#1D1711] shadow-[inset_0_-2px_0_#F4D06F]'
+                        : 'bg-transparent opacity-65 hover:bg-[#17120E] hover:opacity-95'
+                    }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="bg-[#1C1815] px-2 py-0.5 text-[10px] font-bold text-[#F4D06F]">
-                        ผูกที่ {scroll.numeral}
-                      </span>
-                      <span className="text-[10px] font-medium text-[#B83B2A]">
-                        เร็วๆ นี้
-                      </span>
-                    </div>
-                    <h4 className="font-display mt-2 text-sm font-semibold text-[#1C1815]">
-                      {scroll.title}
-                    </h4>
-                    <p className="font-heading mt-1 text-xs leading-relaxed text-[#5C4938]">
-                      {scroll.desc}
+                    <span className="font-editorial block text-sm leading-none font-semibold text-[#F4D06F]">
+                      {folio.num}
+                    </span>
+                    <span className="font-display mt-1 block truncate [@media(max-height:500px)]:mt-0! text-xs font-medium whitespace-nowrap text-[#FFFDF7] sm:text-[13px]">
+                      {folio.short}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Manuscript Body */}
+            <div
+              ref={bodyRef}
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5 sm:px-8 sm:py-7 [&>*]:my-auto [@media(max-height:500px)]:py-3!"
+            >
+              <AnimatePresence mode="wait">
+                <motion.article
+                  key={`${locale}-${chapter.id}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.25 }}
+                  className="mx-auto w-full max-w-2xl"
+                >
+                  {/* Chapter Title */}
+                  <header className="text-center">
+                    <p
+                      className={`font-editorial text-[11px] text-[#C5A059] ${
+                        locale === 'en' ? 'tracking-[0.3em] uppercase' : 'font-heading tracking-wide'
+                      }`}
+                    >
+                      {chapter.sub}
                     </p>
+                    <h3 className="font-display mt-1.5 text-xl font-medium tracking-wide text-balance text-[#F4D06F] sm:text-2xl">
+                      {chapter.title}
+                    </h3>
+                    <div className="mx-auto mt-3 flex w-40 items-center gap-2.5">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#C5A059]/70" />
+                      <span className="h-1.5 w-1.5 rotate-45 bg-[#F4D06F]" />
+                      <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#C5A059]/70" />
+                    </div>
+                  </header>
+
+                  {/* Lede */}
+                  <p className="font-display mt-5 border-l-2 border-[#C5A059]/70 pl-4 text-sm leading-relaxed text-pretty text-[#F5EFE4]/90 sm:text-[15px]">
+                    {chapter.lede}
+                  </p>
+
+                  {/* Sections */}
+                  <div className="mt-6 space-y-5">
+                    {chapter.sections.map((section) => (
+                      <section key={section.heading}>
+                        <h4 className="font-display flex items-baseline gap-2.5 text-[15px] font-medium text-[#FFF275] sm:text-base">
+                          <span className="h-1.5 w-1.5 shrink-0 translate-y-[-2px] rotate-45 bg-[#C5A059]" />
+                          <span className="text-balance">{section.heading}</span>
+                        </h4>
+                        <p className="font-heading mt-1.5 pl-4 text-[13px] leading-[1.85] text-pretty text-[#E6DEC8]/85 sm:text-sm">
+                          {section.body}
+                        </p>
+                      </section>
+                    ))}
                   </div>
-                ))}
-              </div>
+
+                  {/* Margin Note */}
+                  {chapter.note && (
+                    <aside className="mt-7 border border-dashed border-[#C5A059]/50 bg-[#13100C] px-4 py-3.5">
+                      <p
+                        className={`font-editorial text-[11px] text-[#F4D06F] ${
+                          locale === 'en' ? 'tracking-[0.24em] uppercase' : 'font-heading tracking-wide'
+                        }`}
+                      >
+                        {chapter.note.label}
+                      </p>
+                      <p className="font-heading mt-1 text-xs leading-relaxed text-pretty text-[#E6DEC8]/80 sm:text-[13px]">
+                        {chapter.note.text}
+                      </p>
+                    </aside>
+                  )}
+                </motion.article>
+              </AnimatePresence>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end border-t-2 border-[#8C6D3F] bg-[#EBE0CC] px-4 py-3 sm:px-6">
+            <div className="flex items-center justify-between gap-2 border-t border-[#C5A059]/45 bg-[#14100C] px-3 py-2.5 sm:gap-3 sm:px-7 sm:py-3.5 [@media(max-height:500px)]:py-1.5!">
               <button
                 type="button"
-                onClick={onClose}
-                className="thai-chamfer-sm cursor-pointer border border-[#1C1815] bg-[#1C1815] px-5 py-2 text-xs font-semibold text-[#F4D06F] transition-colors hover:bg-[#2E2620]"
+                onClick={() =>
+                  currentIdx > 0 && setActiveId(lr.chapters[currentIdx - 1].id)
+                }
+                disabled={currentIdx === 0}
+                aria-label={lr.prevBtn}
+                className="inline-flex h-9 cursor-pointer items-center gap-1.5 border border-[#C5A059]/45 bg-[#1C1610] px-2.5 text-xs whitespace-nowrap text-[#E6DEC8] transition-opacity hover:border-[#F4D06F] disabled:cursor-not-allowed disabled:opacity-35 sm:px-3.5"
               >
-                ปิดสมุดข่อย
+                <NavArrowLeft width={14} height={14} />
+                <span className="hidden sm:inline">{lr.prevBtn}</span>
               </button>
+
+              <span
+                className={`text-[#C5A059] ${
+                  locale === 'en' ? 'font-editorial text-xs tracking-[0.2em]' : 'font-heading text-[13px] tracking-wider'
+                }`}
+              >
+                {chapter.num} / {lr.chapters[lr.chapters.length - 1].num}
+              </span>
+
+              {currentIdx < lr.chapters.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveId(lr.chapters[currentIdx + 1].id)}
+                  aria-label={lr.nextBtn}
+                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 border border-[#C5A059]/45 bg-[#1C1610] px-2.5 text-xs whitespace-nowrap text-[#E6DEC8] transition-colors hover:border-[#F4D06F] sm:px-3.5"
+                >
+                  <span className="hidden sm:inline">{lr.nextBtn}</span>
+                  <NavArrowRight width={14} height={14} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="thai-chamfer-sm h-9 cursor-pointer border border-[#C5A059] bg-[#1C1610] px-4 text-xs font-medium tracking-wide whitespace-nowrap text-[#F4D06F] transition-colors hover:border-[#FFF275] hover:text-[#FFF275] sm:px-5"
+                >
+                  {lr.closeBtn}
+                </button>
+              )}
             </div>
           </motion.div>
         </motion.div>

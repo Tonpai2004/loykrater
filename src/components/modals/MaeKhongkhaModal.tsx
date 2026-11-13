@@ -12,6 +12,7 @@ import {
 } from 'iconoir-react';
 import { KrathongConfig } from '@/types/krathong';
 import { getActiveOfferings, THAI_NUMERALS } from '@/components/RiverCanvas';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MaeKhongkhaModalProps {
   isOpen: boolean;
@@ -23,7 +24,7 @@ interface MaeKhongkhaModalProps {
 
 function GoddessMaeKhongkhaIllustration() {
   return (
-    <div className="relative mx-auto flex h-56 w-56 items-center justify-center">
+    <div className="relative mx-auto flex size-36 items-center justify-center sm:size-48 md:size-56">
       <svg
         viewBox="0 0 240 230"
         className="relative z-10 h-full w-full overflow-visible"
@@ -151,6 +152,8 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
   onPlayAgain,
   onDismiss,
 }) => {
+  const { locale, t } = useLanguage();
+  const isEn = locale === 'en';
   const [rating, setRating] = useState<number>(5);
   const [reviewText, setReviewText] = useState<string>('');
   const [reviewSubmitted, setReviewSubmitted] = useState<boolean>(false);
@@ -179,22 +182,30 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
   const namesDisplay =
     activeNames.length > 0
       ? activeNames.join(', ')
-      : 'ผู้ฝากคำพร ณ ท่าน้ำพระนคร';
+      : isEn
+        ? 'Waterfront Traveler'
+        : 'ผู้ฝากคำพร ณ ท่าน้ำพระนคร';
 
   const handleShare = async () => {
     const firstVisibleSlot = slots.find((s) => !s.hideWish);
     const firstWish = firstVisibleSlot
       ? firstVisibleSlot.wishText.trim() ||
-        'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน'
-      : 'อธิษฐานไว้ในใจใต้แสงจันทร์วันเพ็ญ';
-    const shareText = `คืนเพ็ญเดือนสิบสอง ณ ท่าน้ำพระนคร "${namesDisplay}" ได้ฝากคำพรลอยกะเธอ (Loikratur): “${firstWish}” ขอเชิญมาร่วมลอยกระทงและปล่อยโคมทองด้วยกันเถิดหนา`;
+        (isEn
+          ? 'May all sorrows drift away with the midnight tide.'
+          : 'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน')
+      : isEn
+        ? 'A silent wish beneath the full moon'
+        : 'อธิษฐานไว้ในใจใต้แสงจันทร์วันเพ็ญ';
+    const shareText = isEn
+      ? `Under the full moon at Loy Kra Ter, "${namesDisplay}" floated an offering: “${firstWish}”`
+      : `คืนเพ็ญเดือนสิบสอง ณ ท่าน้ำพระนคร "${namesDisplay}" ได้ฝากคำพร ณ ลอย กะ เธอ (Loy Kra Ter): “${firstWish}” ขอเชิญมาร่วมลอยกระทงและปล่อยโคมทองด้วยกันเถิดหนา`;
     const shareUrl =
       typeof window !== 'undefined' ? window.location.href : '';
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: 'ลอยกะเธอ มหรสพสายน้ำคืนเพ็ญ',
+          title: isEn ? 'Loy Kra Ter | Water & Sky Ritual' : 'ลอย กะ เธอ มหรสพสายน้ำคืนเพ็ญ',
           text: shareText,
           url: shareUrl,
         });
@@ -218,10 +229,19 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#060810]/85 p-4 backdrop-blur-md"
+          className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#060810]/85 p-2.5 backdrop-blur-md sm:p-4"
         >
           {/* Water-Surface Horizon Mask so the Modal emerges up out of the river water */}
-          <div className="relative flex w-full max-w-3xl flex-col items-center overflow-hidden pb-3">
+          <div className="relative flex w-full max-w-3xl flex-col items-center overflow-hidden pb-3 [zoom:var(--ui-zoom,1)]">
+            {/* Phone: close stays pinned to the card corner while the postcard scrolls */}
+            <button
+              type="button"
+              onClick={onDismiss}
+              aria-label={t.blessingModal.closeBtn}
+              className="absolute top-2.5 right-2.5 z-20 flex h-9 w-9 cursor-pointer items-center justify-center border border-[#D4AF37]/50 bg-[#080B14]/90 text-[#FFFDF7]/85 backdrop-blur-sm transition-colors hover:border-[#FFF275] hover:text-[#FFF275] md:hidden"
+            >
+              <Xmark width={18} height={18} strokeWidth={1.8} />
+            </button>
             <motion.div
               initial={{ opacity: 0, y: 420, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -232,26 +252,28 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                 damping: 15,
                 mass: 1.15,
               }}
-              className="thai-chamfer relative z-10 grid max-h-[90vh] w-full grid-cols-1 overflow-y-auto border border-[#D4AF37]/60 bg-[#0E1222] shadow-[0_30px_90px_rgba(0,0,0,0.92),0_18px_50px_rgba(244,208,111,0.22)] md:grid-cols-12"
+              className="thai-chamfer relative z-10 grid max-h-[calc(100dvh-2.5rem)] w-full grid-cols-1 overflow-y-auto border sm:max-h-[calc(min(90dvh,48rem)/var(--ui-zoom,1))] border-[#D4AF37]/60 bg-[#0E1222] shadow-[0_30px_90px_rgba(0,0,0,0.92),0_18px_50px_rgba(244,208,111,0.22)] md:grid-cols-12"
             >
             {/* Left Panel (5 cols): Nocturnal Shrine Art Print */}
-            <div className="relative flex flex-col items-center justify-between border-b border-[#D4AF37]/30 bg-[#080B14] p-6 text-center text-[#FFFDF7] md:col-span-5 md:border-r md:border-b-0">
-              <div className="font-heading flex w-full items-center justify-between text-[10px] tracking-wider text-[#F4D06F]/85">
-                <span>๑๕ ค่ำ เดือน ๑๒</span>
-                <span>คุ้งน้ำพระนคร</span>
+            <div className="relative flex flex-col items-center justify-between gap-2 border-b border-[#D4AF37]/30 bg-[#080B14] p-4 text-center text-[#FFFDF7] sm:p-6 md:col-span-5 md:border-r md:border-b-0">
+              <div className="font-heading flex w-full items-center justify-between gap-2 pr-11 text-[10px] tracking-wider whitespace-nowrap text-[#F4D06F]/85 md:pr-0">
+                <span>{isEn ? '12th Lunar Full Moon' : '๑๕ ค่ำ เดือน ๑๒'}</span>
+                <span>{isEn ? 'Chao Phraya Sanctuary' : 'คุ้งน้ำพระนคร'}</span>
               </div>
 
               <GoddessMaeKhongkhaIllustration />
 
               <div className="w-full border-t border-[#D4AF37]/25 pt-3">
                 <p className="font-display text-sm text-[#F4D06F]">
-                  พระแม่คงคาเทวี ลุ่มน้ำเจ้าพระยา
+                  {t.blessingModal.deityBoth}
                 </p>
-                <p className="font-wish mt-1 text-xs text-[#FFFDF7]/80">
-                  “อันความทุกข์โศกเศร้าให้ไหลลับ ไปพร้อมกับสายชลคนทั้งหลาย”
+                <p className="font-wish mt-1 text-xs text-pretty text-[#FFFDF7]/80">
+                  {t.blessingModal.blessingKrathong}
                 </p>
                 <p className="font-heading mt-1.5 text-[10px] text-[#D4AF37]/80">
-                  (รับเครื่องสักการะครบทั้ง {releasedCount} ชิ้นแล้ว)
+                  {isEn
+                    ? `(${releasedCount} offering${releasedCount > 1 ? 's' : ''} received)`
+                    : `(รับเครื่องสักการะครบทั้ง ${releasedCount} ชิ้นแล้ว)`}
                 </p>
               </div>
             </div>
@@ -262,44 +284,61 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                 background:
                   'linear-gradient(160deg, rgba(24, 30, 58, 0.98) 0%, rgba(13, 17, 34, 0.99) 100%)',
               }}
-              className="relative flex flex-col justify-between bg-[#141932] p-6 text-left text-[#FFFDF7] sm:p-7 md:col-span-7"
+              className="relative flex flex-col justify-between bg-[#141932] p-4 text-left text-[#FFFDF7] sm:p-7 md:col-span-7"
             >
               <div>
                 <div className="flex items-start justify-between gap-2 border-b border-[#D4AF37]/30 pb-3">
                   <div>
                     <p className="font-heading text-[11px] font-medium tracking-wider text-[#F4D06F]">
-                      สารอวยพรจากคุ้งน้ำเจ้าพระยา • คืนเพ็ญเดือนสิบสอง
+                      {t.blessingModal.headerTag}
                     </p>
-                    <h2 className="font-display mt-0.5 text-xl font-normal text-[#FFF275] sm:text-2xl">
-                      “แม่รับคำพรของพวกเจ้าไว้ในสายชลแล้วหนา”
+                    <h2 className="font-display mt-0.5 text-lg leading-snug font-normal text-balance text-[#FFF275] sm:text-2xl">
+                      {isEn
+                        ? '“The Sacred Waters Have Received Your Wishes”'
+                        : '“แม่รับคำพรของพวกเจ้าไว้ในสายชลแล้วหนา”'}
                     </h2>
                   </div>
 
                   <button
                     type="button"
                     onClick={onDismiss}
-                    title="ชมสายน้ำต่อ"
-                    className="flex h-8 w-8 items-center justify-center border border-[#D4AF37]/40 bg-[#080B14] text-[#FFFDF7]/80 transition-colors hover:border-[#FFF275] hover:text-[#FFF275]"
+                    title={t.blessingModal.closeBtn}
+                    aria-label={t.blessingModal.closeBtn}
+                    className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center border border-[#D4AF37]/40 bg-[#080B14] text-[#FFFDF7]/80 md:flex transition-colors hover:border-[#FFF275] hover:text-[#FFF275]"
                   >
                     <Xmark width={18} height={18} strokeWidth={1.8} />
                   </button>
                 </div>
 
                 {/* Poetic Blessing Message */}
-                <p className="font-heading mt-3 text-xs leading-relaxed text-[#FFFDF7]/90">
-                  ขอบใจยิ่งนักหนา{' '}
-                  <strong className="font-semibold text-[#FFF275]">
-                    {namesDisplay}
-                  </strong>{' '}
-                  ที่มาร่วมลอยประทีปและโคมทองในค่ำคืนนี้
-                  ขอความปรารถนาอันงามทั้ง {releasedCount} ชิ้นจงสัมฤทธิ์ผลดั่งแสงจันทร์วันเพ็ญ
-                  ไร้โรคาพยาธิและร่มเย็นเป็นสุขทุกทิวาราตรีเทอญ
+                <p className="font-heading mt-3 text-xs leading-relaxed text-pretty text-[#FFFDF7]/90">
+                  {isEn ? (
+                    <>
+                      Blessings upon{' '}
+                      <strong className="font-semibold text-[#FFF275]">
+                        {namesDisplay}
+                      </strong>{' '}
+                      for offering {releasedCount} light{releasedCount > 1 ? 's' : ''} to the river and sky tonight. May every wish shine bright as the full moon and bring lasting peace and prosperity.
+                    </>
+                  ) : (
+                    <>
+                      ขอบใจยิ่งนักหนา{' '}
+                      <strong className="font-semibold text-[#FFF275]">
+                        {namesDisplay}
+                      </strong>{' '}
+                      ที่มาร่วมลอยประทีปและโคมทองในค่ำคืนนี้
+                      ขอความปรารถนาอันงามทั้ง {releasedCount} ชิ้นจงสัมฤทธิ์ผลดั่งแสงจันทร์วันเพ็ญ
+                      ไร้โรคาพยาธิและร่มเย็นเป็นสุขทุกทิวาราตรีเทอญ
+                    </>
+                  )}
                 </p>
 
                 {/* Inscribed Wishes for All 1..5 Offerings */}
                 <div className="mt-3.5 max-h-36 space-y-2 overflow-y-auto border border-[#D4AF37]/35 border-l-2 border-l-[#F4D06F] bg-[#080B14]/90 py-2.5 pl-3.5 pr-3">
                   <p className="font-heading text-[10px] tracking-wider text-[#F4D06F]">
-                    ถ้อยคำอธิษฐานที่จารึกไว้ในคืนเพ็ญ ({slots.length} ชิ้น)
+                    {isEn
+                      ? `Inscribed Wishes (${slots.length})`
+                      : `ถ้อยคำอธิษฐานที่จารึกไว้ในคืนเพ็ญ (${slots.length} ชิ้น)`}
                   </p>
                   {slots.map((slot, idx) => (
                     <div
@@ -311,8 +350,14 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                       }
                     >
                       <span className="font-heading text-[11px] text-[#F4D06F]">
-                        ชิ้นที่ {THAI_NUMERALS[idx]} (
-                        {slot.itemType === 'lantern' ? 'โคมลอย' : 'กระทง'}
+                        {isEn ? `#${idx + 1}` : THAI_NUMERALS[idx]} (
+                        {slot.itemType === 'lantern'
+                          ? isEn
+                            ? 'Sky Lantern'
+                            : 'โคมลอย'
+                          : isEn
+                            ? 'Krathong'
+                            : 'กระทง'}
                         {slot.authorName.trim()
                           ? ` • ${slot.authorName.trim()}`
                           : ''}
@@ -321,13 +366,15 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                       <p className="font-wish text-sm text-[#FFFDF7]">
                         {slot.hideWish ? (
                           <span className="text-[#FFF275]/80 italic">
-                            อธิษฐานไว้ในใจ (ซ่อนคำพรส่วนตัว)
+                            {t.blessingModal.privateWishNotice}
                           </span>
                         ) : (
                           <>
                             “
                             {slot.wishText.trim() ||
-                              'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน'}
+                              (isEn
+                                ? 'May all sorrows drift away with the midnight tide.'
+                                : 'ฝากทุกข์โศกลอยลับไปกับน้ำ ให้คืนค่ำมีแต่สุขทุกแห่งหน')}
                             ”
                           </>
                         )}
@@ -340,9 +387,11 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                 <div className="mt-4 border border-[#D4AF37]/35 bg-[#080B14]/90 p-3.5">
                   {!reviewSubmitted ? (
                     <>
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-heading text-xs font-medium text-[#F4D06F]">
-                          สมุดเยี่ยมชมศาลาท่าน้ำ (ฝากถ้อยคำรีวิว)
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-heading text-xs font-medium whitespace-nowrap text-[#F4D06F]">
+                          {isEn
+                            ? 'Pavilion Guestbook'
+                            : 'สมุดเยี่ยมชมศาลาท่าน้ำ'}
                         </span>
                         <div className="flex items-center gap-1">
                           {[1, 2, 3, 4, 5].map((star) => {
@@ -352,7 +401,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                                 key={star}
                                 type="button"
                                 onClick={() => setRating(star)}
-                                className="p-0.5 transition-transform hover:scale-115"
+                                className="cursor-pointer p-0.5 transition-transform hover:scale-115"
                               >
                                 <svg viewBox="0 0 20 20" className="h-4 w-4">
                                   <polygon
@@ -368,22 +417,26 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                         </div>
                       </div>
 
-                      <div className="mt-2.5 flex flex-col gap-2 sm:flex-row sm:items-end">
+                      <div className="mt-2.5 flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-end">
                         <textarea
                           rows={2}
                           maxLength={140}
                           value={reviewText}
                           onChange={(e) => setReviewText(e.target.value)}
-                          placeholder="เขียนถ้อยคำติชมหรือความประทับใจฝากไว้ ณ ศาลาท่าน้ำ..."
+                          placeholder={
+                            isEn
+                              ? 'Share your impression at the waterfront pavilion...'
+                              : 'เขียนถ้อยคำติชมหรือความประทับใจฝากไว้ ณ ศาลาท่าน้ำ...'
+                          }
                           className="font-wish flex-1 resize-none border border-[#D4AF37]/45 bg-[#12172B] px-3 py-2 text-base text-[#FFFDF7] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
                         />
                         <button
                           type="button"
                           onClick={() => setReviewSubmitted(true)}
-                          className="thai-chamfer-sm font-heading flex shrink-0 items-center justify-center gap-1.5 border border-[#D4AF37]/60 bg-[#B83B2A] px-4 py-2.5 text-xs font-medium text-[#FFFDF7] transition-colors hover:bg-[#D4AF37] hover:text-[#0B0E17]"
+                          className="thai-chamfer-sm font-heading flex shrink-0 cursor-pointer items-center justify-center gap-1.5 border border-[#D4AF37]/60 bg-[#B83B2A] px-4 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFFDF7] transition-colors hover:bg-[#D4AF37] hover:text-[#0B0E17]"
                         >
                           <SendDiagonal width={14} height={14} strokeWidth={2} />
-                          <span>ลงนามรีวิว</span>
+                          <span>{isEn ? 'Sign Guestbook' : 'ลงนามรีวิว'}</span>
                         </button>
                       </div>
                     </>
@@ -401,7 +454,9 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                       />
                       <div>
                         <p className="font-heading text-xs font-semibold">
-                          ขึ้นทะเบียนคำชมในสมุดศาลาท่าพระนคร ({rating}/5 ดาว) เรียบร้อยแล้ว
+                          {isEn
+                            ? `Inscribed in the Pavilion Guestbook (${rating}/5)`
+                            : `ขึ้นทะเบียนคำชมในสมุดศาลาท่าพระนคร (${rating}/5 ดาว) เรียบร้อยแล้ว`}
                         </p>
                         {reviewText.trim() && (
                           <p className="font-wish mt-0.5 text-sm text-[#FFFDF7]">
@@ -415,27 +470,31 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
               </div>
 
               {/* Footer Actions */}
-              <div className="mt-5 grid grid-cols-1 gap-2.5 border-t border-[#D4AF37]/25 pt-4 sm:grid-cols-2">
+              <div className="mt-4 grid grid-cols-1 gap-2 border-t border-[#D4AF37]/25 pt-3.5 min-[480px]:grid-cols-2 sm:mt-5 sm:gap-2.5 sm:pt-4">
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="thai-chamfer-sm font-heading flex items-center justify-center gap-2 border border-[#D4AF37]/50 bg-[#080B14] px-4 py-2.5 text-xs font-medium text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#12172B]"
+                  className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-2 border border-[#D4AF37]/50 bg-[#080B14] px-3 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#12172B]"
                 >
                   <ShareAndroid width={15} height={15} strokeWidth={1.8} />
                   <span>
                     {shareCopied
-                      ? 'คัดลอกสาส์นเชิญเรียบร้อยแล้ว'
-                      : 'ส่งสาส์นชวนมิตรสหายมาร่วมลอย'}
+                      ? isEn
+                        ? 'Link Copied'
+                        : 'คัดลอกคำเชิญแล้ว'
+                      : isEn
+                        ? 'Invite Friends'
+                        : 'ชวนเพื่อนมาลอย'}
                   </span>
                 </button>
 
                 <button
                   type="button"
                   onClick={onPlayAgain}
-                  className="thai-chamfer-sm font-heading flex items-center justify-center gap-2 border border-[#FFF275]/60 bg-[#D4AF37] px-4 py-2.5 text-xs font-semibold text-[#0B0E17] transition-colors hover:bg-[#FFF275]"
+                  className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-2 border border-[#FFF275]/60 bg-[#D4AF37] px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#0B0E17] transition-colors hover:bg-[#FFF275]"
                 >
                   <RefreshDouble width={16} height={16} strokeWidth={2} />
-                  <span>ลอยอีกรอบ</span>
+                  <span>{t.blessingModal.playAgainBtn}</span>
                 </button>
               </div>
             </div>

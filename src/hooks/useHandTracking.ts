@@ -20,7 +20,8 @@ interface UseHandTrackingOptions {
 }
 
 interface UseHandTrackingReturn {
-  videoRef: React.RefObject<HTMLVideoElement | null>;
+  // Callback ref: any number of <video> elements may bind; the most recently mounted one receives the camera stream
+  videoRef: React.RefCallback<HTMLVideoElement>;
   gestureState: HandGestureState;
   gestureRef: React.RefObject<HandGestureState>;
   retryCamera: () => void;
@@ -58,6 +59,7 @@ const INITIAL_GESTURE_STATE: HandGestureState = {
 
 export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTrackingReturn {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const mountedVideosRef = useRef<HTMLVideoElement[]>([]);
   const landmarkerRef = useRef<HandLandmarker | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const smoothedCursorsRef = useRef<(NormalizedPoint | null)[]>(
@@ -72,6 +74,16 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
 
   const retryCamera = useCallback(() => {
     setReloadTrigger((prev) => prev + 1);
+  }, []);
+
+  const bindVideo = useCallback((element: HTMLVideoElement | null) => {
+    if (!element) return;
+    mountedVideosRef.current = [...mountedVideosRef.current, element];
+    videoRef.current = element;
+    return () => {
+      mountedVideosRef.current = mountedVideosRef.current.filter((v) => v !== element);
+      videoRef.current = mountedVideosRef.current.at(-1) ?? null;
+    };
   }, []);
 
   useEffect(() => {
@@ -118,14 +130,18 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
           audio: false,
         });
 
-        if (!isMounted || !videoRef.current) {
+        if (!isMounted) {
           activeStream.getTracks().forEach((track) => track.stop());
           return;
         }
 
-        const videoElement = videoRef.current;
-        videoElement.srcObject = activeStream;
-        await videoElement.play();
+        // The bound <video> can change while running (HUD ↔ practice sandbox), so re-attach on every frame check
+        const attachStream = (video: HTMLVideoElement) => {
+          if (video.srcObject === activeStream) return;
+          video.srcObject = activeStream;
+          video.play().catch(() => {});
+        };
+        if (videoRef.current) attachStream(videoRef.current);
 
         gestureRef.current = {
           ...gestureRef.current,
@@ -139,6 +155,7 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
 
           const video = videoRef.current;
           const landmarker = landmarkerRef.current;
+          if (video) attachStream(video);
 
           if (!video || !landmarker || video.readyState < 2) {
             rafIdRef.current = requestAnimationFrame(detectFrame);
@@ -267,11 +284,16 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
       if (activeStream) {
         activeStream.getTracks().forEach((track) => track.stop());
       }
+      // Drop stale hands so canvases stop drawing them once tracking is off
+      isPinchingByHandRef.current = Array(MAX_TRACKED_HANDS).fill(false);
+      smoothedCursorsRef.current = Array(MAX_TRACKED_HANDS).fill(null);
+      gestureRef.current = { ...INITIAL_GESTURE_STATE };
+      setGestureState(INITIAL_GESTURE_STATE);
     };
   }, [enabled, reloadTrigger]);
 
   return {
-    videoRef,
+    videoRef: bindVideo,
     gestureState,
     gestureRef,
     retryCamera,

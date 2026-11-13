@@ -1,72 +1,72 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Xmark, NavArrowLeft, NavArrowRight } from 'iconoir-react';
 import { InteractiveTutorialSandbox } from '@/components/modals/InteractiveTutorialSandbox';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { HandGestureState } from '@/types/krathong';
 
 interface HowToPlayModalProps {
   isOpen: boolean;
   onClose: () => void;
   onEnterPier?: () => void;
+  videoRef: React.RefCallback<HTMLVideoElement>;
+  gestureState: HandGestureState;
+  gestureRef: React.RefObject<HandGestureState>;
+  cameraEnabled: boolean;
+  onToggleCamera: () => void;
+  // Lets the page switch the camera on only while the practice folio is actually on screen
+  onPracticeActiveChange?: (active: boolean) => void;
 }
 
-type ChapterId = 'equipment' | 'customize' | 'gestures' | 'tutorial';
-
-interface ChapterMeta {
-  id: ChapterId;
-  numeral: string;
-  title: string;
-  subtitle: string;
-}
-
-const CHAPTERS: ChapterMeta[] = [
-  {
-    id: 'equipment',
-    numeral: '๑',
-    title: 'อุปกรณ์ที่ใช้เล่น',
-    subtitle: 'กล้อง • เมาส์ • ระบบเสียง',
-  },
-  {
-    id: 'customize',
-    numeral: '๒',
-    title: 'การแต่งกระทงและโคม',
-    subtitle: 'ปรับแต่ง ๑–๕ ชิ้น & คำพร',
-  },
-  {
-    id: 'gestures',
-    numeral: '๓',
-    title: 'วิธีหยิบและปล่อยลอย',
-    subtitle: 'ท่าทางมือ & จุดวางเป้าหมาย',
-  },
-  {
-    id: 'tutorial',
-    numeral: '๔',
-    title: 'ลานทดลองฝึกเล่น',
-    subtitle: 'ซ้อมหยิบและปล่อยลอยจริง',
-  },
-];
+type FolioId = 'gestures' | 'practice' | 'craft';
 
 export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
   isOpen,
   onClose,
   onEnterPier,
+  videoRef,
+  gestureState,
+  gestureRef,
+  cameraEnabled,
+  onToggleCamera,
+  onPracticeActiveChange,
 }) => {
-  const [activeChapter, setActiveChapter] = useState<ChapterId>('equipment');
+  const { t } = useLanguage();
+  const hp = t.howToPlay;
 
-  const currentIdx = CHAPTERS.findIndex((c) => c.id === activeChapter);
+  const [activeFolio, setActiveFolio] = useState<FolioId>('gestures');
 
-  const handlePrev = () => {
-    if (currentIdx > 0) {
-      setActiveChapter(CHAPTERS[currentIdx - 1].id);
-    }
-  };
+  useEffect(() => {
+    onPracticeActiveChange?.(isOpen && activeFolio === 'practice');
+  }, [isOpen, activeFolio, onPracticeActiveChange]);
 
-  const handleNext = () => {
-    if (currentIdx < CHAPTERS.length - 1) {
-      setActiveChapter(CHAPTERS[currentIdx + 1].id);
-    }
-  };
+  const folios: { id: FolioId; num: string; title: string; short: string; sub: string }[] = [
+    {
+      id: 'gestures',
+      num: hp.tabs.gestures.num,
+      title: hp.tabs.gestures.title,
+      short: hp.tabs.gestures.short,
+      sub: hp.tabs.gestures.sub,
+    },
+    {
+      id: 'practice',
+      num: hp.tabs.practice.num,
+      title: hp.tabs.practice.title,
+      short: hp.tabs.practice.short,
+      sub: hp.tabs.practice.sub,
+    },
+    {
+      id: 'craft',
+      num: hp.tabs.craft.num,
+      title: hp.tabs.craft.title,
+      short: hp.tabs.craft.short,
+      sub: hp.tabs.craft.sub,
+    },
+  ];
+
+  const currentIdx = folios.findIndex((f) => f.id === activeFolio);
 
   return (
     <AnimatePresence>
@@ -75,28 +75,35 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#060911]/85 p-3 backdrop-blur-md sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060B]/88 p-2.5 backdrop-blur-md sm:p-6 [@media(max-height:500px)]:p-2!"
           onClick={onClose}
         >
-          {/* Samut Khoi (สมุดข่อยโบราณ) Unfolding Container */}
+          {/* Royal Black Khoi Manuscript (สมุดไทยดำลงรักปิดทอง) */}
           <motion.div
-            initial={{ opacity: 0, y: 40, scaleY: 0.88 }}
+            initial={{ opacity: 0, y: 32, scaleY: 0.92 }}
             animate={{ opacity: 1, y: 0, scaleY: 1 }}
-            exit={{ opacity: 0, y: 30, scaleY: 0.92 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, y: 24, scaleY: 0.94 }}
+            transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="saa-paper-card thai-chamfer relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden border-2 border-[#D4AF37] shadow-[0_28px_80px_rgba(0,0,0,0.85)]"
+            className="thai-chamfer relative flex h-[calc(100dvh-1.25rem)] [@media(max-height:500px)]:h-[calc(100dvh-1rem)]! w-full max-w-3xl flex-col overflow-hidden lg:max-w-4xl border border-[#C5A059] [zoom:var(--ui-zoom,1)] sm:h-[calc(min(90dvh,56rem)/var(--ui-zoom,1))] bg-[#0D0B09] text-[#F5EFE4] shadow-[0_32px_90px_rgba(0,0,0,0.92)]"
           >
-            {/* Top Golden Samut Khoi Spine Bar */}
-            <div className="flex items-center justify-between border-b-2 border-[#8C6D3F] bg-[#1C1815] px-4 py-3 text-[#F5EFE4] sm:px-6">
-              <div className="flex items-center gap-2.5">
-                <span className="h-2.5 w-2.5 rotate-45 border border-[#FFF275] bg-[#D4AF37]" />
-                <div>
-                  <h2 className="font-display text-base font-semibold tracking-wide text-[#F4D06F] sm:text-lg">
-                    สมุดข่อยแนะนำวิธีการเล่น • ลอยกะเธอ
+            {/* Inner Gold Hairline Frame */}
+            <div className="pointer-events-none absolute inset-1.5 border border-[#C5A059]/30" />
+
+            {/* Top Manuscript Spine Header */}
+            <div className="relative flex items-center justify-between gap-3 border-b border-[#C5A059]/45 bg-gradient-to-r from-[#14100C] via-[#1C1610] to-[#14100C] px-4 py-3 sm:px-7 sm:py-4 [@media(max-height:500px)]:py-1.5!">
+              <div className="flex min-w-0 items-center gap-3.5">
+                {/* Traditional Gold Seal */}
+                <div className="hidden h-9 w-9 shrink-0 items-center justify-center border border-[#C5A059]/70 bg-[#0D0B09] sm:flex">
+                  <span className="h-2.5 w-2.5 rotate-45 bg-[#E6C77B]" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-display truncate text-base font-medium tracking-wider text-[#F4D06F] sm:text-lg">
+                    <span className="md:hidden">{hp.manuscriptHeaderShort}</span>
+                    <span className="hidden md:inline">{hp.manuscriptHeader}</span>
                   </h2>
-                  <p className="font-heading text-[11px] text-[#F5EFE4]/75">
-                    ตำราคู่มือการประดิษฐ์เครื่องสักการะ อุปกรณ์ และการหยิบปล่อยสู่สายน้ำและฟากฟ้า
+                  <p className="font-editorial hidden truncate text-xs tracking-[0.22em] text-[#C5A059]/80 uppercase sm:block">
+                    {hp.manuscriptSub}
                   </p>
                 </div>
               </div>
@@ -104,379 +111,319 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex h-8 w-8 cursor-pointer items-center justify-center border border-[#D4AF37]/50 bg-[#2A241F] text-[#F4D06F] transition-colors hover:border-[#FFF275] hover:bg-[#3B322B]"
-                aria-label="ปิดสมุดข่อย"
+                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center border border-[#C5A059]/45 bg-[#16120E] text-[#E6C77B] transition-colors hover:border-[#FFF275] hover:text-[#FFF275]"
+                aria-label="Close"
               >
                 <Xmark width={18} height={18} />
               </button>
             </div>
 
-            {/* Chapter Tabs (สารบัญสมุดข่อย ๔ บท) */}
-            <div className="grid grid-cols-2 border-b border-[#B89047]/50 bg-[#EBE0CC] sm:grid-cols-4">
-              {CHAPTERS.map((chap) => {
-                const isSelected = chap.id === activeChapter;
+            {/* Accordion Folio Index Bar (สารบัญพับสมุดไทย) */}
+            <div className="grid grid-cols-3 border-b border-[#C5A059]/40 bg-[#120E0B]">
+              {folios.map((folio) => {
+                const isSelected = folio.id === activeFolio;
                 return (
                   <button
-                    key={chap.id}
+                    key={folio.id}
                     type="button"
-                    onClick={() => setActiveChapter(chap.id)}
-                    className={`cursor-pointer border-r border-b border-[#B89047]/40 px-3 py-2.5 text-left transition-all last:border-r-0 sm:border-b-0 ${
+                    onClick={() => setActiveFolio(folio.id)}
+                    className={`min-w-0 cursor-pointer border-r border-[#C5A059]/25 px-2 py-2.5 text-center transition-all last:border-r-0 sm:px-4 sm:py-3 md:px-5 [@media(max-height:500px)]:py-1.5! md:text-left ${
                       isSelected
-                        ? 'bg-[#F5EFE4] shadow-[inset_0_-3px_0_#B83B2A]'
-                        : 'bg-[#E5D8C0]/75 hover:bg-[#EFE6D4]'
+                        ? 'bg-[#1D1711] shadow-[inset_0_-2px_0_#F4D06F]'
+                        : 'bg-transparent opacity-65 hover:bg-[#17120E] hover:opacity-95'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center text-xs font-bold ${
-                          isSelected
-                            ? 'bg-[#B83B2A] text-[#FFFDF7]'
-                            : 'bg-[#1C1815]/15 text-[#1C1815]'
-                        }`}
-                      >
-                        {chap.numeral}
+                    <div className="flex items-baseline justify-center gap-1.5 md:justify-start md:gap-2">
+                      <span className="font-editorial text-sm font-semibold text-[#F4D06F]">
+                        {folio.num}.
                       </span>
-                      <div className="min-w-0">
-                        <div
-                          className={`font-display truncate text-xs font-semibold sm:text-sm ${
-                            isSelected ? 'text-[#B83B2A]' : 'text-[#1C1815]'
-                          }`}
-                        >
-                          {chap.title}
-                        </div>
-                        <div className="font-heading truncate text-[10px] text-[#5C4938]">
-                          {chap.subtitle}
-                        </div>
-                      </div>
+                      <span className="font-display truncate text-[13px] font-medium tracking-wide whitespace-nowrap text-[#FFFDF7] sm:text-sm">
+                        <span className="md:hidden">{folio.short}</span>
+                        <span className="hidden md:inline">{folio.title}</span>
+                      </span>
+                    </div>
+                    <div className="font-heading mt-0.5 hidden truncate pl-4 text-[10px] text-[#C5A059] md:block">
+                      {folio.sub}
                     </div>
                   </button>
                 );
               })}
             </div>
 
-            {/* Scrollable Manuscript Body */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-              {/* CHAPTER 1: EQUIPMENT */}
-              {activeChapter === 'equipment' && (
-                <div className="space-y-4">
-                  <div className="border-l-4 border-[#B83B2A] bg-[#FFFDF7]/75 px-4 py-2.5">
-                    <h3 className="font-display text-base font-semibold text-[#1C1815]">
-                      บทที่ ๑ : อุปกรณ์ที่ใช้ในการร่วมพิธีลอยประทีป
+            {/* Manuscript Body */}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-8 sm:py-6 [&>*]:my-auto [@media(max-height:500px)]:py-3!">
+              {/* FOLIO 1: HAND & FINGER GESTURES */}
+              {activeFolio === 'gestures' && (
+                <div className="space-y-6">
+                  {/* Editorial Intro */}
+                  <div className="border-b border-[#C5A059]/30 pb-4">
+                    <h3 className="font-display text-base font-medium tracking-wide text-balance text-[#F4D06F] sm:text-lg">
+                      {hp.gesturesSection.introTitle}
                     </h3>
-                    <p className="font-heading text-xs text-[#4A3B2C]">
-                      สามารถเลือกเล่นได้ทั้งแบบใช้กล้องตรวจจับมือ (AI Hand Tracking) เพื่อความสมจริง หรือใช้เมาส์/หน้าจอสัมผัสได้ทุกอุปกรณ์
+                    <p className="font-heading mt-1.5 text-xs leading-relaxed text-[#E6DEC8]/85 sm:text-sm">
+                      {hp.gesturesSection.introDesc}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
-                    {/* Equipment 1: Webcam */}
-                    <div className="flex flex-col justify-between border border-[#B89047]/60 bg-[#FFFDF7]/90 p-3.5 shadow-sm">
-                      <div>
-                        <div className="mb-2.5 flex h-24 items-center justify-center border border-[#D4AF37]/40 bg-[#0D1321] p-2">
-                          <svg viewBox="0 0 140 80" className="h-full w-full" fill="none">
-                            {/* Webcam body */}
-                            <rect x="14" y="24" width="34" height="26" rx="4" fill="#1A1B41" stroke="#F4D06F" strokeWidth="1.5" />
-                            <circle cx="31" cy="37" r="7" fill="#0D1321" stroke="#FFF275" strokeWidth="1.5" />
-                            <path d="M22 50 L40 50 L44 58 L18 58 Z" fill="#D4AF37" />
-                            {/* Scanning Rays */}
-                            <path d="M48 32 L95 14 M48 37 L95 37 M48 42 L95 60" stroke="#F4D06F" strokeWidth="1" strokeDasharray="3 3" />
-                            {/* Hand Silhouette */}
-                            <circle cx="108" cy="37" r="18" fill="#F4D06F" fillOpacity="0.18" stroke="#FFF275" strokeWidth="1.2" />
-                            <path d="M104 46 L104 32 M108 46 L108 28 M112 46 L112 31 M100 42 L100 36" stroke="#FFF275" strokeWidth="2.2" strokeLinecap="round" />
-                          </svg>
-                        </div>
-                        <div className="mb-1 inline-block bg-[#2D6A4F] px-2 py-0.5 text-[10px] font-semibold text-[#FFFDF7]">
-                          แนะนำเพื่อความสมจริง
-                        </div>
-                        <h4 className="font-display text-sm font-semibold text-[#1C1815]">
-                          ๑. กล้องเว็บแคม (Webcam)
-                        </h4>
-                        <p className="font-heading mt-1 text-xs leading-relaxed text-[#4A3B2C]">
-                          ใช้ระบบ AI ตรวจจับมือแบบเรียลไทม์ รองรับการเล่นพร้อมกันหลายมือ (สูงสุด ๔ มือในจอเดียว) สามารถหยิบกระทงและโคมลอยพร้อมกับคนข้างๆ ได้ทันที
-                        </p>
+                  {/* Three Gold-Leaf Illustrated Hand Folios */}
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4 lg:gap-5">
+                    {/* Folio Step 1: Open Palm Hover */}
+                    <div className="flex items-center gap-3 border border-[#C5A059]/35 bg-[#13100C] p-3 sm:gap-4 sm:p-4 md:flex-col md:items-stretch md:gap-0">
+                      <div className="flex h-20 w-20 shrink-0 items-center justify-center border-r border-[#C5A059]/25 pr-3 sm:h-24 sm:w-28 sm:pr-4 md:mb-3 md:h-28 md:w-auto md:border-r-0 md:border-b md:pr-0 md:pb-3 lg:h-32">
+                        <svg viewBox="0 0 130 100" className="h-full w-full" fill="none">
+                          <circle cx="65" cy="50" r="34" stroke="#C5A059" strokeOpacity="0.4" strokeWidth="1" strokeDasharray="3 3" />
+                          {/* Gold-leaf Open Hand Line Art */}
+                          <path
+                            d="M52 68 L47 34 M59 66 L59 26 M67 66 L69 29 M74 68 L80 38 M46 62 L35 48"
+                            stroke="#F4D06F"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                          />
+                          <polygon
+                            points="48,64 74,64 70,78 52,78"
+                            stroke="#E6C77B"
+                            strokeWidth="1.6"
+                            fill="#C5A059"
+                            fillOpacity="0.15"
+                          />
+                          <circle cx="47" cy="34" r="2.5" fill="#FFF275" />
+                          <circle cx="59" cy="26" r="2.5" fill="#FFF275" />
+                          <circle cx="69" cy="29" r="2.5" fill="#FFF275" />
+                          <circle cx="80" cy="38" r="2.5" fill="#FFF275" />
+                          <circle cx="35" cy="48" r="2.5" fill="#FFF275" />
+                        </svg>
                       </div>
-                      <div className="mt-2.5 border-t border-[#B89047]/30 pt-2 text-[11px] font-medium text-[#7A5C38]">
-                        ระยะที่เหมาะสม: ห่างจากกล้องประมาณ ๔๐–๘๐ ซม. ในที่ที่มีแสงสว่างเพียงพอ
-                      </div>
-                    </div>
-
-                    {/* Equipment 2: Mouse / Touch */}
-                    <div className="flex flex-col justify-between border border-[#B89047]/60 bg-[#FFFDF7]/90 p-3.5 shadow-sm">
-                      <div>
-                        <div className="mb-2.5 flex h-24 items-center justify-center border border-[#D4AF37]/40 bg-[#0D1321] p-2">
-                          <svg viewBox="0 0 140 80" className="h-full w-full" fill="none">
-                            {/* Mouse icon */}
-                            <rect x="26" y="16" width="30" height="48" rx="15" fill="#1A1B41" stroke="#F4D06F" strokeWidth="1.6" />
-                            <line x1="41" y1="16" x2="41" y2="34" stroke="#FFF275" strokeWidth="1.4" />
-                            {/* Drag path */}
-                            <path d="M62 40 C76 40, 82 26, 98 26" stroke="#FF8C42" strokeWidth="1.6" strokeDasharray="4 3" />
-                            <circle cx="106" cy="26" r="12" fill="#FF8C42" fillOpacity="0.25" stroke="#FFF275" strokeWidth="1.4" />
-                            <circle cx="106" cy="26" r="4" fill="#FFF275" />
-                          </svg>
-                        </div>
-                        <div className="mb-1 inline-block bg-[#8C6D3F] px-2 py-0.5 text-[10px] font-semibold text-[#FFFDF7]">
-                          ใช้งานได้ทุกอุปกรณ์
-                        </div>
-                        <h4 className="font-display text-sm font-semibold text-[#1C1815]">
-                          ๒. เมาส์ หรือ หน้าจอสัมผัส
-                        </h4>
-                        <p className="font-heading mt-1 text-xs leading-relaxed text-[#4A3B2C]">
-                          หากไม่สะดวกเปิดกล้อง สามารถใช้เมาส์คลิกค้าง หรือใช้นิ้วแตะลากกระทงและโคมลอยไปยังจุดวางได้โดยตรง หรือกดปุ่ม <strong>&ldquo;ลอยทั้งหมดทันที&rdquo;</strong>
-                        </p>
-                      </div>
-                      <div className="mt-2.5 border-t border-[#B89047]/30 pt-2 text-[11px] font-medium text-[#7A5C38]">
-                        รองรับทั้งคอมพิวเตอร์ แท็บเล็ต และสมาร์ตโฟน
+                      <div className="min-w-0">
+                      <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
+                        {hp.gesturesSection.step1Title}
+                      </h4>
+                      <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
+                        {hp.gesturesSection.step1Tag}
+                      </p>
+                      <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
+                        {hp.gesturesSection.step1Desc}
+                      </p>
                       </div>
                     </div>
 
-                    {/* Equipment 3: Audio */}
-                    <div className="flex flex-col justify-between border border-[#B89047]/60 bg-[#FFFDF7]/90 p-3.5 shadow-sm">
-                      <div>
-                        <div className="mb-2.5 flex h-24 items-center justify-center border border-[#D4AF37]/40 bg-[#0D1321] p-2">
-                          <svg viewBox="0 0 140 80" className="h-full w-full" fill="none">
-                            {/* Traditional Ranat / Sound Wave */}
-                            <polygon points="44,32 56,32 68,20 68,60 56,48 44,48" fill="#F4D06F" />
-                            <path d="M78 28 Q88 40 78 52" stroke="#FFF275" strokeWidth="2" strokeLinecap="round" />
-                            <path d="M86 20 Q102 40 86 60" stroke="#FF8C42" strokeWidth="1.8" strokeLinecap="round" />
-                          </svg>
-                        </div>
-                        <div className="mb-1 inline-block bg-[#B83B2A] px-2 py-0.5 text-[10px] font-semibold text-[#FFFDF7]">
-                          เพิ่มอรรถรสยามค่ำคืน
-                        </div>
-                        <h4 className="font-display text-sm font-semibold text-[#1C1815]">
-                          ๓. ลำโพง หรือ หูฟัง
-                        </h4>
-                        <p className="font-heading mt-1 text-xs leading-relaxed text-[#4A3B2C]">
-                          มุมขวาบนของจอมีปุ่มควบคุมเสียงเพลงบรรเลงลอยกระทง สามารถคลิกเปิด/ปิดเสียงในคลิกเดียว หรือเลื่อนปรับระดับความดังได้ตามต้องการ
-                        </p>
+                    {/* Folio Step 2: Pinch Thumb & Index */}
+                    <div className="flex items-center gap-3 border border-[#C5A059]/35 bg-[#13100C] p-3 sm:gap-4 sm:p-4 md:flex-col md:items-stretch md:gap-0">
+                      <div className="flex h-20 w-20 shrink-0 items-center justify-center border-r border-[#C5A059]/25 pr-3 sm:h-24 sm:w-28 sm:pr-4 md:mb-3 md:h-28 md:w-auto md:border-r-0 md:border-b md:pr-0 md:pb-3 lg:h-32">
+                        <svg viewBox="0 0 130 100" className="h-full w-full" fill="none">
+                          {/* Pinch Aura */}
+                          <circle cx="60" cy="38" r="16" fill="#F4D06F" fillOpacity="0.18" stroke="#FFF275" strokeWidth="1.4" />
+                          <circle cx="60" cy="38" r="4" fill="#FFF275" />
+                          {/* Thumb + Index touching */}
+                          <path
+                            d="M44 70 Q46 48 59 39"
+                            stroke="#FFF275"
+                            strokeWidth="2.8"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M70 70 Q69 48 61 39"
+                            stroke="#FFF275"
+                            strokeWidth="2.8"
+                            strokeLinecap="round"
+                          />
+                          {/* Other 3 fingers */}
+                          <path
+                            d="M75 70 L79 36 M80 72 L86 42 M85 74 L92 50"
+                            stroke="#C5A059"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                          {/* Motion Arrow */}
+                          <path d="M32 45 L32 72 M27 66 L32 72 L37 66" stroke="#FF8C42" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </div>
-                      <div className="mt-2.5 border-t border-[#B89047]/30 pt-2 text-[11px] font-medium text-[#7A5C38]">
-                        ค่าเริ่มต้นจะปิดเสียงไว้เพื่อไม่ให้รบกวน สามารถกดเปิดได้ทันที
+                      <div className="min-w-0">
+                      <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
+                        {hp.gesturesSection.step2Title}
+                      </h4>
+                      <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
+                        {hp.gesturesSection.step2Tag}
+                      </p>
+                      <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
+                        {hp.gesturesSection.step2Desc}
+                      </p>
                       </div>
                     </div>
+
+                    {/* Folio Step 3: Un-pinch inside Target Ring */}
+                    <div className="flex items-center gap-3 border border-[#C5A059]/35 bg-[#13100C] p-3 sm:gap-4 sm:p-4 md:flex-col md:items-stretch md:gap-0">
+                      <div className="flex h-20 w-20 shrink-0 items-center justify-center border-r border-[#C5A059]/25 pr-3 sm:h-24 sm:w-28 sm:pr-4 md:mb-3 md:h-28 md:w-auto md:border-r-0 md:border-b md:pr-0 md:pb-3 lg:h-32">
+                        <svg viewBox="0 0 130 100" className="h-full w-full" fill="none">
+                          {/* Target Rings */}
+                          <ellipse
+                            cx="65"
+                            cy="64"
+                            rx="44"
+                            ry="16"
+                            fill="#F4D06F"
+                            fillOpacity="0.12"
+                            stroke="#F4D06F"
+                            strokeWidth="1.5"
+                            strokeDasharray="5 4"
+                          />
+                          {/* Fingers Opening Outward */}
+                          <path d="M52 44 L40 28 M40 28 L46 28 M40 28 L40 34" stroke="#FFF275" strokeWidth="1.8" strokeLinecap="round" />
+                          <path d="M78 44 L90 28 M90 28 L84 28 M90 28 L90 34" stroke="#FFF275" strokeWidth="1.8" strokeLinecap="round" />
+                          {/* Released Lotus Krathong */}
+                          <path d="M65 44 L73 60 L57 60 Z" fill="#FF99C8" stroke="#FFF275" strokeWidth="1" />
+                          <path d="M48 60 L82 60 L77 68 L53 68 Z" fill="#2D6A4F" stroke="#F4D06F" strokeWidth="1.2" />
+                        </svg>
+                      </div>
+                      <div className="min-w-0">
+                      <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
+                        {hp.gesturesSection.step3Title}
+                      </h4>
+                      <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
+                        {hp.gesturesSection.step3Tag}
+                      </p>
+                      <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
+                        {hp.gesturesSection.step3Desc}
+                      </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Subtle Footnote + CTA to jump to Finger Practice */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#C5A059]/30 pt-4">
+                    <p className="font-heading text-xs text-[#C5A059]">
+                      {hp.gesturesSection.distanceNote}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setActiveFolio('practice')}
+                      className="w-full cursor-pointer border border-[#F4D06F] bg-[#C5A059]/15 px-4 py-2 text-xs font-medium tracking-wide whitespace-nowrap text-[#FFF275] sm:w-auto transition-colors hover:bg-[#C5A059]/30"
+                    >
+                      {hp.tabs.practice.title} &rarr;
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* CHAPTER 2: CUSTOMIZE */}
-              {activeChapter === 'customize' && (
+              {/* FOLIO 2: LIVE FINGER & HAND PRACTICE SANDBOX */}
+              {activeFolio === 'practice' && (
                 <div className="space-y-4">
-                  <div className="border-l-4 border-[#B83B2A] bg-[#FFFDF7]/75 px-4 py-2.5">
-                    <h3 className="font-display text-base font-semibold text-[#1C1815]">
-                      บทที่ ๒ : การประดิษฐ์กระทง โคมลอย และจารึกคำอธิษฐาน
+                  <div className="border-b border-[#C5A059]/30 pb-3">
+                    <h3 className="font-display text-base font-medium tracking-wide text-balance text-[#F4D06F] sm:text-lg">
+                      {hp.practiceSection.title}
                     </h3>
-                    <p className="font-heading text-xs text-[#4A3B2C]">
-                      ออกแบบเครื่องสักการะได้อิสระสูงสุดถึง ๕ ชิ้นในรอบเดียว โดยปรับแต่งแยกแต่ละชิ้นได้ทั้งหมด
+                    <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/85">
+                      {hp.practiceSection.subtitle}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-                    {/* Step 1: Count & Slot Selection */}
-                    <div className="border border-[#B89047]/60 bg-[#FFFDF7]/90 p-3.5">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center bg-[#1C1815] text-xs font-bold text-[#F4D06F]">
-                          ๑
-                        </span>
-                        <h4 className="font-display text-sm font-semibold text-[#1C1815]">
-                          ระบุจำนวนเครื่องสักการะ (๑ – ๕ ชิ้น)
-                        </h4>
-                      </div>
-                      <p className="font-heading mt-2 text-xs leading-relaxed text-[#4A3B2C]">
-                        เลือกจำนวนกระทงหรือโคมลอยที่ต้องการ (ตั้งแต่ ๑ ถึง ๕ ชิ้น) จากนั้นกดที่แถบหมายเลข <strong>๑, ๒, ๓, ๔, ๕</strong> เพื่อสลับปรับแต่งสี รูปทรง และคำอวยพรของแต่ละชิ้นแยกกันได้เลย
-                      </p>
-                    </div>
-
-                    {/* Step 2: Krathong vs Sky Lantern */}
-                    <div className="border border-[#B89047]/60 bg-[#FFFDF7]/90 p-3.5">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center bg-[#1C1815] text-xs font-bold text-[#F4D06F]">
-                          ๒
-                        </span>
-                        <h4 className="font-display text-sm font-semibold text-[#1C1815]">
-                          เลือกรูปแบบ: กระทงลอยน้ำ หรือ โคมลอยฟ้า
-                        </h4>
-                      </div>
-                      <p className="font-heading mt-2 text-xs leading-relaxed text-[#4A3B2C]">
-                        แต่ละชิ้นสามารถเลือกได้ว่าจะเป็น <strong>&ldquo;ล่องนาวาฝากแม่คงคา (กระทงลอยน้ำ)&rdquo;</strong> หรือ <strong>&ldquo;ลอยโคมทองท่องเวหา (โคมลอยขึ้นฟ้า)&rdquo;</strong> ผสมกันในเซ็ตเดียวได้ตามใจชอบ
-                      </p>
-                    </div>
-
-                    {/* Step 3: Colors & Extended Color Modal */}
-                    <div className="border border-[#B89047]/60 bg-[#FFFDF7]/90 p-3.5">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center bg-[#1C1815] text-xs font-bold text-[#F4D06F]">
-                          ๓
-                        </span>
-                        <h4 className="font-display text-sm font-semibold text-[#1C1815]">
-                          เลือกทรงกลีบ และถาดผสมสีเพิ่มเติม
-                        </h4>
-                      </div>
-                      <p className="font-heading mt-2 text-xs leading-relaxed text-[#4A3B2C]">
-                        เลือกทรงกลีบใบตอง ๓ แบบ และเลือกสีฐาน สีบุปผา สีธูปเทียน หากต้องการสีพิเศษ สามารถกด <strong>ปุ่มวงล้อสีรุ้ง</strong> ท้ายแถวเพื่อเปิดถาดคู่สีไทย ๑๖ เฉด หลอดไล่เฉดสี และ <strong>หลอดดูดสี (Eyedropper)</strong>
-                      </p>
-                    </div>
-
-                    {/* Step 4: Wish Couplets, Privacy & Submerge Book */}
-                    <div className="border border-[#B89047]/60 bg-[#FFFDF7]/90 p-3.5">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center bg-[#1C1815] text-xs font-bold text-[#F4D06F]">
-                          ๔
-                        </span>
-                        <h4 className="font-display text-sm font-semibold text-[#1C1815]">
-                          สุ่มกลอนมงคล • ซ่อนคำพร • พับตำราชมวิว
-                        </h4>
-                      </div>
-                      <p className="font-heading mt-2 text-xs leading-relaxed text-[#4A3B2C]">
-                        พิมพ์คำอธิษฐานเองหรือกด <strong>&ldquo;สุ่มกลอน&rdquo;</strong> คล้องจอง ๒๔ บท หากไม่อยากให้ผู้อื่นเห็นคำพรบนผิวน้ำให้กด <strong>&ldquo;ซ่อนคำอวยพร&rdquo;</strong> และสามารถกดพับตำราลงน้ำชั่วคราวเพื่อชมวิวท่าน้ำชัดๆ ก่อนเริ่มลอย
-                      </p>
-                    </div>
-                  </div>
+                  <InteractiveTutorialSandbox
+                    videoRef={videoRef}
+                    gestureState={gestureState}
+                    gestureRef={gestureRef}
+                    cameraEnabled={cameraEnabled}
+                    onToggleCamera={onToggleCamera}
+                  />
                 </div>
               )}
 
-              {/* CHAPTER 3: GESTURES & RELEASE */}
-              {activeChapter === 'gestures' && (
-                <div className="space-y-4">
-                  <div className="border-l-4 border-[#B83B2A] bg-[#FFFDF7]/75 px-4 py-2.5">
-                    <h3 className="font-display text-base font-semibold text-[#1C1815]">
-                      บทที่ ๓ : ท่าทางมือในการหยิบ และการวางปล่อยลงสู่เป้าหมาย
+              {/* FOLIO 3: CRAFTING OFFERINGS */}
+              {activeFolio === 'craft' && (
+                <div className="space-y-5">
+                  <div className="border-b border-[#C5A059]/30 pb-3">
+                    <h3 className="font-display text-base font-medium tracking-wide text-balance text-[#F4D06F] sm:text-lg">
+                      {hp.craftSection.introTitle}
                     </h3>
-                    <p className="font-heading text-xs text-[#4A3B2C]">
-                      เครื่องสักการะของคุณจะมีวงแสงสีทองส่องสว่างชัดเจน แยกจากกระทงฉากหลังที่ลอยจางๆ ในน้ำ
-                    </p>
                   </div>
 
-                  {/* 3-Step Visual Diagram */}
-                  <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
-                    {/* Gesture Step 1 */}
-                    <div className="border border-[#B89047]/60 bg-[#FFFDF7]/90 p-3.5">
-                      <div className="mb-2.5 flex h-28 items-center justify-center border border-[#D4AF37]/40 bg-[#0D1321] p-2">
-                        <svg viewBox="0 0 120 90" className="h-full w-full" fill="none">
-                          <circle cx="60" cy="45" r="26" stroke="#F4D06F" strokeWidth="1.2" strokeDasharray="4 4" />
-                          {/* Open palm fingers */}
-                          <line x1="48" y1="56" x2="44" y2="28" stroke="#FFF275" strokeWidth="3.5" strokeLinecap="round" />
-                          <line x1="55" y1="55" x2="55" y2="22" stroke="#FFF275" strokeWidth="3.5" strokeLinecap="round" />
-                          <line x1="63" y1="55" x2="65" y2="24" stroke="#FFF275" strokeWidth="3.5" strokeLinecap="round" />
-                          <line x1="70" y1="57" x2="75" y2="32" stroke="#FFF275" strokeWidth="3.5" strokeLinecap="round" />
-                          <line x1="42" y1="52" x2="32" y2="40" stroke="#F4D06F" strokeWidth="3.5" strokeLinecap="round" />
-                          <circle cx="58" cy="56" r="10" fill="#F4D06F" fillOpacity="0.4" />
-                        </svg>
+                  <div className="divide-y divide-[#C5A059]/25 border border-[#C5A059]/35 bg-[#13100C]">
+                    <div className="flex items-start gap-3.5 p-3.5 sm:gap-5 sm:p-4">
+                      <span className="font-editorial w-7 shrink-0 text-center text-2xl leading-none font-semibold text-[#F4D06F]">
+                        {hp.tabs.gestures.num}
+                      </span>
+                      <div>
+                        <h4 className="font-display text-sm font-medium text-balance text-[#FFF275] sm:text-base">
+                          {hp.craftSection.item1Title}
+                        </h4>
+                        <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:text-sm">
+                          {hp.craftSection.item1Desc}
+                        </p>
                       </div>
-                      <h4 className="font-display text-sm font-semibold text-[#1C1815]">
-                        ขั้นที่ ๑ : แบมือเล็งตำแหน่ง
-                      </h4>
-                      <p className="font-heading mt-1 text-xs leading-relaxed text-[#4A3B2C]">
-                        ยกมือขึ้นหน้ากล้อง จะเห็นรูปมือสีทองเคลื่อนที่ตามมือของคุณ เลื่อนมือไปวางทับเครื่องสักการะที่มีวงแสงคำว่า <strong>&ldquo;หยิบชิ้นนี้&rdquo;</strong>
-                      </p>
                     </div>
 
-                    {/* Gesture Step 2 */}
-                    <div className="border border-[#B89047]/60 bg-[#FFFDF7]/90 p-3.5">
-                      <div className="mb-2.5 flex h-28 items-center justify-center border border-[#D4AF37]/40 bg-[#0D1321] p-2">
-                        <svg viewBox="0 0 120 90" className="h-full w-full" fill="none">
-                          {/* Pinching thumb + index */}
-                          <circle cx="56" cy="36" r="12" fill="#52B788" fillOpacity="0.3" stroke="#52B788" strokeWidth="1.6" />
-                          <circle cx="56" cy="36" r="4.5" fill="#FFF275" />
-                          <path d="M40 62 Q44 45 55 37" stroke="#FFF275" strokeWidth="4" strokeLinecap="round" />
-                          <path d="M68 62 Q66 42 57 37" stroke="#FFF275" strokeWidth="4" strokeLinecap="round" />
-                          <path d="M74 62 L78 42 M80 64 L85 48" stroke="#F4D06F" strokeWidth="3" strokeLinecap="round" strokeOpacity="0.7" />
-                        </svg>
+                    <div className="flex items-start gap-3.5 p-3.5 sm:gap-5 sm:p-4">
+                      <span className="font-editorial w-7 shrink-0 text-center text-2xl leading-none font-semibold text-[#F4D06F]">
+                        {hp.tabs.practice.num}
+                      </span>
+                      <div>
+                        <h4 className="font-display text-sm font-medium text-balance text-[#FFF275] sm:text-base">
+                          {hp.craftSection.item2Title}
+                        </h4>
+                        <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:text-sm">
+                          {hp.craftSection.item2Desc}
+                        </p>
                       </div>
-                      <h4 className="font-display text-sm font-semibold text-[#1C1815]">
-                        ขั้นที่ ๒ : จีบนิ้วค้างเพื่อหยิบและลาก
-                      </h4>
-                      <p className="font-heading mt-1 text-xs leading-relaxed text-[#4A3B2C]">
-                        <strong>จีบนิ้วโป้งแตะนิ้วชี้ค้างไว้</strong> (หรือคลิกเมาส์ค้าง) เพื่อหยิบเครื่องสักการะ แล้วลากไปยังวงแสงเป้าหมายโดยยังไม่ต้องปล่อยนิ้ว
-                      </p>
                     </div>
 
-                    {/* Gesture Step 3 */}
-                    <div className="border border-[#B89047]/60 bg-[#FFFDF7]/90 p-3.5">
-                      <div className="mb-2.5 flex h-28 items-center justify-center border border-[#D4AF37]/40 bg-[#0D1321] p-2">
-                        <svg viewBox="0 0 120 90" className="h-full w-full" fill="none">
-                          {/* Sky Target */}
-                          <ellipse cx="60" cy="24" rx="34" ry="11" fill="#FF8C42" fillOpacity="0.2" stroke="#FF8C42" strokeWidth="1.4" strokeDasharray="3 3" />
-                          <text x="60" y="27" textAnchor="middle" fill="#FFF275" fontSize="8">โซนฟ้า: โคมลอย</text>
-                          {/* Water Target */}
-                          <ellipse cx="60" cy="66" rx="38" ry="12" fill="#F4D06F" fillOpacity="0.2" stroke="#F4D06F" strokeWidth="1.4" strokeDasharray="3 3" />
-                          <text x="60" y="69" textAnchor="middle" fill="#FFF275" fontSize="8">โซนน้ำ: กระทง</text>
-                        </svg>
+                    <div className="flex items-start gap-3.5 p-3.5 sm:gap-5 sm:p-4">
+                      <span className="font-editorial w-7 shrink-0 text-center text-2xl leading-none font-semibold text-[#F4D06F]">
+                        {hp.tabs.craft.num}
+                      </span>
+                      <div>
+                        <h4 className="font-display text-sm font-medium text-balance text-[#FFF275] sm:text-base">
+                          {hp.craftSection.item3Title}
+                        </h4>
+                        <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:text-sm">
+                          {hp.craftSection.item3Desc}
+                        </p>
                       </div>
-                      <h4 className="font-display text-sm font-semibold text-[#1C1815]">
-                        ขั้นที่ ๓ : คลายนิ้วปล่อยในวงแสง
-                      </h4>
-                      <p className="font-heading mt-1 text-xs leading-relaxed text-[#4A3B2C]">
-                        เมื่อลากเข้าสู่วงแสงเป้าหมายแล้ว <strong>ต้องแบมือคลายนิ้วออก (หรือปล่อยเมาส์)</strong> เครื่องสักการะจึงจะถูกปล่อยลอยออกไปอย่างสมบูรณ์
-                      </p>
                     </div>
                   </div>
-
-                  {/* Important Note on Multi-Offering Timer */}
-                  <div className="border border-[#D4AF37] bg-[#1C1815] p-3.5 text-[#F5EFE4]">
-                    <div className="font-display text-xs font-semibold text-[#F4D06F] sm:text-sm">
-                      การลอยพร้อมกันหลายชิ้น และการรับพรจากพระแม่คงคา
-                    </div>
-                    <p className="font-heading mt-1 text-xs leading-relaxed text-[#F5EFE4]/85">
-                      หากเลือกเล่นหลายชิ้น (๒–๕ ชิ้น) ชิ้นที่ปล่อยลงน้ำหรือขึ้นฟ้าไปก่อนจะลอยรอกลางสายน้ำอย่างสวยงาม และเมื่อปล่อย <strong>ชิ้นสุดท้ายในเซ็ตครบแล้ว</strong> เครื่องสักการะทุกชิ้นจะเริ่มลอยเคียงคู่กันไปพร้อมกัน จากนั้นพระแม่คงคาและจันทรเทพจะเสด็จขึ้นมาประทานพรให้แก่ทุกท่าน
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* CHAPTER 4: INTERACTIVE MINI-TUTORIAL */}
-              {activeChapter === 'tutorial' && (
-                <div className="space-y-3">
-                  <div className="border-l-4 border-[#B83B2A] bg-[#FFFDF7]/75 px-4 py-2">
-                    <h3 className="font-display text-base font-semibold text-[#1C1815]">
-                      บทที่ ๔ : ลานทดลองฝึกหยิบและปล่อยลอย
-                    </h3>
-                    <p className="font-heading text-xs text-[#4A3B2C]">
-                      ลองกดค้างที่กระทงหรือโคมลอยด้านล่าง ลากไปยังวงแสงเป้าหมาย แล้วปล่อยมือเพื่อซ้อมความคุ้นเคยก่อนเข้าสู่ท่าน้ำจริง
-                    </p>
-                  </div>
-
-                  <InteractiveTutorialSandbox />
                 </div>
               )}
             </div>
 
-            {/* Bottom Samut Khoi Navigation Footer */}
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t-2 border-[#8C6D3F] bg-[#EBE0CC] px-4 py-3 sm:px-6">
+            {/* Bottom Manuscript Footer */}
+            <div className="flex items-center justify-between gap-2 border-t border-[#C5A059]/45 bg-[#14100C] px-3 py-2.5 sm:gap-3 sm:px-7 sm:py-3.5 [@media(max-height:500px)]:py-1.5!">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={handlePrev}
+                  onClick={() =>
+                    currentIdx > 0 && setActiveFolio(folios[currentIdx - 1].id)
+                  }
                   disabled={currentIdx === 0}
-                  className="inline-flex cursor-pointer items-center gap-1 border border-[#8C6D3F] bg-[#FFFDF7] px-3 py-1.5 text-xs font-semibold text-[#1C1815] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label={hp.footerPrev}
+                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 border border-[#C5A059]/45 bg-[#1C1610] px-2.5 text-xs whitespace-nowrap text-[#E6DEC8] transition-opacity hover:border-[#F4D06F] disabled:cursor-not-allowed disabled:opacity-35 sm:px-3.5"
                 >
-                  <NavArrowLeft width={15} height={15} />
-                  บทก่อนหน้า
+                  <NavArrowLeft width={14} height={14} />
+                  <span className="hidden sm:inline">{hp.footerPrev}</span>
                 </button>
                 <button
                   type="button"
-                  onClick={handleNext}
-                  disabled={currentIdx === CHAPTERS.length - 1}
-                  className="inline-flex cursor-pointer items-center gap-1 border border-[#8C6D3F] bg-[#FFFDF7] px-3 py-1.5 text-xs font-semibold text-[#1C1815] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+                  onClick={() =>
+                    currentIdx < folios.length - 1 &&
+                    setActiveFolio(folios[currentIdx + 1].id)
+                  }
+                  disabled={currentIdx === folios.length - 1}
+                  aria-label={hp.footerNext}
+                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 border border-[#C5A059]/45 bg-[#1C1610] px-2.5 text-xs whitespace-nowrap text-[#E6DEC8] transition-opacity hover:border-[#F4D06F] disabled:cursor-not-allowed disabled:opacity-35 sm:px-3.5"
                 >
-                  บทถัดไป
-                  <NavArrowRight width={15} height={15} />
+                  <span className="hidden sm:inline">{hp.footerNext}</span>
+                  <NavArrowRight width={14} height={14} />
                 </button>
               </div>
 
-              <div className="flex items-center gap-2">
-                {onEnterPier && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onClose();
-                      onEnterPier();
-                    }}
-                    className="thai-chamfer-sm cursor-pointer border border-[#1C1815] bg-[#1C1815] px-4 py-2 text-xs font-semibold text-[#F4D06F] transition-colors hover:bg-[#2E2620]"
-                  >
-                    เข้าใจแล้ว • เข้าสู่ท่าน้ำเพื่อลอยกระทง
-                  </button>
-                )}
-              </div>
+              {onEnterPier && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onEnterPier();
+                  }}
+                  className="thai-chamfer-sm h-9 cursor-pointer truncate border border-[#FFF275] bg-gradient-to-r from-[#F4D06F] to-[#D4AF37] px-4 text-xs font-semibold tracking-wide whitespace-nowrap text-[#0D0B09] transition-all hover:brightness-110 sm:px-5"
+                >
+                  {hp.footerEnterPier}
+                </button>
+              )}
             </div>
           </motion.div>
         </motion.div>
