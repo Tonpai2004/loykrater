@@ -43,10 +43,19 @@ interface RiverCanvasProps {
 
 const GRAB_HIT_RADIUS_RATIO = 0.135;
 export const FLOAT_LIFESPAN_MS = 24000;
+const AMBIENT_CYCLE_MS = 38000;
 const WISH_TAG_VISIBLE_MS = 5500;
 const WISH_TAG_FADE_END_MS = 7500;
 const SPRING_STIFFNESS = 100;
 const SPRING_DAMPING = 15;
+
+function getStableItemSeed(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
 
 const DEFAULT_SLOT_PRESETS: Omit<OfferingSlotConfig, 'id'>[] = [
   {
@@ -462,28 +471,68 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
       const now = Date.now();
       const activeRiverItems = riverItems.filter((item) => {
-        if (currentMode === 'INTERACT' && item.isLocal) return true;
+        if (!item.isLocal) return true;
+        if (currentMode === 'INTERACT') return true;
         const age = now - item.createdAt;
         return age >= 0 && age < FLOAT_LIFESPAN_MS;
       });
 
       const computedFloating = activeRiverItems
-        .map((item, idx) => {
-          // Wait until the last item in the set is released before counting down user's items
-          const rawElapsed = Math.max(0, now - item.createdAt);
-          const elapsed =
-            currentMode === 'INTERACT' && item.isLocal
-              ? Math.min(1600, rawElapsed)
-              : rawElapsed;
-          const progress = Math.min(1, elapsed / FLOAT_LIFESPAN_MS);
+        .map((item) => {
+          const isAmbient = !item.isLocal;
+          const seed = getStableItemSeed(item.id);
+          const driftDir = seed % 2 === 0 ? 1 : -1;
+          const phaseOffset = (seed % 100) * 0.17;
           const isLantern = item.itemType === 'lantern';
 
-          // Wish tag appears briefly (~5.5s) then fades out by 7.5s after the round completes
+          let elapsed: number;
+          let progress: number;
+          let finalOpacity: number;
+
+          if (isAmbient) {
+            // Continuous, seamless 38s loop for ambient background items — never jumps or refreshes
+            elapsed =
+              (((now - item.createdAt) % AMBIENT_CYCLE_MS) + AMBIENT_CYCLE_MS) %
+              AMBIENT_CYCLE_MS;
+            progress = elapsed / AMBIENT_CYCLE_MS;
+
+            const fadeIn =
+              progress < 0.16
+                ? Math.sin((progress / 0.16) * (Math.PI / 2))
+                : 1;
+            const fadeOut =
+              progress > 0.78
+                ? Math.cos(((progress - 0.78) / 0.22) * (Math.PI / 2))
+                : 1;
+            // Keep ambient background items soft & faded so player's Krathongs stand out clearly
+            const maxAmbientOpacity =
+              currentMode === 'INTERACT' ? 0.2 : 0.34;
+            finalOpacity = Math.max(
+              0,
+              Math.min(maxAmbientOpacity, maxAmbientOpacity * fadeIn * fadeOut)
+            );
+          } else {
+            // Player's own released items: wait until last item in the set is released before counting down
+            const rawElapsed = Math.max(0, now - item.createdAt);
+            elapsed =
+              currentMode === 'INTERACT'
+                ? Math.min(1600, rawElapsed)
+                : rawElapsed;
+            progress = Math.min(1, elapsed / FLOAT_LIFESPAN_MS);
+
+            const lifeFadeOut =
+              progress > 0.78
+                ? Math.cos(((progress - 0.78) / 0.22) * (Math.PI / 2))
+                : 1;
+            finalOpacity = Math.max(0, Math.min(1, lifeFadeOut));
+          }
+
+          // Wish tag appears briefly (~5.5s) then fades out by 7.5s after the round completes (only for player/shared wishes)
           let wishTagOpacity = 0;
-          if (!item.config.hideWish) {
-            if (currentMode === 'INTERACT' && item.isLocal) {
+          if (!isAmbient && !item.config.hideWish) {
+            if (currentMode === 'INTERACT') {
               wishTagOpacity = 0.9;
-            } else if (currentMode !== 'INTERACT') {
+            } else {
               if (elapsed <= WISH_TAG_VISIBLE_MS) {
                 wishTagOpacity = 1;
               } else if (elapsed < WISH_TAG_FADE_END_MS) {
@@ -495,15 +544,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             }
           }
 
-          // Smooth fade-in for ambient spawns and smooth fade-out at the end of its 24s float
-          const lifeFadeIn = item.isLocal ? 1 : Math.min(1, elapsed / 900);
-          const lifeFadeOut = progress > 0.78 ? (1 - progress) / 0.22 : 1;
-          const interactDimFactor =
-            currentMode === 'INTERACT' && !item.isLocal ? 0.42 : 1;
-          const finalOpacity = Math.max(
-            0,
-            Math.min(1, lifeFadeIn * lifeFadeOut * interactDimFactor)
-          );
+          const ambientScaleMultiplier = isAmbient ? 0.72 : 1;
 
           if (isLantern) {
             const topLimitY = 0.04;
@@ -511,16 +552,15 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               item.spawnYRatio -
               (item.spawnYRatio - topLimitY) * Math.pow(progress, 0.82);
             const horizontalSway =
-              Math.sin(time * 0.0008 + idx * 1.7) * 0.045 +
-              progress * 0.06 * (idx % 2 === 0 ? 1 : -1);
+              Math.sin(time * 0.0007 + phaseOffset) * 0.038 +
+              progress * 0.055 * driftDir;
             const currentXRatio = Math.max(
               0.06,
               Math.min(0.94, item.spawnXRatio + horizontalSway)
             );
-            const perspectiveScale = Math.max(
-              0.28,
-              0.94 * Math.pow(1 - progress * 0.68, 1.05)
-            );
+            const perspectiveScale =
+              Math.max(0.26, 0.94 * Math.pow(1 - progress * 0.68, 1.05)) *
+              ambientScaleMultiplier;
 
             return {
               item,
@@ -538,18 +578,19 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             (item.spawnYRatio - horizonLimitY) * Math.pow(progress, 0.78);
 
           const horizontalDrift =
-            Math.sin(time * 0.00065 + idx * 1.9) * 0.055 * (1 - progress * 0.5) +
-            progress * 0.08 * (idx % 2 === 0 ? 1 : -1);
+            Math.sin(time * 0.00055 + phaseOffset) *
+              0.045 *
+              (1 - progress * 0.5) +
+            progress * 0.075 * driftDir;
 
           const currentXRatio = Math.max(
             0.06,
             Math.min(0.94, item.spawnXRatio + horizontalDrift)
           );
 
-          const perspectiveScale = Math.max(
-            0.26,
-            0.96 * Math.pow(1 - progress * 0.72, 1.1)
-          );
+          const perspectiveScale =
+            Math.max(0.24, 0.96 * Math.pow(1 - progress * 0.72, 1.1)) *
+            ambientScaleMultiplier;
 
           return {
             item,
@@ -564,6 +605,8 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
       computedFloating.forEach(
         ({ item, x, y, scale, opacity, wishTagOpacity }) => {
+          if (opacity <= 0.01) return;
+
           if (item.itemType === 'lantern') {
             drawInteractiveSkyLantern({
               ctx,
@@ -590,7 +633,11 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             });
           }
 
-          if (sparksRef.current.length < 60 && Math.random() < 0.07 * scale) {
+          if (
+            item.isLocal &&
+            sparksRef.current.length < 60 &&
+            Math.random() < 0.07 * scale
+          ) {
             sparksRef.current.push({
               x: x + (Math.random() - 0.5) * 10 * scale,
               y: item.itemType === 'lantern' ? y + 28 * scale : y - 50 * scale,

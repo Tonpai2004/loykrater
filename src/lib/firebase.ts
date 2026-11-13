@@ -349,20 +349,23 @@ export async function publishKrathong(
   };
 }
 
+export function createInitialAmbientKrathongs(): FloatingKrathong[] {
+  const now = Date.now();
+  return INITIAL_COMMUNITY_KRATHONGS.map((item, idx) => ({
+    ...item,
+    id: `seed-${idx}`,
+    createdAt: now - idx * 2375,
+  }));
+}
+
 export function subscribeToGlobalRiver(
   onUpdate: (krathongs: FloatingKrathong[]) => void
 ): () => void {
   const db = getFirebaseDatabase();
+  const ambientSeeds = createInitialAmbientKrathongs();
 
   if (!db) {
-    const now = Date.now();
-    let fallbackList: FloatingKrathong[] = INITIAL_COMMUNITY_KRATHONGS.map(
-      (item, idx) => ({
-        ...item,
-        id: `seed-${idx}`,
-        createdAt: now - idx * 1350,
-      })
-    );
+    let fallbackList: FloatingKrathong[] = [...ambientSeeds];
 
     queueMicrotask(() => {
       onUpdate(fallbackList);
@@ -376,10 +379,13 @@ export function subscribeToGlobalRiver(
     if (channel) {
       channel.onmessage = (event: MessageEvent<FloatingKrathong>) => {
         if (!event.data?.id) return;
-        fallbackList = [...fallbackList.slice(-(MAX_ACTIVE_KRATHONGS - 1)), event.data];
+        fallbackList = [
+          ...fallbackList.slice(-(MAX_ACTIVE_KRATHONGS - 1)),
+          event.data,
+        ];
         queueMicrotask(() => {
-      onUpdate(fallbackList);
-    });
+          onUpdate(fallbackList);
+        });
       };
     }
 
@@ -395,9 +401,12 @@ export function subscribeToGlobalRiver(
   );
 
   const unsubscribe = onValue(recentKrathongsQuery, (snapshot) => {
-    const rawData = snapshot.val() as Record<string, Omit<FloatingKrathong, 'id'>> | null;
+    const rawData = snapshot.val() as Record<
+      string,
+      Omit<FloatingKrathong, 'id'>
+    > | null;
     if (!rawData) {
-      onUpdate([]);
+      onUpdate(ambientSeeds);
       return;
     }
 
@@ -407,12 +416,13 @@ export function subscribeToGlobalRiver(
         itemType: value.itemType ?? 'krathong',
         config: value.config,
         spawnXRatio: value.spawnXRatio ?? 0.5,
-        spawnYRatio: value.spawnYRatio ?? (value.itemType === 'lantern' ? 0.25 : 0.78),
+        spawnYRatio:
+          value.spawnYRatio ?? (value.itemType === 'lantern' ? 0.25 : 0.78),
         createdAt: value.createdAt ?? Date.now(),
       }))
       .sort((a, b) => a.createdAt - b.createdAt);
 
-    onUpdate(parsed);
+    onUpdate([...ambientSeeds, ...parsed]);
   });
 
   return () => unsubscribe();

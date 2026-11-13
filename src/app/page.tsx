@@ -13,7 +13,6 @@ import {
 } from '@/components/RiverCanvas';
 import { useHandTracking } from '@/hooks/useHandTracking';
 import {
-  createAmbientFloatingItem,
   publishKrathong,
   subscribeToGlobalRiver,
 } from '@/lib/firebase';
@@ -39,7 +38,6 @@ const DEFAULT_KRATHONG_CONFIG: KrathongConfig = {
   selectedSlotIndex: 0,
 };
 
-const MIN_AMBIENT_ITEMS = 16;
 const BLESSING_MODAL_DELAY_MS = 7800;
 
 export default function LoiKrathongPage() {
@@ -53,7 +51,6 @@ export default function LoiKrathongPage() {
   const [totalRoundCount, setTotalRoundCount] = useState<number>(1);
   const [isBlessingModalOpen, setIsBlessingModalOpen] = useState<boolean>(false);
   const blessingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const ambientSeqRef = useRef<number>(16);
   const gameStateRef = useRef<GameState>(gameState);
 
   useEffect(() => {
@@ -78,38 +75,35 @@ export default function LoiKrathongPage() {
     const unsubscribe = subscribeToGlobalRiver((items) => {
       const now = Date.now();
       setFloatingKrathongs(
-        items.filter((item) => now - item.createdAt < FLOAT_LIFESPAN_MS)
+        items.filter(
+          (item) => !item.isLocal || now - item.createdAt < FLOAT_LIFESPAN_MS
+        )
       );
     });
     return () => unsubscribe();
   }, []);
 
-  // Prune expired floating items after their 24s lifespan AND continuously spawn ambient background Krathongs
+  // Prune only expired player-released (isLocal) items; ambient background items cycle seamlessly inside the 60fps canvas
   useEffect(() => {
     const cycleInterval = setInterval(() => {
       const now = Date.now();
       const inInteract = gameStateRef.current === 'INTERACT';
       setFloatingKrathongs((prev) => {
-        const active = prev.filter(
+        const hasExpiredLocal = prev.some(
           (item) =>
-            (inInteract && item.isLocal) ||
+            item.isLocal &&
+            !inInteract &&
+            now - item.createdAt >= FLOAT_LIFESPAN_MS
+        );
+        if (!hasExpiredLocal) return prev;
+        return prev.filter(
+          (item) =>
+            !item.isLocal ||
+            inInteract ||
             now - item.createdAt < FLOAT_LIFESPAN_MS
         );
-
-        const ambientCount = active.filter((i) => !i.isLocal).length;
-        if (ambientCount < MIN_AMBIENT_ITEMS) {
-          const spawnCount = Math.min(2, MIN_AMBIENT_ITEMS - ambientCount);
-          const spawned: FloatingKrathong[] = [];
-          for (let s = 0; s < spawnCount; s++) {
-            ambientSeqRef.current += 1;
-            spawned.push(createAmbientFloatingItem(ambientSeqRef.current));
-          }
-          return [...active, ...spawned];
-        }
-
-        return active.length === prev.length ? prev : active;
       });
-    }, 1400);
+    }, 2000);
 
     return () => clearInterval(cycleInterval);
   }, []);
