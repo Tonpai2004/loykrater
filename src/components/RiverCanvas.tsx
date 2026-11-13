@@ -42,9 +42,9 @@ interface RiverCanvasProps {
 }
 
 const GRAB_HIT_RADIUS_RATIO = 0.135;
-export const FLOAT_LIFESPAN_MS = 10000;
-const WISH_TAG_VISIBLE_MS = 3200;
-const WISH_TAG_FADE_END_MS = 4500;
+export const FLOAT_LIFESPAN_MS = 24000;
+const WISH_TAG_VISIBLE_MS = 5500;
+const WISH_TAG_FADE_END_MS = 7500;
 const SPRING_STIFFNESS = 100;
 const SPRING_DAMPING = 15;
 
@@ -504,12 +504,13 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             }
           }
 
-          // Smooth fade out of the Krathong/Lantern at the end of its 10s float
-          const lifeFadeOut = progress > 0.72 ? (1 - progress) / 0.28 : 1;
+          // Smooth fade-in for ambient spawns and smooth fade-out at the end of its 24s float
+          const lifeFadeIn = item.isLocal ? 1 : Math.min(1, elapsed / 900);
+          const lifeFadeOut = progress > 0.78 ? (1 - progress) / 0.22 : 1;
           const interactDimFactor = currentMode === 'INTERACT' ? 0.34 : 1;
           const finalOpacity = Math.max(
             0,
-            Math.min(1, lifeFadeOut * interactDimFactor)
+            Math.min(1, lifeFadeIn * lifeFadeOut * interactDimFactor)
           );
 
           if (isLantern) {

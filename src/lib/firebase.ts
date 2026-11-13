@@ -30,7 +30,7 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
   {
     itemType: 'krathong',
     spawnXRatio: 0.22,
-    spawnYRatio: 0.78,
+    spawnYRatio: 0.81,
     config: {
       baseColor: '#2D6A4F',
       flowerColor: '#FF99C8',
@@ -42,8 +42,8 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
   },
   {
     itemType: 'krathong',
-    spawnXRatio: 0.54,
-    spawnYRatio: 0.82,
+    spawnXRatio: 0.56,
+    spawnYRatio: 0.84,
     config: {
       baseColor: '#40916C',
       flowerColor: '#F4D06F',
@@ -55,8 +55,8 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
   },
   {
     itemType: 'lantern',
-    spawnXRatio: 0.48,
-    spawnYRatio: 0.26,
+    spawnXRatio: 0.46,
+    spawnYRatio: 0.28,
     config: {
       baseColor: '#2D6A4F',
       flowerColor: '#FF8C42',
@@ -68,10 +68,10 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
   },
   {
     itemType: 'krathong',
-    spawnXRatio: 0.76,
-    spawnYRatio: 0.79,
+    spawnXRatio: 0.78,
+    spawnYRatio: 0.8,
     config: {
-      baseColor: '#2D6A4F',
+      baseColor: '#52B788',
       flowerColor: '#FFF275',
       candleColor: '#F4D06F',
       baseStyle: 'layered-star',
@@ -79,7 +79,57 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
       authorName: 'บุหลัน พระนคร',
     },
   },
+  {
+    itemType: 'krathong',
+    spawnXRatio: 0.34,
+    spawnYRatio: 0.83,
+    config: {
+      baseColor: '#B5838D',
+      flowerColor: '#E0AAFF',
+      candleColor: '#FFF275',
+      baseStyle: 'classic-lotus',
+      wishText: 'สายน้ำไหลพัดพาความเศร้าหมอง ให้เรืองรองดั่งทองทาบนภาลัย',
+      authorName: 'แม่หญิงเรไร',
+    },
+  },
+  {
+    itemType: 'lantern',
+    spawnXRatio: 0.68,
+    spawnYRatio: 0.27,
+    config: {
+      baseColor: '#40916C',
+      flowerColor: '#F4D06F',
+      candleColor: '#FFF275',
+      baseStyle: 'royal-pleat',
+      wishText: 'ลอยประทีปทองส่องทางสว่างไสว คิดสิ่งใดสมถวิลสิ้นหมองศรี',
+      authorName: 'ขุนหลวงภักดี',
+    },
+  },
 ];
+
+export function createAmbientFloatingItem(seq: number): FloatingKrathong {
+  const template =
+    INITIAL_COMMUNITY_KRATHONGS[seq % INITIAL_COMMUNITY_KRATHONGS.length];
+  const jitterX = ((seq * 37) % 19 - 9) * 0.012;
+  const jitterY = ((seq * 23) % 11 - 5) * 0.008;
+
+  const spawnXRatio = Math.max(
+    0.12,
+    Math.min(0.88, template.spawnXRatio + jitterX)
+  );
+  const spawnYRatio =
+    template.itemType === 'lantern'
+      ? Math.max(0.2, Math.min(0.35, template.spawnYRatio + jitterY))
+      : Math.max(0.74, Math.min(0.88, template.spawnYRatio + jitterY));
+
+  return {
+    ...template,
+    id: `ambient-${Date.now()}-${seq}`,
+    spawnXRatio,
+    spawnYRatio,
+    createdAt: Date.now(),
+  };
+}
 
 export function isFirebaseConfigured(): boolean {
   const url = firebaseConfig.databaseURL;
@@ -160,10 +210,13 @@ export function subscribeToGlobalRiver(
 
   if (!db) {
     const now = Date.now();
-    let fallbackList: FloatingKrathong[] = INITIAL_COMMUNITY_KRATHONGS.map((item, idx) => ({
+    let fallbackList: FloatingKrathong[] = INITIAL_COMMUNITY_KRATHONGS.slice(
+      0,
+      4
+    ).map((item, idx) => ({
       ...item,
       id: `seed-${idx}`,
-      createdAt: now - idx * 1800,
+      createdAt: now - idx * 3800,
     }));
 
     queueMicrotask(() => {

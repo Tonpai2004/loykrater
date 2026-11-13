@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { CustomizationPanel } from '@/components/CustomizationPanel';
 import { HandTrackerHUD } from '@/components/HandTrackerHUD';
 import { MaeKhongkhaModal } from '@/components/MaeKhongkhaModal';
@@ -12,6 +12,7 @@ import {
 } from '@/components/RiverCanvas';
 import { useHandTracking } from '@/hooks/useHandTracking';
 import {
+  createAmbientFloatingItem,
   publishKrathong,
   subscribeToGlobalRiver,
 } from '@/lib/firebase';
@@ -37,40 +38,8 @@ const DEFAULT_KRATHONG_CONFIG: KrathongConfig = {
   selectedSlotIndex: 0,
 };
 
-const SPRING_TRANSITION = {
-  type: 'spring' as const,
-  stiffness: 100,
-  damping: 16,
-};
-
-function ThaiGlobalOctagramSeal() {
-  return (
-    <svg viewBox="0 0 40 40" className="h-10 w-10 shrink-0 overflow-visible">
-      <rect
-        x="7"
-        y="7"
-        width="26"
-        height="26"
-        fill="none"
-        stroke="#D4AF37"
-        strokeWidth="1"
-      />
-      <rect
-        x="7"
-        y="7"
-        width="26"
-        height="26"
-        transform="rotate(45 20 20)"
-        fill="#0B0E17"
-        stroke="#D4AF37"
-        strokeWidth="1"
-      />
-      <polygon points="20,9 24,20 20,31 16,20" fill="#B83B2A" />
-      <polygon points="9,20 20,16 31,20 20,24" fill="#D4AF37" opacity="0.85" />
-      <circle cx="20" cy="20" r="2.5" fill="#FFF275" />
-    </svg>
-  );
-}
+const MIN_AMBIENT_ITEMS = 5;
+const BLESSING_MODAL_DELAY_MS = 7800;
 
 export default function LoiKrathongPage() {
   const [gameState, setGameState] = useState<GameState>('CUSTOMIZE');
@@ -83,6 +52,7 @@ export default function LoiKrathongPage() {
   const [totalRoundCount, setTotalRoundCount] = useState<number>(1);
   const [isBlessingModalOpen, setIsBlessingModalOpen] = useState<boolean>(false);
   const blessingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ambientSeqRef = useRef<number>(4);
 
   const scheduleBlessingModal = useCallback(() => {
     if (blessingTimerRef.current) {
@@ -90,7 +60,7 @@ export default function LoiKrathongPage() {
     }
     blessingTimerRef.current = setTimeout(() => {
       setIsBlessingModalOpen(true);
-    }, 3200);
+    }, BLESSING_MODAL_DELAY_MS);
   }, []);
 
   const shouldTrackHand = gameState === 'INTERACT' && cameraEnabled;
@@ -108,18 +78,26 @@ export default function LoiKrathongPage() {
     return () => unsubscribe();
   }, []);
 
-  // Prune expired floating items after their 10-second lifespan so the counter stays accurate
+  // Prune expired floating items after their 24s lifespan AND gently spawn new ambient background items
   useEffect(() => {
-    const pruneInterval = setInterval(() => {
+    const cycleInterval = setInterval(() => {
       const now = Date.now();
       setFloatingKrathongs((prev) => {
-        const next = prev.filter(
+        const active = prev.filter(
           (item) => now - item.createdAt < FLOAT_LIFESPAN_MS
         );
-        return next.length === prev.length ? prev : next;
+
+        if (active.length < MIN_AMBIENT_ITEMS) {
+          ambientSeqRef.current += 1;
+          const nextAmbient = createAmbientFloatingItem(ambientSeqRef.current);
+          return [...active, nextAmbient];
+        }
+
+        return active.length === prev.length ? prev : active;
       });
-    }, 1000);
-    return () => clearInterval(pruneInterval);
+    }, 3400);
+
+    return () => clearInterval(cycleInterval);
   }, []);
 
   const handleReleaseItem = useCallback(
@@ -201,55 +179,7 @@ export default function LoiKrathongPage() {
         onAllItemsReleased={handleAllItemsReleased}
       />
 
-      <div className="pointer-events-none relative z-10 flex h-full w-full flex-col justify-between p-4 sm:p-6">
-        {/* Editorial Phra Nakhon Masthead */}
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: -14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={SPRING_TRANSITION}
-            className="pointer-events-auto flex items-center gap-3.5 border-l-2 border-[#D4AF37] bg-[#0B0E17]/75 px-4 py-2 backdrop-blur-md"
-          >
-            <ThaiGlobalOctagramSeal />
-            <div>
-              <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
-                มหรสพสายน้ำและฟากฟ้ายามราตรี • คืนเพ็ญเดือนสิบสอง ณ ท่าน้ำพระนคร
-              </p>
-              <div className="flex flex-wrap items-baseline gap-2.5">
-                <h1 className="font-display text-2xl font-normal tracking-wide text-[#FFFDF7] sm:text-3xl">
-                  ลอยกะเธอ
-                </h1>
-                <span className="font-editorial text-base italic text-[#D4AF37]">
-                  / Loikratur
-                </span>
-              </div>
-              <p className="font-wish text-xs text-[#FFF275]/85">
-                “จันทร์เอ๋ยจันทร์ฉาย แสงพราวพรายเหนือสายชล อธิษฐานใต้แสงกมล บันดาลดลลงกลางใจ”
-              </p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: -14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={SPRING_TRANSITION}
-            className="thai-chamfer-sm pointer-events-auto flex items-center gap-3 border border-[#D4AF37]/45 bg-[#0B0E17]/90 px-4 py-2.5 backdrop-blur-md"
-          >
-            <div className="text-right">
-              <p className="font-heading text-[10px] tracking-wider text-[#F4D06F]">
-                ดวงประทีปล่องธาราและเวหา
-              </p>
-              <p className="font-wish text-sm text-[#FFFDF7]/90">
-                ลอยเคียงจันทร์อยู่{' '}
-                <strong className="font-display text-base font-medium text-[#FFF275]">
-                  {floatingKrathongs.length}
-                </strong>{' '}
-                ดวง
-              </p>
-            </div>
-          </motion.div>
-        </header>
-
+      <div className="pointer-events-none relative z-10 flex h-full w-full flex-col justify-end p-4 sm:p-6">
         <section className="flex flex-col justify-end gap-4">
           <AnimatePresence mode="wait">
             {gameState === 'CUSTOMIZE' && (
