@@ -289,6 +289,7 @@ export const translations = {
         },
       ],
       acceptBtn: 'ยอมรับและเข้าสู่ท่าน้ำ',
+      closeBtn: 'กลับหน้าแรก',
       footnote: 'เมื่อกดยอมรับ ถือว่าคุณรับทราบและยินยอมตามข้อตกลงข้างต้น',
     },
     share: {
@@ -579,6 +580,7 @@ export const translations = {
         },
       ],
       acceptBtn: 'Accept & Enter the Pier',
+      closeBtn: 'Back to Home',
       footnote: 'By accepting, you acknowledge and agree to the terms above.',
     },
     share: {

@@ -25,7 +25,7 @@ import {
 } from '@/constants/krathongDefaults';
 import { localizeWish } from '@/constants/translations';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useConsentPending } from '@/lib/consentStore';
+import { acceptConsent, useConsentAccepted } from '@/lib/consentStore';
 import { useHandTracking } from '@/hooks/useHandTracking';
 import {
   publishKrathong,
@@ -308,7 +308,25 @@ export default function LoiKrathongPage() {
     setGameState('HOME');
   }, []);
 
-  const isConsentOpen = useConsentPending();
+  // The welcome agreement opens on the first "enter the pier" tap rather than on load,
+  // which is also the moment camera use and public wishes start to matter
+  const consentAccepted = useConsentAccepted();
+  const [isConsentOpen, setIsConsentOpen] = useState<boolean>(false);
+
+  const handleEnterPier = useCallback(() => {
+    if (!consentAccepted) {
+      setIsConsentOpen(true);
+      return;
+    }
+    setGameState('CUSTOMIZE');
+  }, [consentAccepted]);
+
+  const handleAcceptConsent = useCallback(() => {
+    acceptConsent();
+    setIsConsentOpen(false);
+    setGameState('CUSTOMIZE');
+  }, []);
+
   const isAnyModalOpen =
     isHowToPlayOpen || isLoreModalOpen || isBlessingModalOpen || isConsentOpen;
 
@@ -340,7 +358,7 @@ export default function LoiKrathongPage() {
               {gameState === 'HOME' && (
                 <HomeLandingOverlay
                   key="home-landing"
-                  onEnterPier={() => setGameState('CUSTOMIZE')}
+                  onEnterPier={handleEnterPier}
                   onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
                   onOpenLore={() => setIsLoreModalOpen(true)}
                 />
@@ -386,7 +404,7 @@ export default function LoiKrathongPage() {
       <HowToPlayModal
         isOpen={isHowToPlayOpen}
         onClose={() => setIsHowToPlayOpen(false)}
-        onEnterPier={() => setGameState('CUSTOMIZE')}
+        onEnterPier={handleEnterPier}
         videoRef={videoRef}
         gestureState={gestureState}
         gestureRef={gestureRef}
@@ -415,7 +433,11 @@ export default function LoiKrathongPage() {
         onClose={closeShareSheet}
       />
 
-      <WelcomeConsentModal isOpen={isConsentOpen} />
+      <WelcomeConsentModal
+        isOpen={isConsentOpen}
+        onAccept={handleAcceptConsent}
+        onClose={() => setIsConsentOpen(false)}
+      />
     </main>
   );
 }

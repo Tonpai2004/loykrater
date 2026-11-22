@@ -2,25 +2,36 @@
 
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChatLines, HardDrive, ShieldCheck, VideoCamera } from 'iconoir-react';
+import { ChatLines, HardDrive, ShieldCheck, VideoCamera, Xmark } from 'iconoir-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { acceptConsent } from '@/lib/consentStore';
 
 const ITEM_ICONS = [VideoCamera, ChatLines, ShieldCheck, HardDrive];
 
 interface WelcomeConsentModalProps {
-  // From useConsentPending(): first visit, after the page has settled
   isOpen: boolean;
+  onAccept: () => void;
+  // Backs out to the home page without accepting
+  onClose: () => void;
 }
 
-// Shown once per browser; the page decides when, so the server-rendered home copy paints untouched
-export const WelcomeConsentModal: React.FC<WelcomeConsentModalProps> = ({ isOpen }) => {
+// Opened by the page on the first "enter the pier" tap; accepting continues straight into the pier
+export const WelcomeConsentModal: React.FC<WelcomeConsentModalProps> = ({
+  isOpen,
+  onAccept,
+  onClose,
+}) => {
   const { locale, setLocale, t } = useLanguage();
   const acceptRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
-    if (isOpen) acceptRef.current?.focus({ preventScroll: true });
-  }, [isOpen]);
+    if (!isOpen) return;
+    acceptRef.current?.focus({ preventScroll: true });
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   return (
     <AnimatePresence>
@@ -62,26 +73,38 @@ export const WelcomeConsentModal: React.FC<WelcomeConsentModalProps> = ({ isOpen
                 </div>
               </div>
 
-              <div
-                role="group"
-                aria-label="Language switcher"
-                className="thai-chamfer-sm flex shrink-0 items-center border border-[#D4AF37]/55 bg-[#0B0E17]/92 p-1"
-              >
-                {(['th', 'en'] as const).map((code) => (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => setLocale(code)}
-                    aria-pressed={locale === code}
-                    className={`cursor-pointer px-2 py-1 text-xs font-semibold tracking-wider whitespace-nowrap transition-all sm:px-2.5 ${
-                      locale === code
-                        ? 'bg-[#D4AF37] text-[#0B0E17] shadow-[0_0_12px_rgba(244,208,111,0.35)]'
-                        : 'text-[#FFFDF7]/65 hover:text-[#FFF275]'
-                    }`}
-                  >
-                    {code === 'th' ? 'ไทย' : 'EN'}
-                  </button>
-                ))}
+              <div className="flex shrink-0 items-center gap-2">
+                <div
+                  role="group"
+                  aria-label="Language switcher"
+                  className="thai-chamfer-sm flex shrink-0 items-center border border-[#D4AF37]/55 bg-[#0B0E17]/92 p-1"
+                >
+                  {(['th', 'en'] as const).map((code) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => setLocale(code)}
+                      aria-pressed={locale === code}
+                      className={`cursor-pointer px-2 py-1 text-xs font-semibold tracking-wider whitespace-nowrap transition-all sm:px-2.5 ${
+                        locale === code
+                          ? 'bg-[#D4AF37] text-[#0B0E17] shadow-[0_0_12px_rgba(244,208,111,0.35)]'
+                          : 'text-[#FFFDF7]/65 hover:text-[#FFF275]'
+                      }`}
+                    >
+                      {code === 'th' ? 'ไทย' : 'EN'}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label={t.consent.closeBtn}
+                  title={t.consent.closeBtn}
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center border border-[#D4AF37]/50 bg-[#0B0E17] text-[#FFFDF7]/85 transition-colors hover:border-[#FFF275] hover:text-[#FFF275]"
+                >
+                  <Xmark width={18} height={18} strokeWidth={1.8} />
+                </button>
               </div>
             </div>
 
@@ -115,7 +138,7 @@ export const WelcomeConsentModal: React.FC<WelcomeConsentModalProps> = ({ isOpen
               <button
                 ref={acceptRef}
                 type="button"
-                onClick={acceptConsent}
+                onClick={onAccept}
                 className="thai-chamfer-sm font-heading flex w-full cursor-pointer items-center justify-center gap-2 border border-[#FFF275]/60 bg-[#D4AF37] px-4 py-3 text-sm font-semibold whitespace-nowrap text-[#0B0E17] transition-colors hover:bg-[#FFF275] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFF275] sm:w-auto sm:min-w-72"
               >
                 <span className="h-2 w-2 rotate-45 bg-[#0B0E17]" />
