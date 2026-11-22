@@ -24,7 +24,7 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className="pointer-events-none flex flex-1 flex-col items-center justify-center py-2 sm:px-4 sm:py-4"
+      className="lk-enter [--lk-enter-dur:0.45s] pointer-events-none flex flex-1 flex-col items-center justify-center py-2 sm:px-4 sm:py-4"
     >
       <div className="pointer-events-auto relative flex w-full max-w-md flex-col items-center sm:max-w-[34rem]">
         <div className="pointer-events-none absolute -inset-10 -z-10 rounded-full bg-radial from-[#0B0E17]/75 via-[#0B0E17]/35 to-transparent blur-2xl" />
@@ -32,10 +32,7 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
         <LoyKraTerLogo />
 
         <motion.div
-          initial={{ scaleX: 0.4, opacity: 0 }}
-          animate={{ scaleX: 1, opacity: 1 }}
-          transition={{ delay: 0.36, duration: 0.5 }}
-          className="my-[clamp(0.6rem,2.2dvh,1.25rem)] flex w-56 items-center gap-3 sm:w-80 [@media(max-height:440px)]:my-2.5"
+          className="lk-enter [--lk-enter-delay:0.36s] [--lk-enter-scale:0.4_1] my-[clamp(0.6rem,2.2dvh,1.25rem)] flex w-56 items-center gap-3 sm:w-80 [@media(max-height:440px)]:my-2.5"
         >
           <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#D4AF37]/60 to-[#F4D06F]" />
           <span className="h-2 w-2 rotate-45 border border-[#F4D06F] bg-[#D4AF37]/40" />
@@ -45,12 +42,9 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
         <motion.button
           type="button"
           onClick={onEnterPier}
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="thai-chamfer group relative w-full cursor-pointer overflow-hidden border-2 border-[#FFF275] bg-gradient-to-r from-[#F4D06F] via-[#FF8C42] to-[#F4D06F] px-4 py-[clamp(0.6rem,1.8dvh,1rem)] text-[#0D1321] shadow-[0_12px_36px_rgba(244,208,111,0.38)] transition-all hover:shadow-[0_16px_46px_rgba(244,208,111,0.55)] sm:px-7"
+          className="lk-enter [--lk-enter-delay:0.4s] [--lk-enter-y:14px] thai-chamfer group relative w-full cursor-pointer overflow-hidden border-2 border-[#FFF275] bg-gradient-to-r from-[#F4D06F] via-[#FF8C42] to-[#F4D06F] px-4 py-[clamp(0.6rem,1.8dvh,1rem)] text-[#0D1321] shadow-[0_12px_36px_rgba(244,208,111,0.38)] transition-all hover:shadow-[0_16px_46px_rgba(244,208,111,0.55)] sm:px-7"
         >
           <span className="pointer-events-none absolute inset-1 border border-[#0D1321]/25" />
           <div className="relative flex items-center justify-center gap-3">
@@ -86,10 +80,7 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
         </motion.button>
 
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.48, duration: 0.5 }}
-          className="mt-3 grid w-full grid-cols-1 gap-2.5 sm:mt-3.5 sm:grid-cols-2 sm:gap-3"
+          className="lk-enter [--lk-enter-delay:0.48s] [--lk-enter-y:16px] mt-3 grid w-full grid-cols-1 gap-2.5 sm:mt-3.5 sm:grid-cols-2 sm:gap-3"
         >
           <button
             type="button"

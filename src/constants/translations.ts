@@ -59,7 +59,7 @@ export const translations = {
   th: {
     numerals: ['๑', '๒', '๓', '๔', '๕'],
     meta: {
-      title: 'ลอยกะใคร อ๋อ ลอยกระทง',
+      title: 'ลอยกะใคร อ๋อ ลอยกระทง | ลอยกระทงออนไลน์ ลอย กะ เธอ',
     },
     home: {
       title: 'ลอย กะ เธอ',
@@ -266,6 +266,30 @@ export const translations = {
       privateWishNotice: 'คำอธิษฐานถูกเก็บไว้ในใจของผู้ลอยอย่างเป็นส่วนตัว',
       playAgainBtn: 'ลอยประทีปอีกครั้ง',
       closeBtn: 'ชมประทีปลอยต่อ',
+    },
+    consent: {
+      headerTag: 'ข้อตกลงร่วมกันก่อนเข้าสู่งานลอยกระทง',
+      title: 'ยินดีต้อนรับสู่ท่าพระนคร',
+      items: [
+        {
+          title: 'กล้องอยู่แค่ในเครื่องของคุณ',
+          body: 'กล้องใช้จับท่าจีบนิ้วเท่านั้น ภาพประมวลผลบนอุปกรณ์ของคุณ ไม่มีการบันทึก อัปโหลด หรือส่งภาพออกไปที่ใด และเล่นด้วยเมาส์หรือแตะจอแทนได้เสมอ',
+        },
+        {
+          title: 'คำพรและชื่อจะลอยให้ผู้อื่นเห็น',
+          body: 'กระทง คำอธิษฐาน และชื่อที่คุณใส่ จะถูกบันทึกและแสดงให้ผู้เล่นคนอื่นเห็นบนสายน้ำ เลือก "ซ่อนคำพร" หรือเว้นชื่อว่างไว้ได้ทุกเมื่อ',
+        },
+        {
+          title: 'ร่วมรักษาสายน้ำให้ใสสะอาด',
+          body: 'โปรดใช้ถ้อยคำสุภาพ และไม่ใส่ข้อมูลส่วนตัว เช่น เบอร์โทรหรือที่อยู่ คำไม่เหมาะสม ลิงก์ และเบอร์โทรจะถูกกรองออกโดยอัตโนมัติ',
+        },
+        {
+          title: 'สิ่งที่จำไว้ในเครื่อง',
+          body: 'เว็บจำเพียงภาษา ระดับเสียง และสมุดเยี่ยมชมไว้ในเบราว์เซอร์ของคุณ ไม่มีการติดตามตัวตนหรือแสดงโฆษณา',
+        },
+      ],
+      acceptBtn: 'ยอมรับและเข้าสู่ท่าน้ำ',
+      footnote: 'เมื่อกดยอมรับ ถือว่าคุณรับทราบและยินยอมตามข้อตกลงข้างต้น',
     },
     share: {
       headerTag: 'ส่งแสงประทีปต่อให้คนที่คิดถึง',
@@ -532,6 +556,30 @@ export const translations = {
       privateWishNotice: 'Your wish is kept privately within your heart.',
       playAgainBtn: 'Craft & Float Again',
       closeBtn: 'Continue Watching the River',
+    },
+    consent: {
+      headerTag: 'OUR SHARED AGREEMENT BEFORE THE LOY KRATHONG FESTIVAL',
+      title: 'Welcome to Tha Phra Nakhon',
+      items: [
+        {
+          title: 'Your camera stays on your device',
+          body: 'The camera only tracks your pinch gesture. Frames are processed on your device and are never recorded, uploaded or sent anywhere. You can always play with a mouse or touch instead.',
+        },
+        {
+          title: 'Wishes and names float for others to see',
+          body: 'Your offering, wish and name are saved and shown to other players on the river. Choose "Hide Wish" or leave your name blank at any time.',
+        },
+        {
+          title: 'Help keep the river clear',
+          body: 'Please keep your words kind and leave out personal details such as phone numbers or addresses. Profanity, links and phone numbers are filtered out automatically.',
+        },
+        {
+          title: 'What your browser remembers',
+          body: 'The site only remembers your language, volume and guestbook entries in your own browser. No tracking and no ads.',
+        },
+      ],
+      acceptBtn: 'Accept & Enter the Pier',
+      footnote: 'By accepting, you acknowledge and agree to the terms above.',
     },
     share: {
       headerTag: 'PASS THE CANDLELIGHT ON',

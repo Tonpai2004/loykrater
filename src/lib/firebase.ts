@@ -1,21 +1,12 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import {
-  getDatabase,
-  ref,
-  push,
-  set,
-  onValue,
-  query,
-  orderByChild,
-  limitToLast,
-  Database,
-} from 'firebase/database';
+import type { FirebaseApp } from 'firebase/app';
+import type { Database } from 'firebase/database';
 import {
   BaseStyle,
   FloatingKrathong,
   KrathongConfig,
   RitualItemType,
 } from '@/types/krathong';
+import { moderatePublicText, takePublishSlot } from '@/lib/moderation';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -306,11 +297,11 @@ function sanitizeFloatingKrathong(
   const wishText = hideWish
     ? ''
     : typeof rawConfig.wishText === 'string'
-      ? rawConfig.wishText.trim().slice(0, 70)
+      ? moderatePublicText(rawConfig.wishText).slice(0, 70)
       : '';
   const authorName =
     typeof rawConfig.authorName === 'string'
-      ? rawConfig.authorName.trim().slice(0, 24)
+      ? moderatePublicText(rawConfig.authorName).slice(0, 24)
       : '';
 
   const defaultY = itemType === 'lantern' ? 0.25 : 0.78;
@@ -346,13 +337,28 @@ export function isFirebaseConfigured(): boolean {
   return url.startsWith('https://');
 }
 
-function getFirebaseDatabase(): Database | null {
+type FirebaseDatabaseSdk = typeof import('firebase/database');
+
+// The SDK is imported on first use so it stays out of the first-paint bundle
+let firebaseSdkPromise: Promise<
+  [typeof import('firebase/app'), FirebaseDatabaseSdk]
+> | null = null;
+
+async function getFirebaseDatabase(): Promise<{
+  db: Database;
+  sdk: FirebaseDatabaseSdk;
+} | null> {
   if (!isFirebaseConfigured()) return null;
 
   try {
+    firebaseSdkPromise ??= Promise.all([
+      import('firebase/app'),
+      import('firebase/database'),
+    ]);
+    const [{ initializeApp, getApps, getApp }, sdk] = await firebaseSdkPromise;
     const app: FirebaseApp =
       getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    return getDatabase(app);
+    return { db: sdk.getDatabase(app), sdk };
   } catch {
     return null;
   }
@@ -376,8 +382,8 @@ export async function publishKrathong(
     candleColor: sanitizeHexColor(config.candleColor, '#F4D06F'),
     baseStyle: sanitizeBaseStyle(config.baseStyle),
     hideWish,
-    wishText: hideWish ? '' : config.wishText.trim().slice(0, 70),
-    authorName: config.authorName.trim().slice(0, 24),
+    wishText: hideWish ? '' : moderatePublicText(config.wishText).slice(0, 70),
+    authorName: moderatePublicText(config.authorName).slice(0, 24),
   };
 
   const payload: Omit<FloatingKrathong, 'id'> = {
@@ -388,8 +394,8 @@ export async function publishKrathong(
     createdAt: Date.now(),
   };
 
-  const db = getFirebaseDatabase();
-  if (!db) {
+  const firebase = await getFirebaseDatabase();
+  if (!firebase) {
     const id = `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const localKrathong: FloatingKrathong = {
       ...payload,
@@ -412,9 +418,24 @@ export async function publishKrathong(
     return localKrathong;
   }
 
-  const riverRef = ref(db, KRATHONGS_NODE);
-  const newItemRef = push(riverRef);
-  await set(newItemRef, payload);
+  const { db, sdk: { ref, push, set, serverTimestamp } } = firebase;
+
+  // Over the per-device limit the offering still floats here, it just isn't shared
+  if (!takePublishSlot()) {
+    return {
+      ...payload,
+      id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      isLocal: true,
+      isAmbient: false,
+    };
+  }
+
+  const newItemRef = push(ref(db, KRATHONGS_NODE));
+  // Server clock stamps the record (the rules require createdAt === now). Don't await the ack:
+  // offline or rejected writes must not stall the round, the offering already floats locally.
+  set(newItemRef, { ...payload, createdAt: serverTimestamp() }).catch((error: unknown) => {
+    console.warn('[loykrater] Could not share this offering to the river', error);
+  });
 
   return {
     ...payload,
@@ -435,68 +456,117 @@ export function createInitialAmbientKrathongs(): FloatingKrathong[] {
   }));
 }
 
-export function subscribeToGlobalRiver(
-  onUpdate: (krathongs: FloatingKrathong[]) => void
+function subscribeToFallbackRiver(
+  onUpdate: (krathongs: FloatingKrathong[]) => void,
+  ambientSeeds: FloatingKrathong[]
 ): () => void {
-  const db = getFirebaseDatabase();
-  const ambientSeeds = createInitialAmbientKrathongs();
+  let fallbackList: FloatingKrathong[] = [...ambientSeeds];
 
-  if (!db) {
-    let fallbackList: FloatingKrathong[] = [...ambientSeeds];
+  queueMicrotask(() => {
+    onUpdate(fallbackList);
+  });
 
-    queueMicrotask(() => {
-      onUpdate(fallbackList);
-    });
+  const channel =
+    typeof window !== 'undefined' && 'BroadcastChannel' in window
+      ? new BroadcastChannel(FALLBACK_CHANNEL_NAME)
+      : null;
 
-    const channel =
-      typeof window !== 'undefined' && 'BroadcastChannel' in window
-        ? new BroadcastChannel(FALLBACK_CHANNEL_NAME)
-        : null;
+  if (channel) {
+    channel.onmessage = (event: MessageEvent<unknown>) => {
+      const raw = event.data as Record<string, unknown> | null;
+      const rawId = typeof raw?.id === 'string' ? raw.id : null;
+      if (!rawId) return;
 
-    if (channel) {
-      channel.onmessage = (event: MessageEvent<unknown>) => {
-        const raw = event.data as Record<string, unknown> | null;
-        const rawId = typeof raw?.id === 'string' ? raw.id : null;
-        if (!rawId) return;
+      const sanitized = sanitizeFloatingKrathong(rawId, raw);
+      if (!sanitized) return;
 
-        const sanitized = sanitizeFloatingKrathong(rawId, raw);
-        if (!sanitized) return;
-
-        fallbackList = [
-          ...fallbackList.filter((item) => item.id !== sanitized.id).slice(-(MAX_ACTIVE_KRATHONGS - 1)),
-          sanitized,
-        ];
-        queueMicrotask(() => {
-          onUpdate(fallbackList);
-        });
-      };
-    }
-
-    return () => {
-      channel?.close();
+      fallbackList = [
+        ...fallbackList.filter((item) => item.id !== sanitized.id).slice(-(MAX_ACTIVE_KRATHONGS - 1)),
+        sanitized,
+      ];
+      queueMicrotask(() => {
+        onUpdate(fallbackList);
+      });
     };
   }
 
+  return () => {
+    channel?.close();
+  };
+}
+
+function subscribeToFirebaseRiver(
+  { db, sdk: { ref, onValue, query, orderByChild, limitToLast } }: {
+    db: Database;
+    sdk: FirebaseDatabaseSdk;
+  },
+  onUpdate: (krathongs: FloatingKrathong[]) => void,
+  ambientSeeds: FloatingKrathong[]
+): () => void {
   const recentKrathongsQuery = query(
     ref(db, KRATHONGS_NODE),
     orderByChild('createdAt'),
     limitToLast(MAX_ACTIVE_KRATHONGS)
   );
 
-  const unsubscribe = onValue(recentKrathongsQuery, (snapshot) => {
-    const rawData = snapshot.val() as Record<string, unknown> | null;
-    if (!rawData || typeof rawData !== 'object') {
+  // Records carry server time; shift them onto this device's clock so the lifespan
+  // checks (Date.now() - createdAt) hold even when the device clock is off
+  let serverTimeOffsetMs = 0;
+  let latestRaw: Record<string, unknown> | null = null;
+
+  const emit = () => {
+    if (!latestRaw || typeof latestRaw !== 'object') {
       onUpdate(ambientSeeds);
       return;
     }
 
-    const parsed: FloatingKrathong[] = Object.entries(rawData)
+    const parsed: FloatingKrathong[] = Object.entries(latestRaw)
       .map(([id, value]) => sanitizeFloatingKrathong(id, value))
       .filter((item): item is FloatingKrathong => item !== null)
+      .map((item) => ({ ...item, createdAt: item.createdAt - serverTimeOffsetMs }))
       .sort((a, b) => a.createdAt - b.createdAt);
 
     onUpdate([...ambientSeeds, ...parsed]);
+  };
+
+  const unsubscribeOffset = onValue(ref(db, '.info/serverTimeOffset'), (snapshot) => {
+    const offset = snapshot.val();
+    serverTimeOffsetMs = typeof offset === 'number' && Number.isFinite(offset) ? offset : 0;
+    if (latestRaw) emit();
   });
 
-  return () => unsubscribe();
+  const unsubscribeRiver = onValue(recentKrathongsQuery, (snapshot) => {
+    latestRaw = snapshot.val() as Record<string, unknown> | null;
+    emit();
+  });
+
+  return () => {
+    unsubscribeOffset();
+    unsubscribeRiver();
+  };
+}
+
+export function subscribeToGlobalRiver(
+  onUpdate: (krathongs: FloatingKrathong[]) => void
+): () => void {
+  const ambientSeeds = createInitialAmbientKrathongs();
+
+  if (!isFirebaseConfigured()) {
+    return subscribeToFallbackRiver(onUpdate, ambientSeeds);
+  }
+
+  let cancelled = false;
+  let cleanup: (() => void) | null = null;
+
+  getFirebaseDatabase().then((firebase) => {
+    if (cancelled) return;
+    cleanup = firebase
+      ? subscribeToFirebaseRiver(firebase, onUpdate, ambientSeeds)
+      : subscribeToFallbackRiver(onUpdate, ambientSeeds);
+  });
+
+  return () => {
+    cancelled = true;
+    cleanup?.();
+  };
 }

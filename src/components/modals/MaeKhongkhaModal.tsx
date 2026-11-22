@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import confetti from 'canvas-confetti';
 import {
   ShareAndroid,
   RefreshDouble,
@@ -219,17 +218,19 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    try {
-      confetti({
-        particleCount: 42,
-        spread: 75,
-        origin: { y: 0.62 },
-        colors: ['#D4AF37', '#FFF275', '#FF99C8', '#F5EFE4'],
-        scalar: 0.9,
+    import('canvas-confetti')
+      .then(({ default: confetti }) => {
+        confetti({
+          particleCount: 42,
+          spread: 75,
+          origin: { y: 0.62 },
+          colors: ['#D4AF37', '#FFF275', '#FF99C8', '#F5EFE4'],
+          scalar: 0.9,
+        });
+      })
+      .catch(() => {
+        // Ignore confetti errors in restricted environments
       });
-    } catch {
-      // Ignore confetti errors in restricted environments
-    }
 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onDismiss]);

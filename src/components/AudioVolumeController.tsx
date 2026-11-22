@@ -93,7 +93,8 @@ export const AudioVolumeController: React.FC = () => {
 
     const audio = new Audio(AUDIO_SRC);
     audio.loop = true;
-    audio.preload = 'auto';
+    // Muted visitors (the default) only fetch the 3MB track once they unmute, so it never competes with first paint
+    audio.preload = initialPrefs.isMuted ? 'none' : 'auto';
     audio.volume = initialPrefs.volume;
     audio.muted = initialPrefs.isMuted;
     audioRef.current = audio;

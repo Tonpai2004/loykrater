@@ -1,0 +1,30 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "global_river_krathongs": {
+      ".read": true,
+      ".indexOn": ["createdAt"],
+      "$id": {
+        ".write": "!data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['itemType', 'config', 'spawnXRatio', 'spawnYRatio', 'createdAt'])",
+        "itemType": { ".validate": "newData.val() === 'krathong' || newData.val() === 'lantern'" },
+        "spawnXRatio": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1" },
+        "spawnYRatio": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1" },
+        "createdAt": { ".validate": "newData.isNumber() && newData.val() === now" },
+        "config": {
+          ".validate": "newData.hasChildren(['baseColor', 'flowerColor', 'candleColor', 'baseStyle', 'wishText', 'authorName'])",
+          "baseColor": { ".validate": "newData.isString() && newData.val().matches(/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/)" },
+          "flowerColor": { ".validate": "newData.isString() && newData.val().matches(/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/)" },
+          "candleColor": { ".validate": "newData.isString() && newData.val().matches(/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/)" },
+          "baseStyle": { ".validate": "newData.val() === 'classic-lotus' || newData.val() === 'layered-star' || newData.val() === 'royal-pleat'" },
+          "wishText": { ".validate": "newData.isString() && newData.val().length <= 70" },
+          "authorName": { ".validate": "newData.isString() && newData.val().length <= 24" },
+          "hideWish": { ".validate": "newData.isBoolean()" },
+          "$other": { ".validate": false }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}

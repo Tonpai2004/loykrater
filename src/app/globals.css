@@ -135,3 +135,19 @@ body {
     --ui-zoom: 1.6;
   }
 }
+
+/* First-paint entrance for the home landing. Plain CSS so the copy fades in
+   before hydration (framer-motion's `initial` would keep it at opacity 0 until JS runs).
+   Uses the individual translate/scale properties so framer's inline transform still composes. */
+@keyframes lk-enter {
+  from {
+    opacity: 0.01;
+    translate: 0 var(--lk-enter-y, 0);
+    scale: var(--lk-enter-scale, 1);
+  }
+}
+
+.lk-enter {
+  animation: lk-enter var(--lk-enter-dur, 0.5s) cubic-bezier(0.22, 1, 0.36, 1)
+    var(--lk-enter-delay, 0s) backwards;
+}

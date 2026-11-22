@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
+import type { HandLandmarker } from '@mediapipe/tasks-vision';
 import {
   HandGestureState,
   NormalizedPoint,
@@ -49,6 +49,8 @@ function interpolatePoint(
 }
 
 async function createHandLandmarkerInstance(): Promise<HandLandmarker> {
+  // Loaded on demand so the MediaPipe runtime is only fetched once the camera is actually needed
+  const { FilesetResolver, HandLandmarker } = await import('@mediapipe/tasks-vision');
   let vision;
   try {
     vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);

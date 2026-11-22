@@ -10,10 +10,7 @@ export const LoyKraTerLogo: React.FC = () => {
   return (
     <div className="flex flex-col items-center text-center">
       <motion.div
-        initial={{ scale: 0.88, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="relative mb-[clamp(0.25rem,1.5dvh,0.75rem)] flex size-[clamp(4.5rem,15dvh,9rem)] items-center justify-center [@media(max-height:440px)]:hidden"
+        className="lk-enter [--lk-enter-dur:0.7s] [--lk-enter-scale:0.88] relative mb-[clamp(0.25rem,1.5dvh,0.75rem)] flex size-[clamp(4.5rem,15dvh,9rem)] items-center justify-center [@media(max-height:440px)]:hidden"
       >
         <motion.div
           animate={{
@@ -258,28 +255,19 @@ export const LoyKraTerLogo: React.FC = () => {
       </motion.div>
 
       <motion.h1
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.16, duration: 0.55 }}
-        className="font-display bg-gradient-to-b from-[#FFFDF7] via-[#FFF275] to-[#D4AF37] bg-clip-text pl-[0.22em] text-[clamp(1.75rem,min(7.5vw,9dvh),4.5rem)] leading-tight font-semibold tracking-[0.22em] whitespace-nowrap text-transparent drop-shadow-[0_6px_24px_rgba(244,208,111,0.28)] [word-spacing:0.3em]"
+        className="lk-enter [--lk-enter-delay:0.16s] [--lk-enter-dur:0.55s] [--lk-enter-y:12px] font-display bg-gradient-to-b from-[#FFFDF7] via-[#FFF275] to-[#D4AF37] bg-clip-text pl-[0.22em] text-[clamp(1.75rem,min(7.5vw,9dvh),4.5rem)] leading-tight font-semibold tracking-[0.22em] whitespace-nowrap text-transparent drop-shadow-[0_6px_24px_rgba(244,208,111,0.28)] [word-spacing:0.3em]"
       >
         {t.home.title}
       </motion.h1>
 
       <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.24, duration: 0.5 }}
-        className="font-editorial mt-1 pl-[0.26em] text-[clamp(0.6rem,2.6vw,1rem)] tracking-[0.26em] whitespace-nowrap text-[#F4D06F]/85 uppercase"
+        className="lk-enter [--lk-enter-delay:0.24s] font-editorial mt-1 pl-[0.26em] text-[clamp(0.6rem,2.6vw,1rem)] tracking-[0.26em] whitespace-nowrap text-[#F4D06F]/85 uppercase"
       >
         {t.home.subtitle}
       </motion.p>
 
       <motion.p
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.32, duration: 0.5 }}
-        className="font-heading mt-[clamp(0.5rem,1.6dvh,0.75rem)] max-w-[34rem] text-[13px] leading-relaxed text-balance text-[#FFFDF7]/85 sm:text-sm [@media(max-height:440px)]:hidden"
+        className="lk-enter [--lk-enter-delay:0.32s] [--lk-enter-y:8px] font-heading mt-[clamp(0.5rem,1.6dvh,0.75rem)] max-w-[34rem] text-[13px] leading-relaxed text-balance text-[#FFFDF7]/85 sm:text-sm [@media(max-height:440px)]:hidden"
       >
         {t.home.descriptionLine1} {t.home.descriptionLine2}
       </motion.p>

@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useSyncExternalStore,
 } from 'react';
+import { usePathname } from 'next/navigation';
 import { Locale, translations } from '@/constants/translations';
 
 const STORAGE_KEY = 'loykrater_locale_v1';
@@ -66,10 +67,17 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     () => DEFAULT_LOCALE
   );
 
+  const pathname = usePathname();
+
+  // Only the home experience is bilingual; other pages (e.g. /loy-krathong) keep their own Thai title and lang
   useEffect(() => {
+    if (pathname !== '/') {
+      document.documentElement.lang = DEFAULT_LOCALE;
+      return;
+    }
     document.documentElement.lang = locale;
     document.title = translations[locale].meta.title;
-  }, [locale]);
+  }, [locale, pathname]);
 
   const toggleLocale = useCallback(() => {
     writeLocale(locale === 'th' ? 'en' : 'th');

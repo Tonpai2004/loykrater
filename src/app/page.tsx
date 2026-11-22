@@ -8,13 +8,10 @@ import React, {
   useState,
 } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { CustomizationPanel } from '@/components/CustomizationPanel';
 import { HandTrackerHUD } from '@/components/HandTrackerHUD';
 import { HomeLandingOverlay } from '@/components/home/HomeLandingOverlay';
-import { MaeKhongkhaModal } from '@/components/modals/MaeKhongkhaModal';
-import { HowToPlayModal } from '@/components/modals/HowToPlayModal';
-import { LoyKrathongLoreModal } from '@/components/modals/LoyKrathongLoreModal';
-import { ShareInviteSheet } from '@/components/modals/ShareInviteSheet';
 import { TopBarControls } from '@/components/navigation/TopBarControls';
 import {
   buildStageItems,
@@ -44,6 +41,28 @@ import {
   OfferingSlotConfig,
   StageItem,
 } from '@/types/krathong';
+
+// Modals render nothing until opened, so they load after hydration instead of weighing on first paint
+const MaeKhongkhaModal = dynamic(
+  () => import('@/components/modals/MaeKhongkhaModal').then((m) => m.MaeKhongkhaModal),
+  { ssr: false }
+);
+const HowToPlayModal = dynamic(
+  () => import('@/components/modals/HowToPlayModal').then((m) => m.HowToPlayModal),
+  { ssr: false }
+);
+const LoyKrathongLoreModal = dynamic(
+  () => import('@/components/modals/LoyKrathongLoreModal').then((m) => m.LoyKrathongLoreModal),
+  { ssr: false }
+);
+const ShareInviteSheet = dynamic(
+  () => import('@/components/modals/ShareInviteSheet').then((m) => m.ShareInviteSheet),
+  { ssr: false }
+);
+const WelcomeConsentModal = dynamic(
+  () => import('@/components/modals/WelcomeConsentModal').then((m) => m.WelcomeConsentModal),
+  { ssr: false }
+);
 
 const NO_OFFERINGS: OfferingSlotConfig[] = [];
 
@@ -314,7 +333,8 @@ export default function LoiKrathongPage() {
 
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
           <div className="flex min-h-full flex-col">
-            <AnimatePresence mode="wait">
+            {/* initial={false}: the home copy is server-rendered visible and enters via the CSS .lk-enter animation */}
+            <AnimatePresence mode="wait" initial={false}>
               {gameState === 'HOME' && (
                 <HomeLandingOverlay
                   key="home-landing"
@@ -392,6 +412,8 @@ export default function LoiKrathongPage() {
         offerings={shareOfferings}
         onClose={closeShareSheet}
       />
+
+      <WelcomeConsentModal />
     </main>
   );
 }
