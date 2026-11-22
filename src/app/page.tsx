@@ -25,6 +25,7 @@ import {
 } from '@/constants/krathongDefaults';
 import { localizeWish } from '@/constants/translations';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useConsentPending } from '@/lib/consentStore';
 import { useHandTracking } from '@/hooks/useHandTracking';
 import {
   publishKrathong,
@@ -307,8 +308,9 @@ export default function LoiKrathongPage() {
     setGameState('HOME');
   }, []);
 
+  const isConsentOpen = useConsentPending();
   const isAnyModalOpen =
-    isHowToPlayOpen || isLoreModalOpen || isBlessingModalOpen;
+    isHowToPlayOpen || isLoreModalOpen || isBlessingModalOpen || isConsentOpen;
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-[#0D1321] select-none">
@@ -413,7 +415,7 @@ export default function LoiKrathongPage() {
         onClose={closeShareSheet}
       />
 
-      <WelcomeConsentModal />
+      <WelcomeConsentModal isOpen={isConsentOpen} />
     </main>
   );
 }

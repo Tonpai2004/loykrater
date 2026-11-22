@@ -1,66 +1,36 @@
 'use client';
 
-import React, { useEffect, useRef, useSyncExternalStore } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatLines, HardDrive, ShieldCheck, VideoCamera } from 'iconoir-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-const CONSENT_STORAGE_KEY = 'loykrater_consent_v1';
-
-// Same tiny external-store pattern as LanguageContext: in-memory first so accepting
-// still works for this visit when storage is blocked
-let memoryAccepted = false;
-const listeners = new Set<() => void>();
-
-function readAccepted(): boolean {
-  if (memoryAccepted) return true;
-  try {
-    return window.localStorage.getItem(CONSENT_STORAGE_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function acceptConsent() {
-  memoryAccepted = true;
-  try {
-    window.localStorage.setItem(CONSENT_STORAGE_KEY, '1');
-  } catch {
-    // Ignore storage errors
-  }
-  listeners.forEach((notify) => notify());
-}
-
-function subscribe(notify: () => void) {
-  listeners.add(notify);
-  return () => {
-    listeners.delete(notify);
-  };
-}
+import { acceptConsent } from '@/lib/consentStore';
 
 const ITEM_ICONS = [VideoCamera, ChatLines, ShieldCheck, HardDrive];
 
-// Shown once per browser before anything else; it only mounts after hydration,
-// so the server-rendered home copy paints untouched underneath
-export const WelcomeConsentModal: React.FC = () => {
+interface WelcomeConsentModalProps {
+  // From useConsentPending(): first visit, after the page has settled
+  isOpen: boolean;
+}
+
+// Shown once per browser; the page decides when, so the server-rendered home copy paints untouched
+export const WelcomeConsentModal: React.FC<WelcomeConsentModalProps> = ({ isOpen }) => {
   const { locale, setLocale, t } = useLanguage();
-  // Server snapshot says "accepted" so nothing renders until the client knows better
-  const accepted = useSyncExternalStore(subscribe, readAccepted, () => true);
   const acceptRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
-    if (!accepted) acceptRef.current?.focus({ preventScroll: true });
-  }, [accepted]);
+    if (isOpen) acceptRef.current?.focus({ preventScroll: true });
+  }, [isOpen]);
 
   return (
     <AnimatePresence>
-      {!accepted && (
+      {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="pointer-events-auto fixed inset-0 z-[70] flex items-center justify-center bg-[#060810]/88 p-2.5 backdrop-blur-md sm:p-4"
+          className="pointer-events-auto fixed inset-0 z-[70] flex items-center justify-center bg-[#060810]/92 p-2.5 sm:p-4"
         >
           <motion.div
             initial={{ opacity: 0, y: 48, scale: 0.96 }}
@@ -80,7 +50,7 @@ export const WelcomeConsentModal: React.FC = () => {
                   <span className="h-2.5 w-2.5 rotate-45 bg-[#F4D06F] shadow-[0_0_12px_rgba(244,208,111,0.7)]" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-heading text-[11px] font-medium tracking-wider text-[#F4D06F]">
+                  <p className="font-heading text-xs font-medium tracking-wider text-[#F4D06F]">
                     {t.consent.headerTag}
                   </p>
                   <h2
@@ -131,7 +101,7 @@ export const WelcomeConsentModal: React.FC = () => {
                         <p className="font-display text-sm leading-snug text-[#FFF275]">
                           {item.title}
                         </p>
-                        <p className="font-heading mt-1 text-[11px] leading-relaxed text-pretty text-[#FFFDF7]/75 sm:text-xs">
+                        <p className="font-heading mt-1 text-xs leading-relaxed text-pretty text-[#FFFDF7]/75">
                           {item.body}
                         </p>
                       </div>
@@ -151,7 +121,7 @@ export const WelcomeConsentModal: React.FC = () => {
                 <span className="h-2 w-2 rotate-45 bg-[#0B0E17]" />
                 <span>{t.consent.acceptBtn}</span>
               </button>
-              <p className="font-heading text-center text-[10px] text-pretty text-[#FFFDF7]/55">
+              <p className="font-heading text-center text-xs text-pretty text-[#FFFDF7]/55">
                 {t.consent.footnote}
               </p>
             </div>
