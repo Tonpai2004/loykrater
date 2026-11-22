@@ -65,7 +65,9 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
               playsInline
               muted
               className={`h-full w-full -scale-x-100 object-cover transition-opacity ${
-                cameraEnabled && gestureState.isReady ? 'opacity-90' : 'opacity-20'
+                cameraEnabled && gestureState.isReady
+                  ? 'opacity-90'
+                  : 'opacity-20'
               }`}
             />
 
@@ -106,18 +108,18 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
                   gestureState.isPinching
                     ? 'animate-ping bg-[#FFF275]'
                     : gestureState.isTracking
-                    ? 'bg-[#52B788]'
-                    : 'bg-white/40'
+                      ? 'bg-[#52B788]'
+                      : 'bg-white/40'
                 }`}
               />
               <span className="font-heading truncate text-[#FFFDF7]">
                 {gestureState.isPinching
                   ? t.hud.pinching
                   : gestureState.isTracking
-                  ? t.hud.handsDetected(detectedHandCount)
-                  : cameraEnabled
-                  ? t.hud.searchingHand
-                  : t.hud.camOff}
+                    ? t.hud.handsDetected(detectedHandCount)
+                    : cameraEnabled
+                      ? t.hud.searchingHand
+                      : t.hud.camOff}
               </span>
             </div>
           </div>
@@ -129,17 +131,27 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
             <button
               type="button"
               onClick={onToggleCamera}
-              aria-label={cameraEnabled ? t.hud.camToggleOff : t.hud.camToggleOn}
+              aria-label={
+                cameraEnabled ? t.hud.camToggleOff : t.hud.camToggleOn
+              }
               className="font-heading flex shrink-0 cursor-pointer items-center gap-1 border border-white/15 bg-white/5 px-1.5 py-1 text-[10px] whitespace-nowrap text-[#FFFDF7]/85 transition-colors hover:border-[#D4AF37]/50 sm:px-2 sm:py-0.5"
             >
               {cameraEnabled ? (
                 <>
-                  <VideoCameraOff width={12} height={12} className="text-[#B83B2A]" />
+                  <VideoCameraOff
+                    width={12}
+                    height={12}
+                    className="text-[#B83B2A]"
+                  />
                   <span className="hidden sm:inline">{t.hud.camToggleOff}</span>
                 </>
               ) : (
                 <>
-                  <VideoCamera width={12} height={12} className="text-[#D4AF37]" />
+                  <VideoCamera
+                    width={12}
+                    height={12}
+                    className="text-[#D4AF37]"
+                  />
                   <span className="hidden sm:inline">{t.hud.camToggleOn}</span>
                 </>
               )}
@@ -155,7 +167,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
           transition={SPRING_TRANSITION}
           className="pointer-events-auto flex flex-col items-stretch gap-2 self-end sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-2.5"
         >
-          <div className="font-heading hidden border border-[#D4AF37]/35 bg-[#0B0E17]/90 px-4 py-2 text-xs whitespace-nowrap text-[#FFF275] backdrop-blur-md xl:block">
+          <div className="font-heading hidden border border-[#D4AF37]/35 bg-[#0B0E17]/90 px-4 py-2 text-xs whitespace-nowrap text-[#FFF275] backdrop-blur-md lg:block">
             {t.hud.interactInstruction} ({releasedCount}/{totalCount})
           </div>
 
@@ -199,7 +211,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
             <button
               type="button"
               onClick={onOpenBlessingModal}
-              className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-1.5 border border-[#D4AF37]/50 bg-[#141932] px-3 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFF275] sm:px-4 transition-colors hover:bg-[#D4AF37]/20"
+              className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-1.5 border border-[#D4AF37]/50 bg-[#141932] px-3 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFF275] transition-colors hover:bg-[#D4AF37]/20 sm:px-4"
             >
               <span>{t.hud.receiveBlessingBtn}</span>
             </button>
@@ -207,7 +219,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
             <button
               type="button"
               onClick={onCreateAnother}
-              className="thai-chamfer-sm font-heading cursor-pointer bg-[#B83B2A] px-3 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFFDF7] sm:px-5 transition-colors hover:bg-[#D4AF37] hover:text-[#0B0E17]"
+              className="thai-chamfer-sm font-heading cursor-pointer bg-[#B83B2A] px-3 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFFDF7] transition-colors hover:bg-[#D4AF37] hover:text-[#0B0E17] sm:px-5"
             >
               {t.hud.createAnotherBtn}
             </button>

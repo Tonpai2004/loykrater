@@ -27,12 +27,10 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
       className="pointer-events-none flex flex-1 flex-col items-center justify-center py-2 sm:px-4 sm:py-4"
     >
       <div className="pointer-events-auto relative flex w-full max-w-md flex-col items-center sm:max-w-[34rem]">
-        {/* Subtle dark radial backdrop behind the hero so text is crisp while keeping the river open */}
         <div className="pointer-events-none absolute -inset-10 -z-10 rounded-full bg-radial from-[#0B0E17]/75 via-[#0B0E17]/35 to-transparent blur-2xl" />
 
         <LoyKraTerLogo />
 
-        {/* Ornamental Divider */}
         <motion.div
           initial={{ scaleX: 0.4, opacity: 0 }}
           animate={{ scaleX: 1, opacity: 1 }}
@@ -44,7 +42,6 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
           <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-[#D4AF37]/60 to-[#F4D06F]" />
         </motion.div>
 
-        {/* Primary Action: Enter the Pier */}
         <motion.button
           type="button"
           onClick={onEnterPier}
@@ -53,11 +50,10 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
           transition={{ delay: 0.4, duration: 0.5 }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="thai-chamfer group relative w-full cursor-pointer overflow-hidden border-2 border-[#FFF275] bg-gradient-to-r from-[#F4D06F] via-[#FF8C42] to-[#F4D06F] px-4 py-[clamp(0.6rem,1.8dvh,1rem)] text-[#0D1321] sm:px-7 shadow-[0_12px_36px_rgba(244,208,111,0.38)] transition-all hover:shadow-[0_16px_46px_rgba(244,208,111,0.55)]"
+          className="thai-chamfer group relative w-full cursor-pointer overflow-hidden border-2 border-[#FFF275] bg-gradient-to-r from-[#F4D06F] via-[#FF8C42] to-[#F4D06F] px-4 py-[clamp(0.6rem,1.8dvh,1rem)] text-[#0D1321] shadow-[0_12px_36px_rgba(244,208,111,0.38)] transition-all hover:shadow-[0_16px_46px_rgba(244,208,111,0.55)] sm:px-7"
         >
           <span className="pointer-events-none absolute inset-1 border border-[#0D1321]/25" />
           <div className="relative flex items-center justify-center gap-3">
-            {/* Lotus & Water Icon */}
             <svg
               viewBox="0 0 28 28"
               className="hidden h-6 w-6 shrink-0 transition-transform duration-300 group-hover:scale-110 min-[400px]:block"
@@ -65,7 +61,11 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
             >
               <path d="M14 4 L18 14 L10 14 Z" fill="#0D1321" />
               <path d="M9 7 L14 15 L6 15 Z" fill="#0D1321" fillOpacity="0.8" />
-              <path d="M19 7 L22 15 L14 15 Z" fill="#0D1321" fillOpacity="0.8" />
+              <path
+                d="M19 7 L22 15 L14 15 Z"
+                fill="#0D1321"
+                fillOpacity="0.8"
+              />
               <path d="M4 16 L24 16 L21 20 L7 20 Z" fill="#0D1321" />
               <path
                 d="M4 23 Q14 25.5 24 23"
@@ -85,18 +85,16 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
           </div>
         </motion.button>
 
-        {/* Secondary Samut Khoi Menu Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.48, duration: 0.5 }}
           className="mt-3 grid w-full grid-cols-1 gap-2.5 sm:mt-3.5 sm:grid-cols-2 sm:gap-3"
         >
-          {/* Samut Khoi 1: Hand-Tracking Guide & Finger Practice */}
           <button
             type="button"
             onClick={onOpenHowToPlay}
-            className="thai-chamfer-sm group relative flex cursor-pointer items-center gap-3 border border-[#C5A059]/70 bg-[#0E0C0A]/90 px-3.5 py-2.5 text-left sm:px-4 sm:py-3 backdrop-blur-md transition-all hover:border-[#FFF275] hover:bg-[#181410]/95 hover:shadow-[0_8px_24px_rgba(212,175,55,0.24)]"
+            className="thai-chamfer-sm group relative flex cursor-pointer items-center gap-3 border border-[#C5A059]/70 bg-[#0E0C0A]/90 px-3.5 py-2.5 text-left backdrop-blur-md transition-all hover:border-[#FFF275] hover:bg-[#181410]/95 hover:shadow-[0_8px_24px_rgba(212,175,55,0.24)] sm:px-4 sm:py-3"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#C5A059]/55 bg-[#C5A059]/10 text-[#F4D06F] transition-transform group-hover:scale-105">
               <svg viewBox="0 0 28 28" className="h-5 w-5" fill="none">
@@ -106,8 +104,22 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
                   strokeWidth="1.6"
                   strokeLinejoin="round"
                 />
-                <line x1="10" y1="5" x2="10" y2="21" stroke="#C5A059" strokeWidth="1.2" />
-                <line x1="18" y1="7" x2="18" y2="23" stroke="#C5A059" strokeWidth="1.2" />
+                <line
+                  x1="10"
+                  y1="5"
+                  x2="10"
+                  y2="21"
+                  stroke="#C5A059"
+                  strokeWidth="1.2"
+                />
+                <line
+                  x1="18"
+                  y1="7"
+                  x2="18"
+                  y2="23"
+                  stroke="#C5A059"
+                  strokeWidth="1.2"
+                />
               </svg>
             </div>
             <div className="min-w-0 flex-1">
@@ -120,11 +132,10 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
             </div>
           </button>
 
-          {/* Samut Khoi 2: Loy Krathong Lore, Mae Khongkha, the Song & Modern Culture */}
           <button
             type="button"
             onClick={onOpenLore}
-            className="thai-chamfer-sm group relative flex cursor-pointer items-center gap-3 border border-[#C5A059]/50 bg-[#0E0C0A]/85 px-3.5 py-2.5 text-left sm:px-4 sm:py-3 backdrop-blur-md transition-all hover:border-[#F4D06F] hover:bg-[#181410]/95 hover:shadow-[0_8px_24px_rgba(212,175,55,0.18)]"
+            className="thai-chamfer-sm group relative flex cursor-pointer items-center gap-3 border border-[#C5A059]/50 bg-[#0E0C0A]/85 px-3.5 py-2.5 text-left backdrop-blur-md transition-all hover:border-[#F4D06F] hover:bg-[#181410]/95 hover:shadow-[0_8px_24px_rgba(212,175,55,0.18)] sm:px-4 sm:py-3"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#C5A059]/45 bg-[#C5A059]/10 text-[#F4D06F] transition-transform group-hover:scale-105">
               <svg viewBox="0 0 28 28" className="h-5 w-5" fill="none">
@@ -136,8 +147,22 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
                   stroke="#F4D06F"
                   strokeWidth="1.5"
                 />
-                <line x1="8" y1="11" x2="20" y2="11" stroke="#C5A059" strokeWidth="1.2" />
-                <line x1="8" y1="15" x2="16" y2="15" stroke="#C5A059" strokeWidth="1.2" />
+                <line
+                  x1="8"
+                  y1="11"
+                  x2="20"
+                  y2="11"
+                  stroke="#C5A059"
+                  strokeWidth="1.2"
+                />
+                <line
+                  x1="8"
+                  y1="15"
+                  x2="16"
+                  y2="15"
+                  stroke="#C5A059"
+                  strokeWidth="1.2"
+                />
               </svg>
             </div>
             <div className="min-w-0 flex-1">

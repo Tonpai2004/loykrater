@@ -29,7 +29,6 @@ import {
   SparkParticle,
 } from '@/lib/canvasRenderer';
 import { useLanguage } from '@/contexts/LanguageContext';
-
 import {
   AMBIENT_CYCLE_MS,
   DEFAULT_SLOT_PRESETS,
@@ -44,6 +43,7 @@ interface RiverCanvasProps {
   activeConfig: KrathongConfig;
   floatingKrathongs: FloatingKrathong[];
   gestureRef: React.RefObject<HandGestureState>;
+  isPaused?: boolean;
   onReleaseItem: (
     item: StageItem,
     spawnXRatio: number,
@@ -67,7 +67,9 @@ function getStableItemSeed(id: string): number {
   return Math.abs(hash);
 }
 
-export function getActiveOfferings(config: KrathongConfig): OfferingSlotConfig[] {
+export function getActiveOfferings(
+  config: KrathongConfig
+): OfferingSlotConfig[] {
   const count: OfferingCount = config.offeringCount ?? 1;
   const existing = config.offerings ?? [];
   const result: OfferingSlotConfig[] = [];
@@ -77,7 +79,7 @@ export function getActiveOfferings(config: KrathongConfig): OfferingSlotConfig[]
       result.push(existing[i]);
     } else if (i === 0) {
       result.push({
-        id: `slot-1`,
+        id: 'slot-1',
         itemType: 'krathong',
         baseColor: config.baseColor,
         flowerColor: config.flowerColor,
@@ -114,7 +116,6 @@ export function buildStageItems(config: KrathongConfig): StageItem[] {
 
   return slots.map((slot, idx) => {
     const xPos = getHorizontalRatio(idx, total);
-    // Zig-zag rows on portrait screens so 4-5 offerings don't stack on top of each other
     const portrait =
       typeof window !== 'undefined' &&
       isPortraitView(window.innerWidth, window.innerHeight);
@@ -127,8 +128,7 @@ export function buildStageItems(config: KrathongConfig): StageItem[] {
           ? 0.41
           : 0.49;
     const ownerName = slot.authorName.trim();
-    const wishText =
-      slot.wishText.trim() || 'ลอยทุกข์โศกโรคภัย ให้ไหลลับกับสายชล';
+    const wishText = slot.wishText.trim();
 
     const itemConfig: KrathongConfig = {
       ...config,
@@ -183,6 +183,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
   activeConfig,
   floatingKrathongs,
   gestureRef,
+  isPaused = false,
   onReleaseItem,
   onProgressChange,
   onAllItemsReleased,
@@ -190,9 +191,12 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
   const { t } = useLanguage();
   const canvasLabelsRef = useRef(t.canvas);
   const handLabelsRef = useRef<string[]>([]);
+
   useEffect(() => {
     canvasLabelsRef.current = t.canvas;
-    handLabelsRef.current = t.numerals.map((n) => `${t.canvas.handLabel} ${n}`);
+    handLabelsRef.current = t.numerals.map(
+      (n) => `${t.canvas.handLabel} ${n}`
+    );
   }, [t]);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -204,6 +208,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
     gameState,
     activeConfig,
     floatingKrathongs,
+    isPaused,
     onReleaseItem,
     onProgressChange,
     onAllItemsReleased,
@@ -214,6 +219,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
       gameState,
       activeConfig,
       floatingKrathongs,
+      isPaused,
       onReleaseItem,
       onProgressChange,
       onAllItemsReleased,
@@ -222,6 +228,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
     gameState,
     activeConfig,
     floatingKrathongs,
+    isPaused,
     onReleaseItem,
     onProgressChange,
     onAllItemsReleased,
@@ -305,14 +312,21 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
       const dt = Math.min(0.032, Math.max(0.008, (time - lastTime) / 1000));
       lastTime = time;
 
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      const viewScale = getViewScale(width, height);
       const {
         gameState: currentMode,
         activeConfig: currentConfig,
         floatingKrathongs: riverItems,
+        isPaused: paused,
       } = latestPropsRef.current;
+
+      if (paused || (typeof document !== 'undefined' && document.hidden)) {
+        animationFrameId = requestAnimationFrame(renderLoop);
+        return;
+      }
+
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const viewScale = getViewScale(width, height);
       const handState = gestureRef.current;
 
       drawNightSkyAndMoon(ctx, width, height, time);
@@ -335,7 +349,8 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
         activeHands.forEach((trackedHand) => {
           const grabbedItem = stageItems.find(
             (item) =>
-              !item.released && item.grabbedByHandIndex === trackedHand.handIndex
+              !item.released &&
+              item.grabbedByHandIndex === trackedHand.handIndex
           );
 
           if (trackedHand.isPinching) {
@@ -443,7 +458,8 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
           item.y += item.vy * dt;
 
           const isGrabbed =
-            item.grabbedByHandIndex !== null || item.grabbedByPointerId !== null;
+            item.grabbedByHandIndex !== null ||
+            item.grabbedByPointerId !== null;
           const targetScale = isGrabbed ? baseScale * 1.14 : baseScale;
           item.scale += (targetScale - item.scale) * Math.min(1, dt * 10);
         });
@@ -451,15 +467,16 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
       const now = Date.now();
       const activeRiverItems = riverItems.filter((item) => {
-        if (!item.isLocal) return true;
-        if (currentMode === 'INTERACT') return true;
+        if (item.isAmbient) return true;
+        if (item.isLocal && currentMode === 'INTERACT') return true;
         const age = now - item.createdAt;
         return age >= 0 && age < FLOAT_LIFESPAN_MS;
       });
 
       const computedFloating = activeRiverItems
         .map((item) => {
-          const isAmbient = !item.isLocal;
+          const isAmbient = Boolean(item.isAmbient);
+          const isLocal = Boolean(item.isLocal);
           const seed = getStableItemSeed(item.id);
           const driftDir = seed % 2 === 0 ? 1 : -1;
           const phaseOffset = (seed % 100) * 0.17;
@@ -470,7 +487,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
           let finalOpacity: number;
 
           if (isAmbient) {
-            // Continuous, seamless 38s loop for ambient background items; never jumps or refreshes
             elapsed =
               (((now - item.createdAt) % AMBIENT_CYCLE_MS) + AMBIENT_CYCLE_MS) %
               AMBIENT_CYCLE_MS;
@@ -484,7 +500,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               progress > 0.78
                 ? Math.cos(((progress - 0.78) / 0.22) * (Math.PI / 2))
                 : 1;
-            // Keep ambient background items soft & faded so player's Krathongs stand out clearly
             const maxAmbientOpacity =
               currentMode === 'INTERACT' ? 0.2 : 0.34;
             finalOpacity = Math.max(
@@ -492,10 +507,9 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               Math.min(maxAmbientOpacity, maxAmbientOpacity * fadeIn * fadeOut)
             );
           } else {
-            // Player's own released items: wait until last item in the set is released before counting down
             const rawElapsed = Math.max(0, now - item.createdAt);
             elapsed =
-              currentMode === 'INTERACT'
+              isLocal && currentMode === 'INTERACT'
                 ? Math.min(1600, rawElapsed)
                 : rawElapsed;
             progress = Math.min(1, elapsed / FLOAT_LIFESPAN_MS);
@@ -504,27 +518,25 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
               progress > 0.78
                 ? Math.cos(((progress - 0.78) / 0.22) * (Math.PI / 2))
                 : 1;
-            finalOpacity = Math.max(0, Math.min(1, lifeFadeOut));
+            const peakOpacity = isLocal ? 1 : 0.92;
+            finalOpacity = Math.max(0, Math.min(peakOpacity, peakOpacity * lifeFadeOut));
           }
 
-          // Wish tag appears briefly (~5.5s) then fades out by 7.5s after the round completes (only for player/shared wishes)
           let wishTagOpacity = 0;
           if (!isAmbient && !item.config.hideWish) {
-            if (currentMode === 'INTERACT') {
+            if (isLocal && currentMode === 'INTERACT') {
               wishTagOpacity = 0.9;
-            } else {
-              if (elapsed <= WISH_TAG_VISIBLE_MS) {
-                wishTagOpacity = 1;
-              } else if (elapsed < WISH_TAG_FADE_END_MS) {
-                wishTagOpacity =
-                  1 -
-                  (elapsed - WISH_TAG_VISIBLE_MS) /
-                    (WISH_TAG_FADE_END_MS - WISH_TAG_VISIBLE_MS);
-              }
+            } else if (elapsed <= WISH_TAG_VISIBLE_MS) {
+              wishTagOpacity = 1;
+            } else if (elapsed < WISH_TAG_FADE_END_MS) {
+              wishTagOpacity =
+                1 -
+                (elapsed - WISH_TAG_VISIBLE_MS) /
+                  (WISH_TAG_FADE_END_MS - WISH_TAG_VISIBLE_MS);
             }
           }
 
-          const ambientScaleMultiplier = isAmbient ? 0.72 : 1;
+          const scaleMultiplier = isAmbient ? 0.72 : isLocal ? 1 : 0.94;
 
           if (isLantern) {
             const topLimitY = 0.04;
@@ -540,7 +552,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             );
             const perspectiveScale =
               Math.max(0.26, 0.94 * Math.pow(1 - progress * 0.68, 1.05)) *
-              ambientScaleMultiplier;
+              scaleMultiplier;
 
             return {
               item,
@@ -570,7 +582,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
           const perspectiveScale =
             Math.max(0.24, 0.96 * Math.pow(1 - progress * 0.72, 1.1)) *
-            ambientScaleMultiplier;
+            scaleMultiplier;
 
           return {
             item,
@@ -635,7 +647,6 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
         }
       );
 
-      // CUSTOMIZE mode live preview of all 1..5 offerings
       if (currentMode === 'CUSTOMIZE') {
         const slots = getActiveOfferings(currentConfig);
         const total = slots.length;
@@ -652,11 +663,12 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             total === 1
               ? 1.18
               : total === 2
-              ? 1.02
-              : total === 3
-              ? 0.92
-              : 0.82;
-          const finalScale = (isSelected ? baseScale * 1.12 : baseScale * 0.9) * viewScale;
+                ? 1.02
+                : total === 3
+                  ? 0.92
+                  : 0.82;
+          const finalScale =
+            (isSelected ? baseScale * 1.12 : baseScale * 0.9) * viewScale;
 
           const slotConfig: KrathongConfig = {
             ...currentConfig,
@@ -664,7 +676,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
             flowerColor: slot.flowerColor,
             candleColor: slot.candleColor,
             baseStyle: slot.baseStyle,
-            wishText: slot.wishText,
+            wishText: slot.wishText.trim(),
             authorName: slot.authorName.trim(),
             hideWish: slot.hideWish ?? false,
           };
@@ -699,18 +711,24 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
       if (currentMode === 'INTERACT') {
         const stageItems = stageItemsRef.current;
-        // Badges & wish slips only when each offering has room; otherwise just for the one in hand
         const roomy = width / Math.max(1, stageItems.length) >= 150;
-        drawTargetSpotlights(ctx, width, height, stageItems, time, canvasLabelsRef.current);
+        drawTargetSpotlights(
+          ctx,
+          width,
+          height,
+          stageItems,
+          time,
+          canvasLabelsRef.current
+        );
 
         stageItems.forEach((item) => {
           if (item.released) return;
           const ix = item.x * width;
           const iy = item.y * height;
           const isGrabbed =
-            item.grabbedByHandIndex !== null || item.grabbedByPointerId !== null;
+            item.grabbedByHandIndex !== null ||
+            item.grabbedByPointerId !== null;
 
-          // Bright unmistakable golden aura, spotlight pedestal, and callout badge
           drawStageItemBeacon(
             ctx,
             ix,
@@ -773,7 +791,13 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
       }
 
       if (currentMode === 'INTERACT') {
-        drawIllustratedHands(ctx, width, height, handState, handLabelsRef.current);
+        drawIllustratedHands(
+          ctx,
+          width,
+          height,
+          handState,
+          handLabelsRef.current
+        );
       }
 
       animationFrameId = requestAnimationFrame(renderLoop);
@@ -899,6 +923,8 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onLostPointerCapture={handlePointerUp}
       className="fixed inset-0 h-full w-full touch-none select-none"
     />
   );

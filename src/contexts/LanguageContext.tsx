@@ -12,7 +12,6 @@ import { Locale, translations } from '@/constants/translations';
 const STORAGE_KEY = 'loykrater_locale_v1';
 const DEFAULT_LOCALE: Locale = 'th';
 
-// Tiny external store: in-memory choice first (works even when storage is blocked), then the saved choice
 let memoryLocale: Locale | null = null;
 const listeners = new Set<() => void>();
 
@@ -22,7 +21,7 @@ function readLocale(): Locale {
     const saved = window.localStorage.getItem(STORAGE_KEY);
     if (saved === 'th' || saved === 'en') return saved;
   } catch {
-    // Storage blocked, fall through to default
+    // Fall through to default when storage is unavailable
   }
   return DEFAULT_LOCALE;
 }
@@ -32,7 +31,7 @@ function writeLocale(next: Locale) {
   try {
     window.localStorage.setItem(STORAGE_KEY, next);
   } catch {
-    // Ignore storage errors
+    // Ignore storage write errors
   }
   listeners.forEach((notify) => notify());
 }
@@ -61,10 +60,12 @@ const LanguageContext = createContext<LanguageContextValue>({
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  // Server render is always Thai; the client then picks up the visitor's saved choice
-  const locale = useSyncExternalStore(subscribe, readLocale, () => DEFAULT_LOCALE);
+  const locale = useSyncExternalStore(
+    subscribe,
+    readLocale,
+    () => DEFAULT_LOCALE
+  );
 
-  // Tab title & <html lang> follow the chosen language (server HTML ships the Thai title)
   useEffect(() => {
     document.documentElement.lang = locale;
     document.title = translations[locale].meta.title;

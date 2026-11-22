@@ -41,6 +41,7 @@ export interface FloatingKrathong {
   spawnYRatio: number;
   createdAt: number;
   isLocal?: boolean;
+  isAmbient?: boolean;
 }
 
 export interface StageItem {

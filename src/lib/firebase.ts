@@ -10,7 +10,12 @@ import {
   limitToLast,
   Database,
 } from 'firebase/database';
-import { FloatingKrathong, KrathongConfig, RitualItemType } from '@/types/krathong';
+import {
+  BaseStyle,
+  FloatingKrathong,
+  KrathongConfig,
+  RitualItemType,
+} from '@/types/krathong';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -26,7 +31,17 @@ const KRATHONGS_NODE = 'global_river_krathongs';
 const MAX_ACTIVE_KRATHONGS = 35;
 const FALLBACK_CHANNEL_NAME = 'loi_krathong_multiplayer_bus';
 
-const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] = [
+const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+const VALID_BASE_STYLES: readonly BaseStyle[] = [
+  'classic-lotus',
+  'layered-star',
+  'royal-pleat',
+];
+
+const INITIAL_COMMUNITY_KRATHONGS: Omit<
+  FloatingKrathong,
+  'id' | 'createdAt'
+>[] = [
   {
     itemType: 'krathong',
     spawnXRatio: 0.14,
@@ -253,27 +268,74 @@ const INITIAL_COMMUNITY_KRATHONGS: Omit<FloatingKrathong, 'id' | 'createdAt'>[] 
   },
 ];
 
-export function createAmbientFloatingItem(seq: number): FloatingKrathong {
-  const template =
-    INITIAL_COMMUNITY_KRATHONGS[seq % INITIAL_COMMUNITY_KRATHONGS.length];
-  const jitterX = (((seq * 37) % 23) - 11) * 0.011;
-  const jitterY = (((seq * 29) % 13) - 6) * 0.008;
+function sanitizeHexColor(value: unknown, fallback: string): string {
+  return typeof value === 'string' && HEX_COLOR_REGEX.test(value)
+    ? value
+    : fallback;
+}
 
-  const spawnXRatio = Math.max(
-    0.08,
-    Math.min(0.92, template.spawnXRatio + jitterX)
-  );
-  const spawnYRatio =
-    template.itemType === 'lantern'
-      ? Math.max(0.2, Math.min(0.35, template.spawnYRatio + jitterY))
-      : Math.max(0.72, Math.min(0.89, template.spawnYRatio + jitterY));
+function sanitizeBaseStyle(value: unknown): BaseStyle {
+  return typeof value === 'string' &&
+    (VALID_BASE_STYLES as readonly string[]).includes(value)
+    ? (value as BaseStyle)
+    : 'classic-lotus';
+}
+
+function clampRatio(value: unknown, min: number, max: number, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+  return Math.max(min, Math.min(max, value));
+}
+
+function sanitizeFloatingKrathong(
+  id: string,
+  raw: unknown
+): FloatingKrathong | null {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const record = raw as Record<string, unknown>;
+  const rawConfig =
+    record.config && typeof record.config === 'object'
+      ? (record.config as Record<string, unknown>)
+      : null;
+
+  if (!rawConfig) return null;
+
+  const itemType: RitualItemType =
+    record.itemType === 'lantern' ? 'lantern' : 'krathong';
+  const hideWish = Boolean(rawConfig.hideWish);
+  const wishText = hideWish
+    ? ''
+    : typeof rawConfig.wishText === 'string'
+      ? rawConfig.wishText.trim().slice(0, 70)
+      : '';
+  const authorName =
+    typeof rawConfig.authorName === 'string'
+      ? rawConfig.authorName.trim().slice(0, 24)
+      : '';
+
+  const defaultY = itemType === 'lantern' ? 0.25 : 0.78;
+  const minY = itemType === 'lantern' ? 0.14 : 0.58;
+  const maxY = itemType === 'lantern' ? 0.4 : 0.9;
 
   return {
-    ...template,
-    id: `ambient-${Date.now()}-${seq}`,
-    spawnXRatio,
-    spawnYRatio,
-    createdAt: Date.now(),
+    id,
+    itemType,
+    config: {
+      baseColor: sanitizeHexColor(rawConfig.baseColor, '#2D6A4F'),
+      flowerColor: sanitizeHexColor(rawConfig.flowerColor, '#FF99C8'),
+      candleColor: sanitizeHexColor(rawConfig.candleColor, '#F4D06F'),
+      baseStyle: sanitizeBaseStyle(rawConfig.baseStyle),
+      wishText,
+      authorName,
+      hideWish,
+    },
+    spawnXRatio: clampRatio(record.spawnXRatio, 0.08, 0.92, 0.5),
+    spawnYRatio: clampRatio(record.spawnYRatio, minY, maxY, defaultY),
+    createdAt:
+      typeof record.createdAt === 'number' && Number.isFinite(record.createdAt)
+        ? record.createdAt
+        : Date.now(),
+    isAmbient: false,
   };
 }
 
@@ -288,7 +350,8 @@ function getFirebaseDatabase(): Database | null {
   if (!isFirebaseConfigured()) return null;
 
   try {
-    const app: FirebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    const app: FirebaseApp =
+      getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     return getDatabase(app);
   } catch {
     return null;
@@ -303,35 +366,46 @@ export async function publishKrathong(
 ): Promise<FloatingKrathong> {
   const clampedY =
     itemType === 'lantern'
-      ? Math.max(0.14, Math.min(0.4, spawnYRatio))
-      : Math.max(0.58, Math.min(0.9, spawnYRatio));
+      ? clampRatio(spawnYRatio, 0.14, 0.4, 0.25)
+      : clampRatio(spawnYRatio, 0.58, 0.9, 0.78);
+
+  const hideWish = Boolean(config.hideWish);
+  const sanitizedConfig: KrathongConfig = {
+    baseColor: sanitizeHexColor(config.baseColor, '#2D6A4F'),
+    flowerColor: sanitizeHexColor(config.flowerColor, '#FF99C8'),
+    candleColor: sanitizeHexColor(config.candleColor, '#F4D06F'),
+    baseStyle: sanitizeBaseStyle(config.baseStyle),
+    hideWish,
+    wishText: hideWish ? '' : config.wishText.trim().slice(0, 70),
+    authorName: config.authorName.trim().slice(0, 24),
+  };
 
   const payload: Omit<FloatingKrathong, 'id'> = {
     itemType,
-    config: {
-      ...config,
-      hideWish: config.hideWish ?? false,
-      wishText: config.hideWish
-        ? ''
-        : config.wishText.trim() || 'ขอให้พบเจอแต่ความสุขความเจริญ',
-      authorName: config.authorName.trim() || 'ผู้ร่วมลอย กะ เธอ',
-    },
-    spawnXRatio: Math.max(0.08, Math.min(0.92, spawnXRatio)),
+    config: sanitizedConfig,
+    spawnXRatio: clampRatio(spawnXRatio, 0.08, 0.92, 0.5),
     spawnYRatio: clampedY,
     createdAt: Date.now(),
   };
 
   const db = getFirebaseDatabase();
   if (!db) {
+    const id = `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const localKrathong: FloatingKrathong = {
       ...payload,
-      id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      id,
       isLocal: true,
+      isAmbient: false,
     };
 
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       const channel = new BroadcastChannel(FALLBACK_CHANNEL_NAME);
-      channel.postMessage(localKrathong);
+      channel.postMessage({
+        ...payload,
+        id,
+        isLocal: false,
+        isAmbient: false,
+      });
       channel.close();
     }
 
@@ -346,6 +420,7 @@ export async function publishKrathong(
     ...payload,
     id: newItemRef.key ?? `fb-${Date.now()}`,
     isLocal: true,
+    isAmbient: false,
   };
 }
 
@@ -355,6 +430,8 @@ export function createInitialAmbientKrathongs(): FloatingKrathong[] {
     ...item,
     id: `seed-${idx}`,
     createdAt: now - idx * 2375,
+    isLocal: false,
+    isAmbient: true,
   }));
 }
 
@@ -377,11 +454,17 @@ export function subscribeToGlobalRiver(
         : null;
 
     if (channel) {
-      channel.onmessage = (event: MessageEvent<FloatingKrathong>) => {
-        if (!event.data?.id) return;
+      channel.onmessage = (event: MessageEvent<unknown>) => {
+        const raw = event.data as Record<string, unknown> | null;
+        const rawId = typeof raw?.id === 'string' ? raw.id : null;
+        if (!rawId) return;
+
+        const sanitized = sanitizeFloatingKrathong(rawId, raw);
+        if (!sanitized) return;
+
         fallbackList = [
-          ...fallbackList.slice(-(MAX_ACTIVE_KRATHONGS - 1)),
-          event.data,
+          ...fallbackList.filter((item) => item.id !== sanitized.id).slice(-(MAX_ACTIVE_KRATHONGS - 1)),
+          sanitized,
         ];
         queueMicrotask(() => {
           onUpdate(fallbackList);
@@ -401,25 +484,15 @@ export function subscribeToGlobalRiver(
   );
 
   const unsubscribe = onValue(recentKrathongsQuery, (snapshot) => {
-    const rawData = snapshot.val() as Record<
-      string,
-      Omit<FloatingKrathong, 'id'>
-    > | null;
-    if (!rawData) {
+    const rawData = snapshot.val() as Record<string, unknown> | null;
+    if (!rawData || typeof rawData !== 'object') {
       onUpdate(ambientSeeds);
       return;
     }
 
     const parsed: FloatingKrathong[] = Object.entries(rawData)
-      .map(([id, value]) => ({
-        id,
-        itemType: value.itemType ?? 'krathong',
-        config: value.config,
-        spawnXRatio: value.spawnXRatio ?? 0.5,
-        spawnYRatio:
-          value.spawnYRatio ?? (value.itemType === 'lantern' ? 0.25 : 0.78),
-        createdAt: value.createdAt ?? Date.now(),
-      }))
+      .map(([id, value]) => sanitizeFloatingKrathong(id, value))
+      .filter((item): item is FloatingKrathong => item !== null)
       .sort((a, b) => a.createdAt - b.createdAt);
 
     onUpdate([...ambientSeeds, ...parsed]);

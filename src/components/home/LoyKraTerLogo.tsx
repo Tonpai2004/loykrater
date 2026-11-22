@@ -9,14 +9,12 @@ export const LoyKraTerLogo: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center text-center">
-      {/* Traditional Thai Geometric Emblem (ตราสัญลักษณ์ประทีปคู่สายชลและจันทรา) */}
       <motion.div
         initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         className="relative mb-[clamp(0.25rem,1.5dvh,0.75rem)] flex size-[clamp(4.5rem,15dvh,9rem)] items-center justify-center [@media(max-height:440px)]:hidden"
       >
-        {/* Outer soft golden aura */}
         <motion.div
           animate={{
             scale: [1, 1.08, 1],
@@ -37,16 +35,37 @@ export const LoyKraTerLogo: React.FC = () => {
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
-            <linearGradient id="goldFrameGrad" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+            <linearGradient
+              id="goldFrameGrad"
+              x1="0"
+              y1="0"
+              x2="180"
+              y2="180"
+              gradientUnits="userSpaceOnUse"
+            >
               <stop offset="0%" stopColor="#FFF275" />
               <stop offset="50%" stopColor="#D4AF37" />
               <stop offset="100%" stopColor="#FF8C42" />
             </linearGradient>
-            <linearGradient id="lotusPinkGrad" x1="90" y1="75" x2="90" y2="128" gradientUnits="userSpaceOnUse">
+            <linearGradient
+              id="lotusPinkGrad"
+              x1="90"
+              y1="75"
+              x2="90"
+              y2="128"
+              gradientUnits="userSpaceOnUse"
+            >
               <stop offset="0%" stopColor="#FF99C8" />
               <stop offset="100%" stopColor="#B83B2A" />
             </linearGradient>
-            <linearGradient id="leafGreenGrad" x1="50" y1="110" x2="130" y2="135" gradientUnits="userSpaceOnUse">
+            <linearGradient
+              id="leafGreenGrad"
+              x1="50"
+              y1="110"
+              x2="130"
+              y2="135"
+              gradientUnits="userSpaceOnUse"
+            >
               <stop offset="0%" stopColor="#52B788" />
               <stop offset="100%" stopColor="#1B4332" />
             </linearGradient>
@@ -57,7 +76,6 @@ export const LoyKraTerLogo: React.FC = () => {
             </radialGradient>
           </defs>
 
-          {/* Outer Thai Yomum Octagonal Brass Frame */}
           <polygon
             points="54,10 126,10 170,54 170,126 126,170 54,170 10,126 10,54"
             fill="#0B0E17"
@@ -73,26 +91,67 @@ export const LoyKraTerLogo: React.FC = () => {
             strokeDasharray="3 3"
           />
 
-          {/* Corner Thai Diamond Ornaments */}
-          <rect x="86" y="6" width="8" height="8" transform="rotate(45 90 10)" fill="#F4D06F" />
-          <rect x="86" y="166" width="8" height="8" transform="rotate(45 90 170)" fill="#F4D06F" />
-          <rect x="6" y="86" width="8" height="8" transform="rotate(45 10 90)" fill="#F4D06F" />
-          <rect x="166" y="86" width="8" height="8" transform="rotate(45 170 90)" fill="#F4D06F" />
+          <rect
+            x="86"
+            y="6"
+            width="8"
+            height="8"
+            transform="rotate(45 90 10)"
+            fill="#F4D06F"
+          />
+          <rect
+            x="86"
+            y="166"
+            width="8"
+            height="8"
+            transform="rotate(45 90 170)"
+            fill="#F4D06F"
+          />
+          <rect
+            x="6"
+            y="86"
+            width="8"
+            height="8"
+            transform="rotate(45 10 90)"
+            fill="#F4D06F"
+          />
+          <rect
+            x="166"
+            y="86"
+            width="8"
+            height="8"
+            transform="rotate(45 170 90)"
+            fill="#F4D06F"
+          />
 
-          {/* Full Moon at the top */}
           <circle cx="90" cy="48" r="24" fill="url(#moonGlowGrad)" />
           <circle cx="90" cy="48" r="14" fill="#FFFDF7" fillOpacity="0.92" />
 
-          {/* Small floating sky lanterns flanking the moon */}
           <g opacity="0.88">
-            <path d="M46 42 L54 42 L56 54 L44 54 Z" fill="#FF8C42" stroke="#FFF275" strokeWidth="0.9" />
+            <path
+              d="M46 42 L54 42 L56 54 L44 54 Z"
+              fill="#FF8C42"
+              stroke="#FFF275"
+              strokeWidth="0.9"
+            />
             <circle cx="50" cy="54" r="2.2" fill="#FFF275" />
-            <path d="M126 38 L134 38 L136 50 L124 50 Z" fill="#FF8C42" stroke="#FFF275" strokeWidth="0.9" />
+            <path
+              d="M126 38 L134 38 L136 50 L124 50 Z"
+              fill="#FF8C42"
+              stroke="#FFF275"
+              strokeWidth="0.9"
+            />
             <circle cx="130" cy="50" r="2.2" fill="#FFF275" />
           </g>
 
-          {/* Candle & Flame in Center */}
-          <rect x="87.5" y="74" width="5" height="18" rx="1.5" fill="#F4D06F" />
+          <rect
+            x="87.5"
+            y="74"
+            width="5"
+            height="18"
+            rx="1.5"
+            fill="#F4D06F"
+          />
           <path
             d="M90 56 C94 64, 95 70, 90 74 C85 70, 86 64, 90 56 Z"
             fill="#FFF275"
@@ -102,40 +161,111 @@ export const LoyKraTerLogo: React.FC = () => {
             fill="#FF8C42"
           />
 
-          {/* Three Incense Sticks */}
-          <line x1="84" y1="77" x2="88" y2="92" stroke="#D4AF37" strokeWidth="1.1" />
-          <line x1="90" y1="76" x2="90" y2="92" stroke="#D4AF37" strokeWidth="1.1" />
-          <line x1="96" y1="77" x2="92" y2="92" stroke="#D4AF37" strokeWidth="1.1" />
+          <line
+            x1="84"
+            y1="77"
+            x2="88"
+            y2="92"
+            stroke="#D4AF37"
+            strokeWidth="1.1"
+          />
+          <line
+            x1="90"
+            y1="76"
+            x2="90"
+            y2="92"
+            stroke="#D4AF37"
+            strokeWidth="1.1"
+          />
+          <line
+            x1="96"
+            y1="77"
+            x2="92"
+            y2="92"
+            stroke="#D4AF37"
+            strokeWidth="1.1"
+          />
 
-          {/* Geometric Lotus Petals (กลีบบัวสัตตบงกช) */}
-          <path d="M90 79 L104 106 L76 106 Z" fill="url(#lotusPinkGrad)" stroke="#FFF275" strokeWidth="1" />
-          <path d="M73 84 L92 108 L62 108 Z" fill="#FF99C8" fillOpacity="0.9" stroke="#F4D06F" strokeWidth="0.9" />
-          <path d="M107 84 L118 108 L88 108 Z" fill="#FF99C8" fillOpacity="0.9" stroke="#F4D06F" strokeWidth="0.9" />
-          <path d="M58 92 L78 111 L50 111 Z" fill="#E0AAFF" fillOpacity="0.85" stroke="#D4AF37" strokeWidth="0.8" />
-          <path d="M122 92 L130 111 L102 111 Z" fill="#E0AAFF" fillOpacity="0.85" stroke="#D4AF37" strokeWidth="0.8" />
+          <path
+            d="M90 79 L104 106 L76 106 Z"
+            fill="url(#lotusPinkGrad)"
+            stroke="#FFF275"
+            strokeWidth="1"
+          />
+          <path
+            d="M73 84 L92 108 L62 108 Z"
+            fill="#FF99C8"
+            fillOpacity="0.9"
+            stroke="#F4D06F"
+            strokeWidth="0.9"
+          />
+          <path
+            d="M107 84 L118 108 L88 108 Z"
+            fill="#FF99C8"
+            fillOpacity="0.9"
+            stroke="#F4D06F"
+            strokeWidth="0.9"
+          />
+          <path
+            d="M58 92 L78 111 L50 111 Z"
+            fill="#E0AAFF"
+            fillOpacity="0.85"
+            stroke="#D4AF37"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M122 92 L130 111 L102 111 Z"
+            fill="#E0AAFF"
+            fillOpacity="0.85"
+            stroke="#D4AF37"
+            strokeWidth="0.8"
+          />
 
-          {/* Banana Leaf Krathong Base (ฐานกลีบใบตอง) */}
-          <path d="M44 110 L136 110 L126 126 L54 126 Z" fill="url(#leafGreenGrad)" stroke="#F4D06F" strokeWidth="1.3" />
-          <path d="M54 110 L63 122 L72 110 L81 122 L90 110 L99 122 L108 110 L117 122 L126 110" stroke="#FFF275" strokeWidth="0.9" strokeOpacity="0.7" />
+          <path
+            d="M44 110 L136 110 L126 126 L54 126 Z"
+            fill="url(#leafGreenGrad)"
+            stroke="#F4D06F"
+            strokeWidth="1.3"
+          />
+          <path
+            d="M54 110 L63 122 L72 110 L81 122 L90 110 L99 122 L108 110 L117 122 L126 110"
+            stroke="#FFF275"
+            strokeWidth="0.9"
+            strokeOpacity="0.7"
+          />
 
-          {/* Golden River Ripples Below */}
-          <path d="M36 135 Q90 142 144 135" stroke="#F4D06F" strokeWidth="1.6" strokeLinecap="round" />
-          <path d="M48 144 Q90 150 132 144" stroke="#D4AF37" strokeWidth="1.2" strokeOpacity="0.75" strokeLinecap="round" />
-          <path d="M64 152 Q90 156 116 152" stroke="#F4D06F" strokeWidth="1" strokeOpacity="0.5" strokeLinecap="round" />
+          <path
+            d="M36 135 Q90 142 144 135"
+            stroke="#F4D06F"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+          <path
+            d="M48 144 Q90 150 132 144"
+            stroke="#D4AF37"
+            strokeWidth="1.2"
+            strokeOpacity="0.75"
+            strokeLinecap="round"
+          />
+          <path
+            d="M64 152 Q90 156 116 152"
+            stroke="#F4D06F"
+            strokeWidth="1"
+            strokeOpacity="0.5"
+            strokeLinecap="round"
+          />
         </svg>
       </motion.div>
 
-      {/* Main Title */}
       <motion.h1
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.16, duration: 0.55 }}
-        className="font-display bg-gradient-to-b from-[#FFFDF7] via-[#FFF275] to-[#D4AF37] bg-clip-text pl-[0.22em] text-[clamp(1.75rem,min(7.5vw,9dvh),4.5rem)] leading-tight font-semibold tracking-[0.22em] whitespace-nowrap [word-spacing:0.3em] text-transparent drop-shadow-[0_6px_24px_rgba(244,208,111,0.28)]"
+        className="font-display bg-gradient-to-b from-[#FFFDF7] via-[#FFF275] to-[#D4AF37] bg-clip-text pl-[0.22em] text-[clamp(1.75rem,min(7.5vw,9dvh),4.5rem)] leading-tight font-semibold tracking-[0.22em] whitespace-nowrap text-transparent drop-shadow-[0_6px_24px_rgba(244,208,111,0.28)] [word-spacing:0.3em]"
       >
         {t.home.title}
       </motion.h1>
 
-      {/* Editorial Subtitle */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -145,12 +275,11 @@ export const LoyKraTerLogo: React.FC = () => {
         {t.home.subtitle}
       </motion.p>
 
-      {/* Poetic Description */}
       <motion.p
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.32, duration: 0.5 }}
-        className="font-heading mt-[clamp(0.5rem,1.6dvh,0.75rem)] max-w-[34rem] text-[13px] [@media(max-height:440px)]:hidden leading-relaxed text-balance text-[#FFFDF7]/85 sm:text-sm"
+        className="font-heading mt-[clamp(0.5rem,1.6dvh,0.75rem)] max-w-[34rem] text-[13px] leading-relaxed text-balance text-[#FFFDF7]/85 sm:text-sm [@media(max-height:440px)]:hidden"
       >
         {t.home.descriptionLine1} {t.home.descriptionLine2}
       </motion.p>

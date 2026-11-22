@@ -27,10 +27,20 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
   );
   const chapter = lr.chapters[currentIdx];
 
-  // Every folio opens at its first line
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: 0 });
   }, [activeId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   return (
     <AnimatePresence>
@@ -42,19 +52,16 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060B]/88 p-2.5 backdrop-blur-md sm:p-6 [@media(max-height:500px)]:p-2!"
           onClick={onClose}
         >
-          {/* Royal Black Khoi Manuscript (สมุดไทยดำลงรักปิดทอง) */}
           <motion.div
             initial={{ opacity: 0, y: 32, scaleY: 0.92 }}
             animate={{ opacity: 1, y: 0, scaleY: 1 }}
             exit={{ opacity: 0, y: 24, scaleY: 0.94 }}
             transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="thai-chamfer relative flex h-[calc(100dvh-1.25rem)] [@media(max-height:500px)]:h-[calc(100dvh-1rem)]! w-full max-w-3xl flex-col overflow-hidden lg:max-w-4xl border border-[#C5A059] bg-[#0D0B09] text-[#F5EFE4] shadow-[0_32px_90px_rgba(0,0,0,0.92)] [zoom:var(--ui-zoom,1)] sm:h-[calc(min(90dvh,56rem)/var(--ui-zoom,1))]"
+            className="thai-chamfer relative flex h-[calc(100dvh-1.25rem)] w-full max-w-3xl flex-col overflow-hidden border border-[#C5A059] bg-[#0D0B09] text-[#F5EFE4] shadow-[0_32px_90px_rgba(0,0,0,0.92)] [zoom:var(--ui-zoom,1)] sm:h-[calc(min(90dvh,56rem)/var(--ui-zoom,1))] lg:max-w-4xl [@media(max-height:500px)]:h-[calc(100dvh-1rem)]!"
           >
-            {/* Inner Gold Hairline Frame */}
             <div className="pointer-events-none absolute inset-1.5 border border-[#C5A059]/30" />
 
-            {/* Header */}
             <div className="relative flex items-center justify-between gap-3 border-b border-[#C5A059]/45 bg-gradient-to-r from-[#14100C] via-[#1C1610] to-[#14100C] px-4 py-3 sm:px-7 sm:py-4 [@media(max-height:500px)]:py-1.5!">
               <div className="flex min-w-0 items-center gap-3.5">
                 <div className="hidden h-9 w-9 shrink-0 items-center justify-center border border-[#C5A059]/70 bg-[#0D0B09] sm:flex">
@@ -81,11 +88,12 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
               </button>
             </div>
 
-            {/* Folio Index (สารบัญผูก) */}
             <div
               role="tablist"
               className="grid border-b border-[#C5A059]/40 bg-[#120E0B]"
-              style={{ gridTemplateColumns: `repeat(${lr.chapters.length}, minmax(0, 1fr))` }}
+              style={{
+                gridTemplateColumns: `repeat(${lr.chapters.length}, minmax(0, 1fr))`,
+              }}
             >
               {lr.chapters.map((folio) => {
                 const isSelected = folio.id === chapter.id;
@@ -106,7 +114,7 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                     <span className="font-editorial block text-sm leading-none font-semibold text-[#F4D06F]">
                       {folio.num}
                     </span>
-                    <span className="font-display mt-1 block truncate [@media(max-height:500px)]:mt-0! text-xs font-medium whitespace-nowrap text-[#FFFDF7] sm:text-[13px]">
+                    <span className="font-display mt-1 block truncate text-xs font-medium whitespace-nowrap text-[#FFFDF7] sm:text-[13px] [@media(max-height:500px)]:mt-0!">
                       {folio.short}
                     </span>
                   </button>
@@ -114,7 +122,6 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
               })}
             </div>
 
-            {/* Manuscript Body */}
             <div
               ref={bodyRef}
               className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5 sm:px-8 sm:py-7 [&>*]:my-auto [@media(max-height:500px)]:py-3!"
@@ -128,11 +135,12 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                   transition={{ duration: 0.25 }}
                   className="mx-auto w-full max-w-2xl"
                 >
-                  {/* Chapter Title */}
                   <header className="text-center">
                     <p
                       className={`font-editorial text-[11px] text-[#C5A059] ${
-                        locale === 'en' ? 'tracking-[0.3em] uppercase' : 'font-heading tracking-wide'
+                        locale === 'en'
+                          ? 'tracking-[0.3em] uppercase'
+                          : 'font-heading tracking-wide'
                       }`}
                     >
                       {chapter.sub}
@@ -147,18 +155,18 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                     </div>
                   </header>
 
-                  {/* Lede */}
                   <p className="font-display mt-5 border-l-2 border-[#C5A059]/70 pl-4 text-sm leading-relaxed text-pretty text-[#F5EFE4]/90 sm:text-[15px]">
                     {chapter.lede}
                   </p>
 
-                  {/* Sections */}
                   <div className="mt-6 space-y-5">
                     {chapter.sections.map((section) => (
                       <section key={section.heading}>
                         <h4 className="font-display flex items-baseline gap-2.5 text-[15px] font-medium text-[#FFF275] sm:text-base">
                           <span className="h-1.5 w-1.5 shrink-0 translate-y-[-2px] rotate-45 bg-[#C5A059]" />
-                          <span className="text-balance">{section.heading}</span>
+                          <span className="text-balance">
+                            {section.heading}
+                          </span>
                         </h4>
                         <p className="font-heading mt-1.5 pl-4 text-[13px] leading-[1.85] text-pretty text-[#E6DEC8]/85 sm:text-sm">
                           {section.body}
@@ -167,12 +175,13 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                     ))}
                   </div>
 
-                  {/* Margin Note */}
                   {chapter.note && (
                     <aside className="mt-7 border border-dashed border-[#C5A059]/50 bg-[#13100C] px-4 py-3.5">
                       <p
                         className={`font-editorial text-[11px] text-[#F4D06F] ${
-                          locale === 'en' ? 'tracking-[0.24em] uppercase' : 'font-heading tracking-wide'
+                          locale === 'en'
+                            ? 'tracking-[0.24em] uppercase'
+                            : 'font-heading tracking-wide'
                         }`}
                       >
                         {chapter.note.label}
@@ -186,7 +195,6 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
               </AnimatePresence>
             </div>
 
-            {/* Footer */}
             <div className="flex items-center justify-between gap-2 border-t border-[#C5A059]/45 bg-[#14100C] px-3 py-2.5 sm:gap-3 sm:px-7 sm:py-3.5 [@media(max-height:500px)]:py-1.5!">
               <button
                 type="button"
@@ -203,7 +211,9 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
 
               <span
                 className={`text-[#C5A059] ${
-                  locale === 'en' ? 'font-editorial text-xs tracking-[0.2em]' : 'font-heading text-[13px] tracking-wider'
+                  locale === 'en'
+                    ? 'font-editorial text-xs tracking-[0.2em]'
+                    : 'font-heading text-[13px] tracking-wider'
                 }`}
               >
                 {chapter.num} / {lr.chapters[lr.chapters.length - 1].num}

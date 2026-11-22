@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from 'react';
 import { RefreshDouble, VideoCamera, VideoCameraOff } from 'iconoir-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -8,7 +14,11 @@ import {
   drawInteractiveSkyLantern,
   drawProceduralKrathong,
 } from '@/lib/canvasRenderer';
-import { HandGestureState, KrathongConfig, RitualItemType } from '@/types/krathong';
+import {
+  HandGestureState,
+  KrathongConfig,
+  RitualItemType,
+} from '@/types/krathong';
 
 interface InteractiveTutorialSandboxProps {
   videoRef: React.RefCallback<HTMLVideoElement>;
@@ -45,12 +55,13 @@ export const InteractiveTutorialSandbox: React.FC<
   );
 
   const [practiceType, setPracticeType] = useState<RitualItemType>('krathong');
-  const [uiPhase, setUiPhase] = useState<'idle' | 'grabbed' | 'inTarget' | 'released'>('idle');
+  const [uiPhase, setUiPhase] = useState<
+    'idle' | 'grabbed' | 'inTarget' | 'released'
+  >('idle');
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const practiceTypeRef = useRef<RitualItemType>(practiceType);
 
-  // Normalized coordinates (0..1) of the practice item
   const itemStateRef = useRef<{
     x: number;
     y: number;
@@ -126,27 +137,28 @@ export const InteractiveTutorialSandbox: React.FC<
       ctx.save();
       ctx.scale(dpr, dpr);
 
-      // Props shrink with the sandbox so phones keep the same proportions as desktop
       const propScale = Math.max(0.55, Math.min(1, width / 560, height / 300));
-
       const type = practiceTypeRef.current;
       const state = itemStateRef.current;
       const target = getTargetPos(type);
       const spawn = getSpawnPos(type);
       const gesture = gestureRef.current;
 
-      // 1. Update Hand-Tracking Grab & Release Logic
       if (!state.released && state.grabbedByPointer === null) {
         const hands = gesture.hands ?? [];
 
         if (state.grabbedByHand !== null) {
-          const activeHand = hands.find((h) => h.handIndex === state.grabbedByHand);
+          const activeHand = hands.find(
+            (h) => h.handIndex === state.grabbedByHand
+          );
           if (activeHand && activeHand.isPinching) {
             state.x += (activeHand.cursor.x - state.x) * 0.35;
             state.y += (activeHand.cursor.y - state.y) * 0.35;
           } else {
-            // Finger un-pinched! Check if inside target ring
-            const distToTarget = Math.hypot(state.x - target.x, state.y - target.y);
+            const distToTarget = Math.hypot(
+              state.x - target.x,
+              state.y - target.y
+            );
             state.grabbedByHand = null;
             if (distToTarget < 0.16) {
               state.released = true;
@@ -156,10 +168,12 @@ export const InteractiveTutorialSandbox: React.FC<
             }
           }
         } else {
-          // Check if any pinching hand is close to the practice item
           for (const hand of hands) {
             if (hand.isPinching) {
-              const dist = Math.hypot(hand.cursor.x - state.x, hand.cursor.y - state.y);
+              const dist = Math.hypot(
+                hand.cursor.x - state.x,
+                hand.cursor.y - state.y
+              );
               if (dist < 0.16) {
                 state.grabbedByHand = hand.handIndex;
                 break;
@@ -169,18 +183,18 @@ export const InteractiveTutorialSandbox: React.FC<
         }
       }
 
-      // Smoothly return to spawn if not grabbed and not released
-      const isGrabbed = state.grabbedByHand !== null || state.grabbedByPointer !== null;
+      const isGrabbed =
+        state.grabbedByHand !== null || state.grabbedByPointer !== null;
       if (!isGrabbed && !state.released) {
         state.x += (spawn.x - state.x) * 0.12;
         state.y += (spawn.y - state.y) * 0.12;
       }
 
-      // Released floating animation
       if (state.released) {
         const elapsed = (performance.now() - state.releaseTime) / 1000;
         if (type === 'krathong') {
-          state.x = target.x + Math.sin(elapsed * 1.4) * 0.04 + elapsed * 0.018;
+          state.x =
+            target.x + Math.sin(elapsed * 1.4) * 0.04 + elapsed * 0.018;
           state.y = Math.max(0.56, target.y - elapsed * 0.02);
         } else {
           state.x = target.x + Math.sin(elapsed * 1.2) * 0.03;
@@ -191,17 +205,16 @@ export const InteractiveTutorialSandbox: React.FC<
       const distToTarget = Math.hypot(state.x - target.x, state.y - target.y);
       const isInTarget = distToTarget < 0.16;
 
-      // Sync UI status phase
-      const nextPhase: 'idle' | 'grabbed' | 'inTarget' | 'released' = state.released
-        ? 'released'
-        : isGrabbed && isInTarget
-          ? 'inTarget'
-          : isGrabbed
-            ? 'grabbed'
-            : 'idle';
+      const nextPhase: 'idle' | 'grabbed' | 'inTarget' | 'released' =
+        state.released
+          ? 'released'
+          : isGrabbed && isInTarget
+            ? 'inTarget'
+            : isGrabbed
+              ? 'grabbed'
+              : 'idle';
       setUiPhase((prev) => (prev === nextPhase ? prev : nextPhase));
 
-      // 2. Draw Nocturnal Sky & Water Canvas
       const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
       skyGrad.addColorStop(0, '#090D18');
       skyGrad.addColorStop(0.52, '#141830');
@@ -219,7 +232,6 @@ export const InteractiveTutorialSandbox: React.FC<
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Subtle water ripples
       ctx.strokeStyle = 'rgba(244, 208, 111, 0.16)';
       ctx.lineWidth = 1.2;
       for (let r = 0; r < 4; r++) {
@@ -231,7 +243,6 @@ export const InteractiveTutorialSandbox: React.FC<
         ctx.stroke();
       }
 
-      // 3. Draw Target Drop Zone Ring
       if (!state.released) {
         const tx = target.x * width;
         const ty = target.y * height;
@@ -280,13 +291,11 @@ export const InteractiveTutorialSandbox: React.FC<
         ctx.restore();
       }
 
-      // 4. Draw Practice Offering (Krathong or Sky Lantern)
       const ix = state.x * width;
       const iy = state.y * height;
       const itemScale = (isGrabbed ? 0.88 : 0.78) * propScale;
 
       if (!state.released) {
-        // Spotlight ring around item so player knows where to pinch
         ctx.save();
         ctx.strokeStyle = isGrabbed
           ? 'rgba(255, 242, 117, 0.9)'
@@ -322,7 +331,6 @@ export const InteractiveTutorialSandbox: React.FC<
         });
       }
 
-      // 5. Draw Real-Time Tracked Hands & Fingers on Top!
       drawIllustratedHands(ctx, width, height, gesture, handLabels);
 
       ctx.restore();
@@ -333,7 +341,6 @@ export const InteractiveTutorialSandbox: React.FC<
     return () => cancelAnimationFrame(animId);
   }, [gestureRef, getSpawnPos, getTargetPos, pt, handLabels]);
 
-  // Pointer / Touch fallback handlers so users can also practice with fingers on screen or mouse
   const getNormalizedPointer = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     return {
@@ -379,7 +386,6 @@ export const InteractiveTutorialSandbox: React.FC<
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Controls Bar */}
       <div className="grid grid-cols-2 gap-2 border-b border-[#C5A059]/30 pb-3 sm:flex sm:items-center sm:justify-between">
         <div className="col-span-2 grid grid-cols-2 gap-2 sm:flex sm:items-center">
           <button
@@ -431,7 +437,6 @@ export const InteractiveTutorialSandbox: React.FC<
         </div>
       </div>
 
-      {/* Live Step Feedback */}
       <div className="flex min-h-[3.25rem] items-center border border-[#C5A059]/40 bg-[#16120E] px-3 py-2 text-xs text-[#F5EFE4] sm:px-3.5">
         <div className="flex items-center gap-2.5">
           <span className="h-2 w-2 shrink-0 rotate-45 bg-[#F4D06F]" />
@@ -451,7 +456,6 @@ export const InteractiveTutorialSandbox: React.FC<
         </div>
       </div>
 
-      {/* Interactive Hand-Tracking & Touch Canvas */}
       <div className="relative h-[clamp(14rem,38dvh,18rem)] w-full overflow-hidden border border-[#C5A059]/60 bg-[#090D18]">
         <canvas
           ref={canvasRef}
@@ -462,7 +466,6 @@ export const InteractiveTutorialSandbox: React.FC<
           className="h-full w-full cursor-grab touch-none active:cursor-grabbing"
         />
 
-        {/* Zone Captions */}
         <div className="pointer-events-none absolute top-2 left-2.5 max-w-[calc(100%-8.5rem)] truncate text-[10px] tracking-[0.08em] text-[#F4D06F]/70 uppercase sm:top-2.5 sm:left-3 sm:max-w-[calc(100%-10rem)]">
           {pt.skyZoneLabel}
         </div>
@@ -470,7 +473,6 @@ export const InteractiveTutorialSandbox: React.FC<
           {pt.waterZoneLabel}
         </div>
 
-        {/* Live Mirrored Hand Camera PIP in Top-Right of Sandbox */}
         <div className="pointer-events-none absolute top-2 right-2 flex flex-col items-end gap-1 sm:top-2.5 sm:right-2.5">
           <div className="relative aspect-[4/3] w-28 overflow-hidden border border-[#C5A059]/65 bg-[#06080F]/90 shadow-lg sm:w-32">
             <video
@@ -478,7 +480,9 @@ export const InteractiveTutorialSandbox: React.FC<
               playsInline
               muted
               className={`h-full w-full -scale-x-100 object-cover transition-opacity ${
-                cameraEnabled && gestureState.isReady ? 'opacity-90' : 'opacity-20'
+                cameraEnabled && gestureState.isReady
+                  ? 'opacity-90'
+                  : 'opacity-20'
               }`}
             />
             <div className="absolute inset-x-0 bottom-0 truncate bg-[#06080F]/85 px-1.5 py-0.5 text-center text-[9px] text-[#F4D06F]">
@@ -494,7 +498,6 @@ export const InteractiveTutorialSandbox: React.FC<
         </div>
       </div>
 
-      {/* Camera Status Note */}
       <p className="font-heading text-[11px] leading-snug text-pretty text-[#C5A059]/85">
         {cameraEnabled
           ? gestureState.isReady

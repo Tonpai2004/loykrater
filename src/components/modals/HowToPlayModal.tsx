@@ -16,7 +16,6 @@ interface HowToPlayModalProps {
   gestureRef: React.RefObject<HandGestureState>;
   cameraEnabled: boolean;
   onToggleCamera: () => void;
-  // Lets the page switch the camera on only while the practice folio is actually on screen
   onPracticeActiveChange?: (active: boolean) => void;
 }
 
@@ -42,7 +41,24 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
     onPracticeActiveChange?.(isOpen && activeFolio === 'practice');
   }, [isOpen, activeFolio, onPracticeActiveChange]);
 
-  const folios: { id: FolioId; num: string; title: string; short: string; sub: string }[] = [
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  const folios: {
+    id: FolioId;
+    num: string;
+    title: string;
+    short: string;
+    sub: string;
+  }[] = [
     {
       id: 'gestures',
       num: hp.tabs.gestures.num,
@@ -78,29 +94,29 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060B]/88 p-2.5 backdrop-blur-md sm:p-6 [@media(max-height:500px)]:p-2!"
           onClick={onClose}
         >
-          {/* Royal Black Khoi Manuscript (สมุดไทยดำลงรักปิดทอง) */}
           <motion.div
             initial={{ opacity: 0, y: 32, scaleY: 0.92 }}
             animate={{ opacity: 1, y: 0, scaleY: 1 }}
             exit={{ opacity: 0, y: 24, scaleY: 0.94 }}
             transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="thai-chamfer relative flex h-[calc(100dvh-1.25rem)] [@media(max-height:500px)]:h-[calc(100dvh-1rem)]! w-full max-w-3xl flex-col overflow-hidden lg:max-w-4xl border border-[#C5A059] [zoom:var(--ui-zoom,1)] sm:h-[calc(min(90dvh,56rem)/var(--ui-zoom,1))] bg-[#0D0B09] text-[#F5EFE4] shadow-[0_32px_90px_rgba(0,0,0,0.92)]"
+            className="thai-chamfer relative flex h-[calc(100dvh-1.25rem)] w-full max-w-3xl flex-col overflow-hidden border border-[#C5A059] bg-[#0D0B09] text-[#F5EFE4] shadow-[0_32px_90px_rgba(0,0,0,0.92)] [zoom:var(--ui-zoom,1)] sm:h-[calc(min(90dvh,56rem)/var(--ui-zoom,1))] lg:max-w-4xl [@media(max-height:500px)]:h-[calc(100dvh-1rem)]!"
           >
-            {/* Inner Gold Hairline Frame */}
             <div className="pointer-events-none absolute inset-1.5 border border-[#C5A059]/30" />
 
-            {/* Top Manuscript Spine Header */}
             <div className="relative flex items-center justify-between gap-3 border-b border-[#C5A059]/45 bg-gradient-to-r from-[#14100C] via-[#1C1610] to-[#14100C] px-4 py-3 sm:px-7 sm:py-4 [@media(max-height:500px)]:py-1.5!">
               <div className="flex min-w-0 items-center gap-3.5">
-                {/* Traditional Gold Seal */}
                 <div className="hidden h-9 w-9 shrink-0 items-center justify-center border border-[#C5A059]/70 bg-[#0D0B09] sm:flex">
                   <span className="h-2.5 w-2.5 rotate-45 bg-[#E6C77B]" />
                 </div>
                 <div className="min-w-0">
                   <h2 className="font-display truncate text-base font-medium tracking-wider text-[#F4D06F] sm:text-lg">
-                    <span className="md:hidden">{hp.manuscriptHeaderShort}</span>
-                    <span className="hidden md:inline">{hp.manuscriptHeader}</span>
+                    <span className="md:hidden">
+                      {hp.manuscriptHeaderShort}
+                    </span>
+                    <span className="hidden md:inline">
+                      {hp.manuscriptHeader}
+                    </span>
                   </h2>
                   <p className="font-editorial hidden truncate text-xs tracking-[0.22em] text-[#C5A059]/80 uppercase sm:block">
                     {hp.manuscriptSub}
@@ -118,7 +134,6 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
               </button>
             </div>
 
-            {/* Accordion Folio Index Bar (สารบัญพับสมุดไทย) */}
             <div className="grid grid-cols-3 border-b border-[#C5A059]/40 bg-[#120E0B]">
               {folios.map((folio) => {
                 const isSelected = folio.id === activeFolio;
@@ -127,7 +142,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                     key={folio.id}
                     type="button"
                     onClick={() => setActiveFolio(folio.id)}
-                    className={`min-w-0 cursor-pointer border-r border-[#C5A059]/25 px-2 py-2.5 text-center transition-all last:border-r-0 sm:px-4 sm:py-3 md:px-5 [@media(max-height:500px)]:py-1.5! md:text-left ${
+                    className={`min-w-0 cursor-pointer border-r border-[#C5A059]/25 px-2 py-2.5 text-center transition-all last:border-r-0 sm:px-4 sm:py-3 md:px-5 md:text-left [@media(max-height:500px)]:py-1.5! ${
                       isSelected
                         ? 'bg-[#1D1711] shadow-[inset_0_-2px_0_#F4D06F]'
                         : 'bg-transparent opacity-65 hover:bg-[#17120E] hover:opacity-95'
@@ -150,12 +165,9 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
               })}
             </div>
 
-            {/* Manuscript Body */}
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-8 sm:py-6 [&>*]:my-auto [@media(max-height:500px)]:py-3!">
-              {/* FOLIO 1: HAND & FINGER GESTURES */}
               {activeFolio === 'gestures' && (
                 <div className="space-y-6">
-                  {/* Editorial Intro */}
                   <div className="border-b border-[#C5A059]/30 pb-4">
                     <h3 className="font-display text-base font-medium tracking-wide text-balance text-[#F4D06F] sm:text-lg">
                       {hp.gesturesSection.introTitle}
@@ -165,14 +177,23 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                     </p>
                   </div>
 
-                  {/* Three Gold-Leaf Illustrated Hand Folios */}
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4 lg:gap-5">
-                    {/* Folio Step 1: Open Palm Hover */}
                     <div className="flex items-center gap-3 border border-[#C5A059]/35 bg-[#13100C] p-3 sm:gap-4 sm:p-4 md:flex-col md:items-stretch md:gap-0">
                       <div className="flex h-20 w-20 shrink-0 items-center justify-center border-r border-[#C5A059]/25 pr-3 sm:h-24 sm:w-28 sm:pr-4 md:mb-3 md:h-28 md:w-auto md:border-r-0 md:border-b md:pr-0 md:pb-3 lg:h-32">
-                        <svg viewBox="0 0 130 100" className="h-full w-full" fill="none">
-                          <circle cx="65" cy="50" r="34" stroke="#C5A059" strokeOpacity="0.4" strokeWidth="1" strokeDasharray="3 3" />
-                          {/* Gold-leaf Open Hand Line Art */}
+                        <svg
+                          viewBox="0 0 130 100"
+                          className="h-full w-full"
+                          fill="none"
+                        >
+                          <circle
+                            cx="65"
+                            cy="50"
+                            r="34"
+                            stroke="#C5A059"
+                            strokeOpacity="0.4"
+                            strokeWidth="1"
+                            strokeDasharray="3 3"
+                          />
                           <path
                             d="M52 68 L47 34 M59 66 L59 26 M67 66 L69 29 M74 68 L80 38 M46 62 L35 48"
                             stroke="#F4D06F"
@@ -194,26 +215,35 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                         </svg>
                       </div>
                       <div className="min-w-0">
-                      <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
-                        {hp.gesturesSection.step1Title}
-                      </h4>
-                      <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
-                        {hp.gesturesSection.step1Tag}
-                      </p>
-                      <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
-                        {hp.gesturesSection.step1Desc}
-                      </p>
+                        <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
+                          {hp.gesturesSection.step1Title}
+                        </h4>
+                        <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
+                          {hp.gesturesSection.step1Tag}
+                        </p>
+                        <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
+                          {hp.gesturesSection.step1Desc}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Folio Step 2: Pinch Thumb & Index */}
                     <div className="flex items-center gap-3 border border-[#C5A059]/35 bg-[#13100C] p-3 sm:gap-4 sm:p-4 md:flex-col md:items-stretch md:gap-0">
                       <div className="flex h-20 w-20 shrink-0 items-center justify-center border-r border-[#C5A059]/25 pr-3 sm:h-24 sm:w-28 sm:pr-4 md:mb-3 md:h-28 md:w-auto md:border-r-0 md:border-b md:pr-0 md:pb-3 lg:h-32">
-                        <svg viewBox="0 0 130 100" className="h-full w-full" fill="none">
-                          {/* Pinch Aura */}
-                          <circle cx="60" cy="38" r="16" fill="#F4D06F" fillOpacity="0.18" stroke="#FFF275" strokeWidth="1.4" />
+                        <svg
+                          viewBox="0 0 130 100"
+                          className="h-full w-full"
+                          fill="none"
+                        >
+                          <circle
+                            cx="60"
+                            cy="38"
+                            r="16"
+                            fill="#F4D06F"
+                            fillOpacity="0.18"
+                            stroke="#FFF275"
+                            strokeWidth="1.4"
+                          />
                           <circle cx="60" cy="38" r="4" fill="#FFF275" />
-                          {/* Thumb + Index touching */}
                           <path
                             d="M44 70 Q46 48 59 39"
                             stroke="#FFF275"
@@ -226,35 +256,41 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                             strokeWidth="2.8"
                             strokeLinecap="round"
                           />
-                          {/* Other 3 fingers */}
                           <path
                             d="M75 70 L79 36 M80 72 L86 42 M85 74 L92 50"
                             stroke="#C5A059"
                             strokeWidth="2"
                             strokeLinecap="round"
                           />
-                          {/* Motion Arrow */}
-                          <path d="M32 45 L32 72 M27 66 L32 72 L37 66" stroke="#FF8C42" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                          <path
+                            d="M32 45 L32 72 M27 66 L32 72 L37 66"
+                            stroke="#FF8C42"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                       </div>
                       <div className="min-w-0">
-                      <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
-                        {hp.gesturesSection.step2Title}
-                      </h4>
-                      <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
-                        {hp.gesturesSection.step2Tag}
-                      </p>
-                      <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
-                        {hp.gesturesSection.step2Desc}
-                      </p>
+                        <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
+                          {hp.gesturesSection.step2Title}
+                        </h4>
+                        <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
+                          {hp.gesturesSection.step2Tag}
+                        </p>
+                        <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
+                          {hp.gesturesSection.step2Desc}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Folio Step 3: Un-pinch inside Target Ring */}
                     <div className="flex items-center gap-3 border border-[#C5A059]/35 bg-[#13100C] p-3 sm:gap-4 sm:p-4 md:flex-col md:items-stretch md:gap-0">
                       <div className="flex h-20 w-20 shrink-0 items-center justify-center border-r border-[#C5A059]/25 pr-3 sm:h-24 sm:w-28 sm:pr-4 md:mb-3 md:h-28 md:w-auto md:border-r-0 md:border-b md:pr-0 md:pb-3 lg:h-32">
-                        <svg viewBox="0 0 130 100" className="h-full w-full" fill="none">
-                          {/* Target Rings */}
+                        <svg
+                          viewBox="0 0 130 100"
+                          className="h-full w-full"
+                          fill="none"
+                        >
                           <ellipse
                             cx="65"
                             cy="64"
@@ -266,29 +302,46 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                             strokeWidth="1.5"
                             strokeDasharray="5 4"
                           />
-                          {/* Fingers Opening Outward */}
-                          <path d="M52 44 L40 28 M40 28 L46 28 M40 28 L40 34" stroke="#FFF275" strokeWidth="1.8" strokeLinecap="round" />
-                          <path d="M78 44 L90 28 M90 28 L84 28 M90 28 L90 34" stroke="#FFF275" strokeWidth="1.8" strokeLinecap="round" />
-                          {/* Released Lotus Krathong */}
-                          <path d="M65 44 L73 60 L57 60 Z" fill="#FF99C8" stroke="#FFF275" strokeWidth="1" />
-                          <path d="M48 60 L82 60 L77 68 L53 68 Z" fill="#2D6A4F" stroke="#F4D06F" strokeWidth="1.2" />
+                          <path
+                            d="M52 44 L40 28 M40 28 L46 28 M40 28 L40 34"
+                            stroke="#FFF275"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M78 44 L90 28 M90 28 L84 28 M90 28 L90 34"
+                            stroke="#FFF275"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M65 44 L73 60 L57 60 Z"
+                            fill="#FF99C8"
+                            stroke="#FFF275"
+                            strokeWidth="1"
+                          />
+                          <path
+                            d="M48 60 L82 60 L77 68 L53 68 Z"
+                            fill="#2D6A4F"
+                            stroke="#F4D06F"
+                            strokeWidth="1.2"
+                          />
                         </svg>
                       </div>
                       <div className="min-w-0">
-                      <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
-                        {hp.gesturesSection.step3Title}
-                      </h4>
-                      <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
-                        {hp.gesturesSection.step3Tag}
-                      </p>
-                      <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
-                        {hp.gesturesSection.step3Desc}
-                      </p>
+                        <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
+                          {hp.gesturesSection.step3Title}
+                        </h4>
+                        <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
+                          {hp.gesturesSection.step3Tag}
+                        </p>
+                        <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
+                          {hp.gesturesSection.step3Desc}
+                        </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Subtle Footnote + CTA to jump to Finger Practice */}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#C5A059]/30 pt-4">
                     <p className="font-heading text-xs text-[#C5A059]">
                       {hp.gesturesSection.distanceNote}
@@ -296,7 +349,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveFolio('practice')}
-                      className="w-full cursor-pointer border border-[#F4D06F] bg-[#C5A059]/15 px-4 py-2 text-xs font-medium tracking-wide whitespace-nowrap text-[#FFF275] sm:w-auto transition-colors hover:bg-[#C5A059]/30"
+                      className="w-full cursor-pointer border border-[#F4D06F] bg-[#C5A059]/15 px-4 py-2 text-xs font-medium tracking-wide whitespace-nowrap text-[#FFF275] transition-colors hover:bg-[#C5A059]/30 sm:w-auto"
                     >
                       {hp.tabs.practice.title} &rarr;
                     </button>
@@ -304,7 +357,6 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                 </div>
               )}
 
-              {/* FOLIO 2: LIVE FINGER & HAND PRACTICE SANDBOX */}
               {activeFolio === 'practice' && (
                 <div className="space-y-4">
                   <div className="border-b border-[#C5A059]/30 pb-3">
@@ -326,7 +378,6 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                 </div>
               )}
 
-              {/* FOLIO 3: CRAFTING OFFERINGS */}
               {activeFolio === 'craft' && (
                 <div className="space-y-5">
                   <div className="border-b border-[#C5A059]/30 pb-3">
@@ -382,7 +433,6 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
               )}
             </div>
 
-            {/* Bottom Manuscript Footer */}
             <div className="flex items-center justify-between gap-2 border-t border-[#C5A059]/45 bg-[#14100C] px-3 py-2.5 sm:gap-3 sm:px-7 sm:py-3.5 [@media(max-height:500px)]:py-1.5!">
               <div className="flex items-center gap-2">
                 <button

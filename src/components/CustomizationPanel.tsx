@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PeaceHand,
@@ -55,10 +55,12 @@ const SPRING_TRANSITION = {
 };
 
 const OFFERING_COUNTS: OfferingCount[] = [1, 2, 3, 4, 5];
-
 const ITEM_TYPE_OPTIONS: RitualItemType[] = ['krathong', 'lantern'];
-
-const BASE_STYLES: BaseStyle[] = ['classic-lotus', 'layered-star', 'royal-pleat'];
+const BASE_STYLES: BaseStyle[] = [
+  'classic-lotus',
+  'layered-star',
+  'royal-pleat',
+];
 
 const LEAF_COLORS: ColorOption[] = [
   { label: 'เขียวใบตองสด', value: '#2D6A4F', accent: '#40916C' },
@@ -81,7 +83,6 @@ const CANDLE_COLORS: ColorOption[] = [
   { label: 'ชมพูเทียนอบ', value: '#FF99C8', accent: '#FFF275' },
 ];
 
-// Full Curated Thai Pigment Pair Collection shown in the Extended Color Modal
 const ALL_THAI_COLOR_PAIRS: ColorOption[] = [
   { label: 'เขียวใบตองสด', value: '#2D6A4F', accent: '#52B788' },
   { label: 'เขียวยอดตองอ่อน', value: '#40916C', accent: '#74C69D' },
@@ -277,13 +278,23 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
     Math.max(0, config.selectedSlotIndex ?? 0)
   );
   const currentSlot = slots[selectedIdx];
-  const [poemIdx, setPoemIdx] = useState<number>(0);
+  const [poemIdx, setPoemIdx] = useState<number>(-1);
 
-  // Extended Color Modal state
   const [activeColorModal, setActiveColorModal] =
     useState<ColorFieldKey | null>(null);
   const [isBookSubmerged, setIsBookSubmerged] = useState<boolean>(false);
   const nativeColorInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!activeColorModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveColorModal(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeColorModal]);
 
   const handleSelectCount = (newCount: OfferingCount) => {
     const nextConfig: KrathongConfig = {
@@ -338,12 +349,16 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
   };
 
   const handleCyclePoem = () => {
-    const nextIdx = (poemIdx + 1) % wishCouplets.length;
+    const currentIndexInCouplets = wishCouplets.indexOf(
+      currentSlot.wishText.trim()
+    );
+    const baseIdx =
+      currentIndexInCouplets >= 0 ? currentIndexInCouplets : poemIdx;
+    const nextIdx = (baseIdx + 1) % wishCouplets.length;
     setPoemIdx(nextIdx);
     updateCurrentSlot('wishText', wishCouplets[nextIdx]);
   };
 
-  // Current color inside the Extended Color Modal
   const modalColorValue = activeColorModal
     ? currentSlot[activeColorModal]
     : '#F4D06F';
@@ -379,7 +394,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
         }
         return;
       } catch {
-        // User canceled or EyeDropper failed
         return;
       }
     }
@@ -402,7 +416,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
   return (
     <>
       <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center">
-        {/* Top Toggle Button when Book is Open: Fold Book & Submerge into River */}
         <AnimatePresence>
           {!isBookSubmerged && (
             <motion.div
@@ -424,7 +437,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Water-Surface Horizon Mask Container so the folded book submerges INTO the river water */}
         <div
           style={{ perspective: '1600px' }}
           className={`relative w-full overflow-hidden transition-all duration-700 ${
@@ -433,7 +445,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               : 'pointer-events-auto max-h-[960px] pb-1'
           }`}
         >
-          {/* Outer Book Body: Folds pages first, then sinks into the river water; Rises from water first, then unfolds pages */}
           <motion.div
             initial={false}
             animate={
@@ -457,7 +468,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
             style={{ transformStyle: 'preserve-3d' }}
             className="mx-auto flex w-full flex-col items-stretch gap-4 lg:flex-row lg:items-stretch"
           >
-            {/* Left Page (Hinged at Right Spine): Black-Gold Lacquer Craft Atelier Tray */}
             <motion.div
               initial={false}
               animate={
@@ -484,7 +494,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               <span className="pointer-events-none absolute bottom-2.5 left-3 h-2.5 w-2.5 border-b border-l border-[#D4AF37]/70" />
               <span className="pointer-events-none absolute right-3 bottom-2.5 h-2.5 w-2.5 border-r border-b border-[#D4AF37]/70" />
 
-              {/* Header Row: Phra Nakhon Atelier + Offering Quantity Selector (1-5) */}
               <div className="flex flex-col gap-2.5 border-b border-[#D4AF37]/25 pb-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="font-heading truncate text-[11px] tracking-wider text-[#F4D06F]">
@@ -495,7 +504,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                   </h2>
                 </div>
 
-                {/* Quantity Selector: 1 to 5 Offerings */}
                 <div className="flex items-center justify-between gap-2 sm:justify-end">
                   <span className="font-heading text-xs whitespace-nowrap text-[#F4D06F]">
                     {ct.countLabel}
@@ -522,7 +530,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 </div>
               </div>
 
-              {/* Per-Item Slot Selector Tabs (๑ .. ๕) */}
               {currentCount > 1 && (
                 <div className="mt-2.5 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2.5">
                   <span className="font-heading shrink-0 text-[11px] whitespace-nowrap text-[#FFFDF7]/70">
@@ -530,38 +537,39 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                   </span>
                   <div
                     className="grid flex-1 gap-1.5"
-                    style={{ gridTemplateColumns: `repeat(${currentCount}, minmax(0, 1fr))` }}
+                    style={{
+                      gridTemplateColumns: `repeat(${currentCount}, minmax(0, 1fr))`,
+                    }}
                   >
-                  {slots.map((slot, idx) => {
-                    const isSelected = idx === selectedIdx;
-                    return (
-                      <button
-                        key={slot.id}
-                        type="button"
-                        onClick={() => handleSelectSlot(idx)}
-                        aria-label={`${ct.slotLabel(numerals[idx])} (${itemName(slot.itemType)})`}
-                        className={`font-heading flex h-8 min-w-0 items-center justify-center gap-1 border px-1.5 text-xs whitespace-nowrap transition-colors ${
-                          isSelected
-                            ? 'border-[#FFF275] bg-[#D4AF37]/25 font-semibold text-[#FFF275]'
-                            : 'border-[#D4AF37]/30 bg-[#080B14]/80 text-[#FFFDF7]/70 hover:border-[#D4AF37]/60'
-                        }`}
-                      >
-                        <span
-                          className="h-2.5 w-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: slot.flowerColor }}
-                        />
-                        <span>{numerals[idx]}</span>
-                        <span className="hidden truncate sm:inline lg:hidden xl:inline">
-                          {itemName(slot.itemType)}
-                        </span>
-                      </button>
-                    );
-                  })}
+                    {slots.map((slot, idx) => {
+                      const isSelected = idx === selectedIdx;
+                      return (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          onClick={() => handleSelectSlot(idx)}
+                          aria-label={`${ct.slotLabel(numerals[idx])} (${itemName(slot.itemType)})`}
+                          className={`font-heading flex h-8 min-w-0 items-center justify-center gap-1 border px-1.5 text-xs whitespace-nowrap transition-colors ${
+                            isSelected
+                              ? 'border-[#FFF275] bg-[#D4AF37]/25 font-semibold text-[#FFF275]'
+                              : 'border-[#D4AF37]/30 bg-[#080B14]/80 text-[#FFFDF7]/70 hover:border-[#D4AF37]/60'
+                          }`}
+                        >
+                          <span
+                            className="h-2.5 w-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: slot.flowerColor }}
+                          />
+                          <span>{numerals[idx]}</span>
+                          <span className="hidden truncate sm:inline lg:hidden xl:inline">
+                            {itemName(slot.itemType)}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              {/* Row 1: Offering Type for the Currently Selected Item */}
               <div className="mt-2.5 grid grid-cols-2 border border-[#D4AF37]/30 bg-[#080B14]/90">
                 {ITEM_TYPE_OPTIONS.map((typeId, idx) => {
                   const active = currentSlot.itemType === typeId;
@@ -598,7 +606,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 })}
               </div>
 
-              {/* Row 2: Banana Leaf Fold Architecture for Current Item */}
               <div className="mt-2.5 grid grid-cols-3 gap-2">
                 {BASE_STYLES.map((styleId) => {
                   const isSelected = currentSlot.baseStyle === styleId;
@@ -632,9 +639,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 })}
               </div>
 
-              {/* Row 3: Unified Pigment Palette Bar + Rainbow Gradient Swatch Trigger for Every Part */}
               <div className="mt-2.5 grid grid-cols-1 gap-2.5 border-t border-[#D4AF37]/25 pt-2.5 sm:grid-cols-3">
-                {/* 01 Base / Leaf Color */}
                 <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
                   <span className="font-heading text-[11px] text-[#F4D06F]">
                     {ct.colorFields.baseColor.title}
@@ -661,7 +666,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                         />
                       );
                     })}
-                    {/* Rainbow Gradient Swatch for Other Colors */}
                     <button
                       type="button"
                       title={ct.moreColorsTitle}
@@ -677,7 +681,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                   </div>
                 </div>
 
-                {/* 02 Flower / Emblem Color */}
                 <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
                   <span className="font-heading text-[11px] text-[#F4D06F]">
                     {ct.colorFields.flowerColor.title}
@@ -704,7 +707,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                         />
                       );
                     })}
-                    {/* Rainbow Gradient Circle Swatch for Other Colors */}
                     <button
                       type="button"
                       title={ct.moreColorsTitle}
@@ -720,7 +722,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                   </div>
                 </div>
 
-                {/* 03 Candle / Glow Color */}
                 <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
                   <span className="font-heading text-[11px] text-[#F4D06F]">
                     {ct.colorFields.candleColor.title}
@@ -747,7 +748,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                         />
                       );
                     })}
-                    {/* Rainbow Gradient Candle Swatch for Other Colors */}
                     <button
                       type="button"
                       title={ct.moreColorsTitle}
@@ -765,7 +765,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               </div>
             </motion.div>
 
-            {/* Right Page (Hinged at Left Spine): Royal Indigo & Gold-Leaf Wish Inscription Box */}
             <motion.div
               initial={false}
               animate={
@@ -874,7 +873,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     />
                   </div>
 
-                  {/* Hide Wish Privacy Toggle */}
                   <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-[#D4AF37]/25 pt-2.5">
                     <span className="font-heading text-[11px] text-[#FFFDF7]/75">
                       {currentSlot.hideWish
@@ -917,7 +915,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 whileTap={{ scale: 0.98 }}
                 transition={SPRING_TRANSITION}
                 onClick={onStartInteract}
-                className="thai-chamfer-sm font-heading group mt-4 flex w-full items-center justify-center gap-3 border border-[#FFF275]/60 bg-[#D4AF37] px-4 py-3 text-xs min-[480px]:justify-between font-semibold tracking-wide text-[#0B0E17] shadow-[0_8px_24px_rgba(212,175,55,0.35)] transition-colors hover:bg-[#FFF275]"
+                className="thai-chamfer-sm font-heading group mt-4 flex w-full items-center justify-center gap-3 border border-[#FFF275]/60 bg-[#D4AF37] px-4 py-3 text-xs font-semibold tracking-wide text-[#0B0E17] shadow-[0_8px_24px_rgba(212,175,55,0.35)] transition-colors hover:bg-[#FFF275] min-[480px]:justify-between"
               >
                 <span className="flex items-center gap-2">
                   <PeaceHand
@@ -926,7 +924,9 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     strokeWidth={2}
                     className="text-[#0B0E17] transition-transform duration-300 group-hover:rotate-12"
                   />
-                  <span className="whitespace-nowrap">{ct.startInteractBtn(numerals[currentCount - 1])}</span>
+                  <span className="whitespace-nowrap">
+                    {ct.startInteractBtn(numerals[currentCount - 1])}
+                  </span>
                 </span>
                 <span className="font-display hidden text-xs font-medium whitespace-nowrap text-[#0B0E17] min-[480px]:inline">
                   {ct.startInteractCta}
@@ -935,7 +935,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
             </motion.div>
           </motion.div>
 
-          {/* Golden Water-Line Shimmer Horizon where the folded book sinks into the river */}
           <AnimatePresence>
             {isBookSubmerged && (
               <motion.div
@@ -945,7 +944,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 transition={{ duration: 0.55 }}
                 className="pointer-events-auto absolute inset-x-0 bottom-1 flex flex-col items-center justify-center"
               >
-                {/* Glowing concentric water ripple rings on the river surface */}
                 <div className="relative flex items-center justify-center">
                   <motion.div
                     animate={{
@@ -964,7 +962,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsBookSubmerged(false)}
-                      className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#FFF275]/80 bg-[#0B0E17]/95 px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#FFF275] sm:px-4 shadow-[0_0_26px_rgba(244,208,111,0.45)] backdrop-blur-md transition-all hover:bg-[#141932]"
+                      className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#FFF275]/80 bg-[#0B0E17]/95 px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#FFF275] shadow-[0_0_26px_rgba(244,208,111,0.45)] backdrop-blur-md transition-all hover:bg-[#141932] sm:px-4"
                     >
                       <span>{ct.emergeBtn}</span>
                     </button>
@@ -972,7 +970,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     <button
                       type="button"
                       onClick={onStartInteract}
-                      className="thai-chamfer-sm font-heading flex items-center gap-1.5 border border-[#FFF275]/70 bg-[#D4AF37] px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#0B0E17] sm:px-4 shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-colors hover:bg-[#FFF275]"
+                      className="thai-chamfer-sm font-heading flex items-center gap-1.5 border border-[#FFF275]/70 bg-[#D4AF37] px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#0B0E17] shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-colors hover:bg-[#FFF275] sm:px-4"
                     >
                       <PeaceHand width={15} height={15} strokeWidth={2} />
                       <span>{ct.launchNowBtn}</span>
@@ -985,7 +983,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
         </div>
       </div>
 
-      {/* Compact Extended Color Picker Modal (All Color Pairs + Gradient Sliders + Eyedropper) */}
       <AnimatePresence>
         {activeColorModal && (
           <motion.div
@@ -1001,9 +998,8 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               exit={{ opacity: 0, scale: 0.94, y: 16 }}
               transition={SPRING_TRANSITION}
               onClick={(e) => e.stopPropagation()}
-              className="thai-chamfer relative max-h-[calc((100dvh-1.5rem)/var(--ui-zoom,1))] w-full max-w-md overflow-y-auto [zoom:var(--ui-zoom,1)] border border-[#D4AF37]/65 bg-[#0E1222] p-4 text-[#FFFDF7] sm:p-5 shadow-[0_26px_70px_rgba(0,0,0,0.92)]"
+              className="thai-chamfer relative max-h-[calc((100dvh-1.5rem)/var(--ui-zoom,1))] w-full max-w-md overflow-y-auto border border-[#D4AF37]/65 bg-[#0E1222] p-4 text-[#FFFDF7] shadow-[0_26px_70px_rgba(0,0,0,0.92)] [zoom:var(--ui-zoom,1)] sm:p-5"
             >
-              {/* Modal Header */}
               <div className="flex items-start justify-between gap-2 border-b border-[#D4AF37]/30 pb-3">
                 <div>
                   <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
@@ -1025,7 +1021,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 </button>
               </div>
 
-              {/* Section 1: All Curated Thai Color Pairs */}
               <div className="mt-3.5">
                 <p className="font-heading mb-2 text-xs font-medium text-[#F4D06F]">
                   {ct.colorModalPresets}
@@ -1050,7 +1045,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                             : 'border-[#D4AF37]/25 bg-[#080B14]/90 text-[#FFFDF7]/80 hover:border-[#D4AF37]/60'
                         }`}
                       >
-                        {/* Dual-Tone Color Pair Swatch */}
                         <span className="relative flex size-full shrink-0 overflow-hidden border border-white/20 sm:size-5">
                           <span
                             className="h-full w-2/3"
@@ -1070,7 +1064,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 </div>
               </div>
 
-              {/* Section 2: Interactive Gradient Spectrum Sliders */}
               <div className="mt-4 space-y-3 border-t border-[#D4AF37]/25 pt-3.5">
                 <div>
                   <div className="mb-1 flex items-center justify-between">
@@ -1126,7 +1119,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 </div>
               </div>
 
-              {/* Section 3: Eyedropper Button + Active Color Preview + Confirm */}
               <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5 border-t border-[#D4AF37]/25 pt-3.5">
                 <div className="flex items-center gap-2.5">
                   <div
@@ -1149,7 +1141,6 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 </div>
 
                 <div className="grid w-full grid-cols-2 gap-2 min-[400px]:flex min-[400px]:w-auto min-[400px]:items-center">
-                  {/* Hidden fallback native color input */}
                   <input
                     ref={nativeColorInputRef}
                     type="color"

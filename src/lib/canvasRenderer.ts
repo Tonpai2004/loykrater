@@ -9,6 +9,7 @@ import {
 export const RIVER_HORIZON_RATIO = 0.45;
 export const RIVER_DROP_ZONE_MIN_Y = 0.54;
 export const RIVER_DROP_ZONE_MAX_Y = 0.92;
+export const SPOT_HIT_RADIUS_RATIO = 0.095;
 
 export const RIVER_SPOT_TARGETS: NormalizedPoint[] = [
   { x: 0.16, y: 0.72 },
@@ -25,7 +26,6 @@ export const SKY_LANTERN_TARGETS: NormalizedPoint[] = [
   { x: 0.76, y: 0.22 },
 ];
 
-// Portrait phones/tablets: a staggered layout so rings never overlap each other or the bottom HUD
 const RIVER_SPOT_TARGETS_PORTRAIT: NormalizedPoint[] = [
   { x: 0.22, y: 0.63 },
   { x: 0.5, y: 0.6 },
@@ -45,23 +45,29 @@ export function isPortraitView(width: number, height: number): boolean {
   return height > width * 1.15;
 }
 
-export function getRiverSpotTargets(width: number, height: number): NormalizedPoint[] {
-  return isPortraitView(width, height) ? RIVER_SPOT_TARGETS_PORTRAIT : RIVER_SPOT_TARGETS;
+export function getRiverSpotTargets(
+  width: number,
+  height: number
+): NormalizedPoint[] {
+  return isPortraitView(width, height)
+    ? RIVER_SPOT_TARGETS_PORTRAIT
+    : RIVER_SPOT_TARGETS;
 }
 
-export function getSkyLanternTargets(width: number, height: number): NormalizedPoint[] {
-  return isPortraitView(width, height) ? SKY_LANTERN_TARGETS_PORTRAIT : SKY_LANTERN_TARGETS;
+export function getSkyLanternTargets(
+  width: number,
+  height: number
+): NormalizedPoint[] {
+  return isPortraitView(width, height)
+    ? SKY_LANTERN_TARGETS_PORTRAIT
+    : SKY_LANTERN_TARGETS;
 }
 
-export const SPOT_HIT_RADIUS_RATIO = 0.095;
-
-// Scene-prop scale for the current viewport: 1 at 1440×900, eased down for phones/tablets and up for large displays
 export function getViewScale(width: number, height: number): number {
   const fit = Math.min(width / 1440, height / 900);
   return Math.max(0.55, Math.min(1.35, Math.pow(fit, 0.75)));
 }
 
-// Localized strings painted onto the canvas (supplied from translations.canvas)
 export interface CanvasLabels {
   beaconIdle: string;
   beaconGrabbed: string;
@@ -114,6 +120,21 @@ const SKY_LANTERNS: SkyLantern[] = [
   { seedX: 0.93, seedY: 0.28, speedY: 0.000011, swaySpeed: 0.0008, scale: 0.4 },
 ];
 
+const MAX_SPRITE_CACHE_SIZE = 40;
+const MAX_TEXT_CACHE_SIZE = 120;
+
+const krathongSpriteCache = new Map<string, HTMLCanvasElement>();
+const lanternSpriteCache = new Map<string, HTMLCanvasElement>();
+const wishWidthCache = new Map<string, number>();
+
+const CANVAS_STARS = Array.from({ length: 34 }, (_, i) => ({
+  rx: ((i * 37.3 + 11) % 96) / 100 + 0.02,
+  ry: ((i * 61.7 + 7) % 38) / 100 + 0.03,
+  size: i % 4 === 0 ? 3.2 : i % 2 === 0 ? 2.2 : 1.6,
+  speed: 0.0018 + (i % 4) * 0.0005,
+  phase: i * 1.7,
+}));
+
 function hexToRgba(hex: string, alpha: number): string {
   const sanitized = hex.replace('#', '');
   const bigint = parseInt(
@@ -131,19 +152,28 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-const krathongSpriteCache = new Map<string, HTMLCanvasElement>();
-const lanternSpriteCache = new Map<string, HTMLCanvasElement>();
-const wishWidthCache = new Map<string, number>();
+function measureCachedTextWidth(
+  ctx: CanvasRenderingContext2D,
+  font: string,
+  text: string
+): number {
+  const cacheKey = `${font}|${text}`;
+  const cached = wishWidthCache.get(cacheKey);
+  if (cached !== undefined) return cached;
 
-const CANVAS_STARS = Array.from({ length: 34 }, (_, i) => ({
-  rx: ((i * 37.3 + 11) % 96) / 100 + 0.02,
-  ry: ((i * 61.7 + 7) % 38) / 100 + 0.03,
-  size: i % 4 === 0 ? 3.2 : i % 2 === 0 ? 2.2 : 1.6,
-  speed: 0.0018 + (i % 4) * 0.0005,
-  phase: i * 1.7,
-}));
+  ctx.font = font;
+  const width = ctx.measureText(text).width;
+  if (wishWidthCache.size >= MAX_TEXT_CACHE_SIZE) {
+    const oldestKey = wishWidthCache.keys().next().value;
+    if (oldestKey) wishWidthCache.delete(oldestKey);
+  }
+  wishWidthCache.set(cacheKey, width);
+  return width;
+}
 
-function getOrCreateKrathongSprite(config: KrathongConfig): HTMLCanvasElement | null {
+function getOrCreateKrathongSprite(
+  config: KrathongConfig
+): HTMLCanvasElement | null {
   if (typeof document === 'undefined') return null;
 
   const key = `${config.baseStyle}|${config.baseColor}|${config.flowerColor}|${config.candleColor}`;
@@ -187,8 +217,8 @@ function getOrCreateKrathongSprite(config: KrathongConfig): HTMLCanvasElement | 
     config.baseStyle === 'layered-star'
       ? 14
       : config.baseStyle === 'royal-pleat'
-      ? 12
-      : 10;
+        ? 12
+        : 10;
 
   for (let ring = 0; ring < 2; ring++) {
     const ringRadiusX = ring === 0 ? 48 : 35;
@@ -196,7 +226,8 @@ function getOrCreateKrathongSprite(config: KrathongConfig): HTMLCanvasElement | 
     const petalHeight = ring === 0 ? 30 : 23;
 
     for (let i = 0; i < petalCount; i++) {
-      const angle = (i / petalCount) * Math.PI * 2 + ring * (Math.PI / petalCount);
+      const angle =
+        (i / petalCount) * Math.PI * 2 + ring * (Math.PI / petalCount);
       const px = Math.cos(angle) * ringRadiusX;
       const py = Math.sin(angle) * ringRadiusY;
 
@@ -332,7 +363,7 @@ function getOrCreateKrathongSprite(config: KrathongConfig): HTMLCanvasElement | 
   sCtx.roundRect(-5, -40, 5, 33, 3);
   sCtx.fill();
 
-  if (krathongSpriteCache.size > 40) {
+  if (krathongSpriteCache.size >= MAX_SPRITE_CACHE_SIZE) {
     const firstKey = krathongSpriteCache.keys().next().value;
     if (firstKey) krathongSpriteCache.delete(firstKey);
   }
@@ -340,7 +371,9 @@ function getOrCreateKrathongSprite(config: KrathongConfig): HTMLCanvasElement | 
   return sprite;
 }
 
-function getOrCreateLanternSprite(config: KrathongConfig): HTMLCanvasElement | null {
+function getOrCreateLanternSprite(
+  config: KrathongConfig
+): HTMLCanvasElement | null {
   if (typeof document === 'undefined') return null;
 
   const key = `lantern|${config.baseStyle}|${config.baseColor}|${config.flowerColor}|${config.candleColor}`;
@@ -360,13 +393,11 @@ function getOrCreateLanternSprite(config: KrathongConfig): HTMLCanvasElement | n
   sCtx.scale(scale, scale);
   sCtx.translate(w / 2, 78);
 
-  // Outer warm glow halo
   sCtx.fillStyle = 'rgba(244, 208, 111, 0.16)';
   sCtx.beginPath();
   sCtx.arc(0, -6, 52, 0, Math.PI * 2);
   sCtx.fill();
 
-  // Main paper lantern silhouette (Lanna Khom Loi shape)
   sCtx.fillStyle = '#FF8C42';
   sCtx.beginPath();
   sCtx.moveTo(-24, -48);
@@ -378,7 +409,6 @@ function getOrCreateLanternSprite(config: KrathongConfig): HTMLCanvasElement | n
   sCtx.closePath();
   sCtx.fill();
 
-  // Cel-shaded lit right half
   sCtx.fillStyle = config.candleColor;
   sCtx.beginPath();
   sCtx.moveTo(0, -48);
@@ -389,7 +419,6 @@ function getOrCreateLanternSprite(config: KrathongConfig): HTMLCanvasElement | n
   sCtx.closePath();
   sCtx.fill();
 
-  // Inner bright core panel
   sCtx.fillStyle = 'rgba(255, 242, 117, 0.48)';
   sCtx.beginPath();
   sCtx.moveTo(-14, -44);
@@ -401,7 +430,6 @@ function getOrCreateLanternSprite(config: KrathongConfig): HTMLCanvasElement | n
   sCtx.closePath();
   sCtx.fill();
 
-  // Top & bottom decorative paper-cut bands using baseColor
   sCtx.fillStyle = config.baseColor;
   sCtx.beginPath();
   sCtx.moveTo(-25, -48);
@@ -419,7 +447,6 @@ function getOrCreateLanternSprite(config: KrathongConfig): HTMLCanvasElement | n
   sCtx.closePath();
   sCtx.fill();
 
-  // Center Lanna geometric flower emblem on the lantern paper
   sCtx.save();
   sCtx.translate(0, -10);
   const emblemPetals = config.baseStyle === 'layered-star' ? 8 : 6;
@@ -446,7 +473,6 @@ function getOrCreateLanternSprite(config: KrathongConfig): HTMLCanvasElement | n
   sCtx.fill();
   sCtx.restore();
 
-  // Hanging paper tassels at the bottom corners
   [-18, 18].forEach((tx) => {
     sCtx.fillStyle = config.flowerColor;
     sCtx.beginPath();
@@ -459,14 +485,13 @@ function getOrCreateLanternSprite(config: KrathongConfig): HTMLCanvasElement | n
     sCtx.fill();
   });
 
-  // Bamboo rim at bottom opening
   sCtx.strokeStyle = '#8D5B4C';
   sCtx.lineWidth = 2.4;
   sCtx.beginPath();
   sCtx.ellipse(0, 34, 24, 5, 0, 0, Math.PI * 2);
   sCtx.stroke();
 
-  if (lanternSpriteCache.size > 40) {
+  if (lanternSpriteCache.size >= MAX_SPRITE_CACHE_SIZE) {
     const firstKey = lanternSpriteCache.keys().next().value;
     if (firstKey) lanternSpriteCache.delete(firstKey);
   }
@@ -482,27 +507,35 @@ function drawWishSlipTag(
   tagOpacity = 1
 ): void {
   if (tagOpacity <= 0.02) return;
+
+  const cleanWish = wishText.trim();
+  const authorLabel = authorName.trim();
+  const hasWish = cleanWish.length > 0;
+  const hasAuthor = authorLabel.length > 0;
+
+  if (!hasWish && !hasAuthor) return;
+
   const prevAlpha = ctx.globalAlpha;
   ctx.globalAlpha = prevAlpha * tagOpacity;
 
   const truncatedWish =
-    wishText.length > 46 ? `${wishText.slice(0, 46)}...` : wishText;
-  const authorLabel = authorName.trim();
-  const hasAuthor = authorLabel.length > 0;
+    cleanWish.length > 46 ? `${cleanWish.slice(0, 46)}...` : cleanWish;
+  const wishFont = '400 13.5px Charm, cursive, serif';
+  const authorFont = '600 10.5px "Bai Jamjuree", sans-serif';
 
-  let textWidth = wishWidthCache.get(truncatedWish);
-  if (textWidth === undefined) {
-    ctx.font = '400 13.5px Charm, cursive, serif';
-    textWidth = Math.max(ctx.measureText(truncatedWish).width, 108);
-    wishWidthCache.set(truncatedWish, textWidth);
-  }
+  const wishWidth = hasWish
+    ? measureCachedTextWidth(ctx, wishFont, `“${truncatedWish}”`)
+    : 0;
+  const authorWidth = hasAuthor
+    ? measureCachedTextWidth(ctx, authorFont, authorLabel)
+    : 0;
+  const contentWidth = Math.max(wishWidth, authorWidth, 84);
 
-  const slipW = textWidth + 36;
-  const slipH = hasAuthor ? 44 : 30;
+  const slipW = contentWidth + 32;
+  const slipH = hasWish && hasAuthor ? 44 : 30;
   const halfW = slipW / 2;
   const cut = 6;
 
-  // Royal Indigo & Gold-Leaf slip with Thai chamfered corners
   ctx.fillStyle = 'rgba(16, 20, 42, 0.92)';
   ctx.strokeStyle = 'rgba(212, 175, 55, 0.7)';
   ctx.lineWidth = 1.1;
@@ -519,7 +552,6 @@ function drawWishSlipTag(
   ctx.fill();
   ctx.stroke();
 
-  // Gold & Vermilion top eyelet seal
   ctx.fillStyle = '#F4D06F';
   ctx.beginPath();
   ctx.moveTo(0, slipY - 4);
@@ -530,18 +562,22 @@ function drawWishSlipTag(
   ctx.fill();
 
   ctx.textAlign = 'center';
-  if (hasAuthor) {
+  if (hasAuthor && hasWish) {
     ctx.fillStyle = '#F4D06F';
-    ctx.font = '600 10.5px "Bai Jamjuree", sans-serif';
+    ctx.font = authorFont;
     ctx.fillText(authorLabel, 0, slipY + 16);
 
     ctx.fillStyle = '#FFFDF7';
-    ctx.font = '400 13.5px Charm, cursive, serif';
+    ctx.font = wishFont;
     ctx.fillText(`“${truncatedWish}”`, 0, slipY + 34);
-  } else {
+  } else if (hasWish) {
     ctx.fillStyle = '#FFFDF7';
-    ctx.font = '400 13.5px Charm, cursive, serif';
+    ctx.font = wishFont;
     ctx.fillText(`“${truncatedWish}”`, 0, slipY + 20);
+  } else {
+    ctx.fillStyle = '#F4D06F';
+    ctx.font = authorFont;
+    ctx.fillText(authorLabel, 0, slipY + 19);
   }
 
   ctx.globalAlpha = prevAlpha;
@@ -675,7 +711,8 @@ export function drawNightSkyAndMoon(
 
   for (let i = 0; i < CANVAS_STARS.length; i++) {
     const star = CANVAS_STARS[i];
-    const twinkle = 0.35 + 0.65 * Math.abs(Math.sin(time * star.speed + star.phase));
+    const twinkle =
+      0.35 + 0.65 * Math.abs(Math.sin(time * star.speed + star.phase));
     const sx = star.rx * width;
     const sy = star.ry * height;
     const r = star.size * twinkle;
@@ -774,7 +811,10 @@ export function drawRiverSurface(
     for (let x = 0; x <= width; x += 48) {
       const waveY =
         bandY +
-        Math.sin(x * 0.006 + time * 0.0012 * (idx % 2 === 0 ? 1 : -1) + idx) * band.amp;
+        Math.sin(
+          x * 0.006 + time * 0.0012 * (idx % 2 === 0 ? 1 : -1) + idx
+        ) *
+          band.amp;
       ctx.lineTo(x, waveY);
     }
     ctx.lineTo(width, height);
@@ -787,8 +827,10 @@ export function drawRiverSurface(
   const reflectionSlices = 14;
   for (let i = 0; i < reflectionSlices; i++) {
     const progress = i / reflectionSlices;
-    const sliceY = horizonY + 12 + Math.pow(progress, 1.35) * (riverHeight * 0.8);
-    const waveShift = Math.sin(time * 0.002 + i * 0.9) * (10 + progress * 26);
+    const sliceY =
+      horizonY + 12 + Math.pow(progress, 1.35) * (riverHeight * 0.8);
+    const waveShift =
+      Math.sin(time * 0.002 + i * 0.9) * (10 + progress * 26);
     const sliceWidth = Math.max(
       6,
       (22 + progress * 84) * (0.88 + 0.12 * Math.sin(time * 0.003 + i))
@@ -796,7 +838,9 @@ export function drawRiverSurface(
     const sliceHeight = Math.max(2, 2.5 + progress * 3.2);
 
     ctx.fillStyle =
-      i % 2 === 0 ? 'rgba(244, 208, 111, 0.22)' : 'rgba(255, 140, 66, 0.14)';
+      i % 2 === 0
+        ? 'rgba(244, 208, 111, 0.22)'
+        : 'rgba(255, 140, 66, 0.14)';
     ctx.beginPath();
     ctx.roundRect(
       moonX + waveShift - sliceWidth,
@@ -898,8 +942,8 @@ export function drawProceduralKrathong({
     showWishTag &&
     !config.hideWish &&
     wishTagOpacity > 0.02 &&
-    effectiveWish.trim().length > 0 &&
-    scale > 0.34
+    scale > 0.34 &&
+    (effectiveWish.trim().length > 0 || effectiveAuthor.trim().length > 0)
   ) {
     drawWishSlipTag(ctx, effectiveWish, effectiveAuthor, -114, wishTagOpacity);
   }
@@ -944,8 +988,10 @@ export function drawInteractiveSkyLantern({
     ctx.drawImage(sprite, -68, -78, 136, 156);
   }
 
-  // Animated burner flame at bottom opening (y = 34)
-  const flickerScale = Math.max(0.65, 0.95 + Math.sin(time * 0.02 + x) * 0.12);
+  const flickerScale = Math.max(
+    0.65,
+    0.95 + Math.sin(time * 0.02 + x) * 0.12
+  );
   ctx.fillStyle = 'rgba(255, 140, 66, 0.28)';
   ctx.beginPath();
   ctx.arc(0, 30, Math.max(5, 20 * flickerScale), 0, Math.PI * 2);
@@ -976,8 +1022,8 @@ export function drawInteractiveSkyLantern({
     showWishTag &&
     !config.hideWish &&
     wishTagOpacity > 0.02 &&
-    effectiveWish.trim().length > 0 &&
-    scale > 0.34
+    scale > 0.34 &&
+    (effectiveWish.trim().length > 0 || effectiveAuthor.trim().length > 0)
   ) {
     drawWishSlipTag(ctx, effectiveWish, effectiveAuthor, -104, wishTagOpacity);
   }
@@ -1001,7 +1047,6 @@ export function drawStageItemBeacon(
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
-  // 1. Bright outer golden spotlight aura so user's un-released item stands out vividly
   ctx.fillStyle = isGrabbed
     ? `rgba(255, 242, 117, ${0.32 + pulse * 0.14})`
     : `rgba(244, 208, 111, ${0.22 + pulse * 0.1})`;
@@ -1009,7 +1054,6 @@ export function drawStageItemBeacon(
   ctx.arc(0, -8, isGrabbed ? 84 : 74 + pulse * 6, 0, Math.PI * 2);
   ctx.fill();
 
-  // 2. Luminous pedestal ring beneath the item
   ctx.fillStyle = isGrabbed
     ? 'rgba(255, 242, 117, 0.35)'
     : 'rgba(244, 208, 111, 0.25)';
@@ -1023,7 +1067,6 @@ export function drawStageItemBeacon(
   ctx.ellipse(0, 18, 66 + pulse * 5, 21 + pulse * 2, 0, 0, Math.PI * 2);
   ctx.stroke();
 
-  // 3. Rotating star diamonds around the un-released item
   for (let i = 0; i < 4; i++) {
     const angle = (i / 4) * Math.PI * 2 + time * 0.0018;
     const sx = Math.cos(angle) * 68;
@@ -1038,11 +1081,11 @@ export function drawStageItemBeacon(
     ctx.fill();
   }
 
-  // 4. High-contrast callout pill badge beneath the pedestal (skipped when items sit too close together)
   if (!showBadge) {
     ctx.restore();
     return;
   }
+
   const badgeW = 122;
   const badgeH = 22;
   const badgeY = 42;
@@ -1080,13 +1123,14 @@ export function drawTargetSpotlights(
 
   const pulse = 0.5 + 0.5 * Math.sin(time * 0.004);
 
-  // 1. Draw glowing circular sky release spots for Sky Lanterns
   if (unReleasedLanterns.length > 0) {
     getSkyLanternTargets(width, height).forEach((spot, idx) => {
       const sx = spot.x * width;
       const sy = spot.y * height;
       const isHovered = unReleasedLanterns.some(
-        (item) => Math.hypot(item.x - spot.x, item.y - spot.y) < SPOT_HIT_RADIUS_RATIO * 1.15
+        (item) =>
+          Math.hypot(item.x - spot.x, item.y - spot.y) <
+          SPOT_HIT_RADIUS_RATIO * 1.15
       );
 
       const baseRadius = 60 * getViewScale(width, height);
@@ -1095,7 +1139,6 @@ export function drawTargetSpotlights(
       ctx.save();
       ctx.translate(sx, sy);
 
-      // Soft outer celestial aura circle
       ctx.fillStyle = isHovered
         ? `rgba(255, 242, 117, ${0.24 + pulse * 0.12})`
         : `rgba(244, 208, 111, ${0.09 + pulse * 0.05})`;
@@ -1103,7 +1146,6 @@ export function drawTargetSpotlights(
       ctx.arc(0, 0, r * 1.32, 0, Math.PI * 2);
       ctx.fill();
 
-      // Inner soft circle
       ctx.fillStyle = isHovered
         ? 'rgba(255, 140, 66, 0.22)'
         : 'rgba(244, 208, 111, 0.08)';
@@ -1111,7 +1153,6 @@ export function drawTargetSpotlights(
       ctx.arc(0, 0, r * 0.88, 0, Math.PI * 2);
       ctx.fill();
 
-      // Glowing circular ring
       ctx.strokeStyle = isHovered
         ? '#FFF275'
         : `rgba(244, 208, 111, ${0.38 + pulse * 0.25})`;
@@ -1122,7 +1163,6 @@ export function drawTargetSpotlights(
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // 4 cardinal star diamonds around the sky circle
       for (let d = 0; d < 4; d++) {
         const angle = (d / 4) * Math.PI * 2 + time * 0.0008;
         const dx = Math.cos(angle) * r;
@@ -1152,23 +1192,23 @@ export function drawTargetSpotlights(
     });
   }
 
-  // 2. Draw glowing circular water-lily spots on the river for Krathongs
   if (unReleasedKrathongs.length > 0) {
     getRiverSpotTargets(width, height).forEach((spot, idx) => {
       const sx = spot.x * width;
       const sy = spot.y * height;
       const isHovered = unReleasedKrathongs.some(
-        (item) => Math.hypot(item.x - spot.x, item.y - spot.y) < SPOT_HIT_RADIUS_RATIO * 1.2
+        (item) =>
+          Math.hypot(item.x - spot.x, item.y - spot.y) <
+          SPOT_HIT_RADIUS_RATIO * 1.2
       );
 
       const rx = 70 * getViewScale(width, height) * (isHovered ? 1.15 : 1);
       const ry = rx * 0.44;
-      const ripplePulse = ( (time * 0.0008 + idx * 0.25) % 1 );
+      const ripplePulse = (time * 0.0008 + idx * 0.25) % 1;
 
       ctx.save();
       ctx.translate(sx, sy);
 
-      // Soft glowing water halo
       ctx.fillStyle = isHovered
         ? `rgba(255, 242, 117, ${0.26 + pulse * 0.12})`
         : `rgba(244, 208, 111, ${0.1 + pulse * 0.06})`;
@@ -1176,7 +1216,6 @@ export function drawTargetSpotlights(
       ctx.ellipse(0, 0, rx * 1.25, ry * 1.25, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Expanding water ripple ring
       ctx.strokeStyle = isHovered
         ? `rgba(255, 242, 117, ${0.85 * (1 - ripplePulse)})`
         : `rgba(244, 208, 111, ${0.45 * (1 - ripplePulse)})`;
@@ -1193,7 +1232,6 @@ export function drawTargetSpotlights(
       );
       ctx.stroke();
 
-      // Core target ring
       ctx.strokeStyle = isHovered
         ? '#FFF275'
         : `rgba(255, 153, 200, ${0.42 + pulse * 0.25})`;
@@ -1204,7 +1242,6 @@ export function drawTargetSpotlights(
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Center lotus-light diamond
       ctx.fillStyle = isHovered ? '#FFF275' : '#FF99C8';
       ctx.beginPath();
       ctx.moveTo(0, -5);
@@ -1231,11 +1268,11 @@ export function drawTargetSpotlights(
 }
 
 const FINGER_CHAINS: number[][] = [
-  [1, 2, 3, 4],     // Thumb
-  [5, 6, 7, 8],     // Index
-  [9, 10, 11, 12],  // Middle
-  [13, 14, 15, 16], // Ring
-  [17, 18, 19, 20], // Pinky
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16],
+  [17, 18, 19, 20],
 ];
 
 const HAND_PALETTES = [
@@ -1273,7 +1310,6 @@ function drawSingleIllustratedHand(
       y: (pts[0].y + pts[5].y + pts[9].y + pts[13].y + pts[17].y) / 5,
     };
 
-    // Soft magical aura behind palm
     ctx.fillStyle = hand.isPinching
       ? 'rgba(255, 242, 117, 0.22)'
       : hexToRgba(accentColor, 0.14);
@@ -1281,7 +1317,6 @@ function drawSingleIllustratedHand(
     ctx.arc(palmCenter.x, palmCenter.y, 44, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2D Paper-cut Palm Polygon
     ctx.fillStyle = hexToRgba(primarySkin, 0.82);
     ctx.strokeStyle = accentColor;
     ctx.lineWidth = 2;
@@ -1297,7 +1332,6 @@ function drawSingleIllustratedHand(
     ctx.fill();
     ctx.stroke();
 
-    // Decorative Thai lotus-diamond motif on back of palm
     ctx.fillStyle = hexToRgba(jointColor, 0.55);
     ctx.beginPath();
     ctx.moveTo(palmCenter.x, palmCenter.y - 7);
@@ -1307,7 +1341,6 @@ function drawSingleIllustratedHand(
     ctx.closePath();
     ctx.fill();
 
-    // Draw 5 articulated 2D fingers
     FINGER_CHAINS.forEach((chain, fingerIdx) => {
       const baseWidth = fingerIdx === 0 ? 13 : fingerIdx === 4 ? 9.5 : 11.5;
 
@@ -1323,7 +1356,6 @@ function drawSingleIllustratedHand(
         ctx.lineTo(pB.x, pB.y);
         ctx.stroke();
 
-        // Subtle golden edge highlight along finger segment
         ctx.strokeStyle = hexToRgba(accentColor, 0.65);
         ctx.lineWidth = 1.4;
         ctx.beginPath();
@@ -1332,7 +1364,6 @@ function drawSingleIllustratedHand(
         ctx.stroke();
       }
 
-      // Fingertip pad + golden nail accent
       const tip = pts[chain[chain.length - 1]];
       const isPinchFinger = fingerIdx === 0 || fingerIdx === 1;
 
@@ -1349,7 +1380,6 @@ function drawSingleIllustratedHand(
       ctx.fill();
     });
 
-    // Golden wrist bangle (กำไลข้อมือทอง)
     ctx.fillStyle = '#F4D06F';
     ctx.beginPath();
     ctx.arc(wrist.x, wrist.y, 6, 0, Math.PI * 2);
@@ -1363,7 +1393,6 @@ function drawSingleIllustratedHand(
     }
   }
 
-  // Pinch cursor spark between thumb & index finger
   const cx = hand.cursor.x * width;
   const cy = hand.cursor.y * height;
 
@@ -1373,7 +1402,6 @@ function drawSingleIllustratedHand(
     ctx.arc(cx, cy, 20, 0, Math.PI * 2);
     ctx.fill();
 
-    // 4-point star spark at pinch point
     ctx.fillStyle = '#FFF275';
     ctx.beginPath();
     ctx.moveTo(cx, cy - 11);

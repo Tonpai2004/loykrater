@@ -2,9 +2,15 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
-import { HandGestureState, NormalizedPoint, TrackedHand } from '@/types/krathong';
+import {
+  HandGestureState,
+  NormalizedPoint,
+  TrackedHand,
+} from '@/types/krathong';
 
 const MEDIAPIPE_WASM_URL =
+  'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3/wasm';
+const MEDIAPIPE_FALLBACK_WASM_URL =
   'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
 const HAND_MODEL_ASSET_URL =
   'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
@@ -20,7 +26,6 @@ interface UseHandTrackingOptions {
 }
 
 interface UseHandTrackingReturn {
-  // Callback ref: any number of <video> elements may bind; the most recently mounted one receives the camera stream
   videoRef: React.RefCallback<HTMLVideoElement>;
   gestureState: HandGestureState;
   gestureRef: React.RefObject<HandGestureState>;
@@ -28,9 +33,7 @@ interface UseHandTrackingReturn {
 }
 
 function calculateDistance(a: NormalizedPoint, b: NormalizedPoint): number {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  return Math.hypot(dx, dy);
+  return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
 function interpolatePoint(
@@ -45,6 +48,41 @@ function interpolatePoint(
   };
 }
 
+async function createHandLandmarkerInstance(): Promise<HandLandmarker> {
+  let vision;
+  try {
+    vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);
+  } catch {
+    vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_FALLBACK_WASM_URL);
+  }
+
+  const sharedOptions = {
+    runningMode: 'VIDEO' as const,
+    numHands: MAX_TRACKED_HANDS,
+    minHandDetectionConfidence: 0.5,
+    minHandPresenceConfidence: 0.5,
+    minTrackingConfidence: 0.5,
+  };
+
+  try {
+    return await HandLandmarker.createFromOptions(vision, {
+      ...sharedOptions,
+      baseOptions: {
+        modelAssetPath: HAND_MODEL_ASSET_URL,
+        delegate: 'GPU',
+      },
+    });
+  } catch {
+    return await HandLandmarker.createFromOptions(vision, {
+      ...sharedOptions,
+      baseOptions: {
+        modelAssetPath: HAND_MODEL_ASSET_URL,
+        delegate: 'CPU',
+      },
+    });
+  }
+}
+
 const INITIAL_GESTURE_STATE: HandGestureState = {
   isReady: false,
   isTracking: false,
@@ -57,7 +95,9 @@ const INITIAL_GESTURE_STATE: HandGestureState = {
   error: null,
 };
 
-export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTrackingReturn {
+export function useHandTracking({
+  enabled,
+}: UseHandTrackingOptions): UseHandTrackingReturn {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mountedVideosRef = useRef<HTMLVideoElement[]>([]);
   const landmarkerRef = useRef<HandLandmarker | null>(null);
@@ -70,7 +110,9 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
   );
   const gestureRef = useRef<HandGestureState>({ ...INITIAL_GESTURE_STATE });
   const [reloadTrigger, setReloadTrigger] = useState(0);
-  const [gestureState, setGestureState] = useState<HandGestureState>(INITIAL_GESTURE_STATE);
+  const [gestureState, setGestureState] = useState<HandGestureState>(
+    INITIAL_GESTURE_STATE
+  );
 
   const retryCamera = useCallback(() => {
     setReloadTrigger((prev) => prev + 1);
@@ -78,10 +120,15 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
 
   const bindVideo = useCallback((element: HTMLVideoElement | null) => {
     if (!element) return;
-    mountedVideosRef.current = [...mountedVideosRef.current, element];
+    mountedVideosRef.current = [
+      ...mountedVideosRef.current.filter((v) => v !== element),
+      element,
+    ];
     videoRef.current = element;
     return () => {
-      mountedVideosRef.current = mountedVideosRef.current.filter((v) => v !== element);
+      mountedVideosRef.current = mountedVideosRef.current.filter(
+        (v) => v !== element
+      );
       videoRef.current = mountedVideosRef.current.at(-1) ?? null;
     };
   }, []);
@@ -102,20 +149,12 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
         setGestureState((prev) => ({ ...prev, error: null }));
 
         if (!landmarkerRef.current) {
-          const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);
-          if (!isMounted) return;
-
-          landmarkerRef.current = await HandLandmarker.createFromOptions(vision, {
-            baseOptions: {
-              modelAssetPath: HAND_MODEL_ASSET_URL,
-              delegate: 'GPU',
-            },
-            runningMode: 'VIDEO',
-            numHands: MAX_TRACKED_HANDS,
-            minHandDetectionConfidence: 0.5,
-            minHandPresenceConfidence: 0.5,
-            minTrackingConfidence: 0.5,
-          });
+          const instance = await createHandLandmarkerInstance();
+          if (!isMounted) {
+            instance.close();
+            return;
+          }
+          landmarkerRef.current = instance;
         }
 
         if (!isMounted) return;
@@ -135,13 +174,15 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
           return;
         }
 
-        // The bound <video> can change while running (HUD ↔ practice sandbox), so re-attach on every frame check
-        const attachStream = (video: HTMLVideoElement) => {
-          if (video.srcObject === activeStream) return;
-          video.srcObject = activeStream;
-          video.play().catch(() => {});
+        const attachStreamToMountedVideos = () => {
+          for (const vid of mountedVideosRef.current) {
+            if (vid.srcObject !== activeStream) {
+              vid.srcObject = activeStream;
+              vid.play().catch(() => {});
+            }
+          }
         };
-        if (videoRef.current) attachStream(videoRef.current);
+        attachStreamToMountedVideos();
 
         gestureRef.current = {
           ...gestureRef.current,
@@ -153,9 +194,9 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
         const detectFrame = (nowMs: number) => {
           if (!isMounted) return;
 
+          attachStreamToMountedVideos();
           const video = videoRef.current;
           const landmarker = landmarkerRef.current;
-          if (video) attachStream(video);
 
           if (!video || !landmarker || video.readyState < 2) {
             rafIdRef.current = requestAnimationFrame(detectFrame);
@@ -195,43 +236,45 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
               const trackedHands: TrackedHand[] = rawHands
                 .slice(0, MAX_TRACKED_HANDS)
                 .map((landmarks, idx) => {
-                const mirroredLandmarks: NormalizedPoint[] = landmarks.map((pt) => ({
-                  x: 1 - pt.x,
-                  y: pt.y,
-                }));
+                  const mirroredLandmarks: NormalizedPoint[] = landmarks.map(
+                    (pt) => ({
+                      x: 1 - pt.x,
+                      y: pt.y,
+                    })
+                  );
 
-                const thumbTip = mirroredLandmarks[4];
-                const indexTip = mirroredLandmarks[8];
+                  const thumbTip = mirroredLandmarks[4];
+                  const indexTip = mirroredLandmarks[8];
 
-                const rawMidpoint: NormalizedPoint = {
-                  x: (thumbTip.x + indexTip.x) * 0.5,
-                  y: (thumbTip.y + indexTip.y) * 0.5,
-                };
+                  const rawMidpoint: NormalizedPoint = {
+                    x: (thumbTip.x + indexTip.x) * 0.5,
+                    y: (thumbTip.y + indexTip.y) * 0.5,
+                  };
 
-                const smoothedCursor = interpolatePoint(
-                  smoothedCursorsRef.current[idx],
-                  rawMidpoint,
-                  CURSOR_SMOOTHING_FACTOR
-                );
-                smoothedCursorsRef.current[idx] = smoothedCursor;
+                  const smoothedCursor = interpolatePoint(
+                    smoothedCursorsRef.current[idx],
+                    rawMidpoint,
+                    CURSOR_SMOOTHING_FACTOR
+                  );
+                  smoothedCursorsRef.current[idx] = smoothedCursor;
 
-                const distance = calculateDistance(thumbTip, indexTip);
-                const prevPinch = isPinchingByHandRef.current[idx] ?? false;
-                const nextPinch = prevPinch
-                  ? distance < PINCH_RELEASE_THRESHOLD
-                  : distance < PINCH_ENGAGE_THRESHOLD;
+                  const distance = calculateDistance(thumbTip, indexTip);
+                  const prevPinch = isPinchingByHandRef.current[idx] ?? false;
+                  const nextPinch = prevPinch
+                    ? distance < PINCH_RELEASE_THRESHOLD
+                    : distance < PINCH_ENGAGE_THRESHOLD;
 
-                isPinchingByHandRef.current[idx] = nextPinch;
+                  isPinchingByHandRef.current[idx] = nextPinch;
 
-                return {
-                  handIndex: idx,
-                  isPinching: nextPinch,
-                  cursor: smoothedCursor,
-                  thumbTip,
-                  indexTip,
-                  landmarks: mirroredLandmarks,
-                };
-              });
+                  return {
+                    handIndex: idx,
+                    isPinching: nextPinch,
+                    cursor: smoothedCursor,
+                    thumbTip,
+                    indexTip,
+                    landmarks: mirroredLandmarks,
+                  };
+                });
 
               const primary = trackedHands[0];
               const anyPinching = trackedHands.some((h) => h.isPinching);
@@ -247,7 +290,10 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
                 cursor: primary.cursor,
                 thumbTip: primary.thumbTip,
                 indexTip: primary.indexTip,
-                pinchDistance: calculateDistance(primary.thumbTip, primary.indexTip),
+                pinchDistance: calculateDistance(
+                  primary.thumbTip,
+                  primary.indexTip
+                ),
                 hands: trackedHands,
                 error: null,
               };
@@ -284,7 +330,6 @@ export function useHandTracking({ enabled }: UseHandTrackingOptions): UseHandTra
       if (activeStream) {
         activeStream.getTracks().forEach((track) => track.stop());
       }
-      // Drop stale hands so canvases stop drawing them once tracking is off
       isPinchingByHandRef.current = Array(MAX_TRACKED_HANDS).fill(false);
       smoothedCursorsRef.current = Array(MAX_TRACKED_HANDS).fill(null);
       gestureRef.current = { ...INITIAL_GESTURE_STATE };

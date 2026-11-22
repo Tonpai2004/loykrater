@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { CustomizationPanel } from '@/components/CustomizationPanel';
 import { HandTrackerHUD } from '@/components/HandTrackerHUD';
@@ -8,6 +14,7 @@ import { HomeLandingOverlay } from '@/components/home/HomeLandingOverlay';
 import { MaeKhongkhaModal } from '@/components/modals/MaeKhongkhaModal';
 import { HowToPlayModal } from '@/components/modals/HowToPlayModal';
 import { LoyKrathongLoreModal } from '@/components/modals/LoyKrathongLoreModal';
+import { ShareInviteSheet } from '@/components/modals/ShareInviteSheet';
 import { TopBarControls } from '@/components/navigation/TopBarControls';
 import {
   buildStageItems,
@@ -34,25 +41,33 @@ import {
   FloatingKrathong,
   GameState,
   KrathongConfig,
+  OfferingSlotConfig,
   StageItem,
 } from '@/types/krathong';
+
+const NO_OFFERINGS: OfferingSlotConfig[] = [];
 
 export default function LoiKrathongPage() {
   const [gameState, setGameState] = useState<GameState>('HOME');
   const [krathongConfig, setKrathongConfig] = useState<KrathongConfig>(
     DEFAULT_KRATHONG_CONFIG
   );
-  const [floatingKrathongs, setFloatingKrathongs] = useState<FloatingKrathong[]>([]);
+  const [floatingKrathongs, setFloatingKrathongs] = useState<
+    FloatingKrathong[]
+  >([]);
   const [cameraEnabled, setCameraEnabled] = useState<boolean>(true);
   const [releasedCount, setReleasedCount] = useState<number>(0);
   const [totalRoundCount, setTotalRoundCount] = useState<number>(1);
-  const [isBlessingModalOpen, setIsBlessingModalOpen] = useState<boolean>(false);
+  const [isBlessingModalOpen, setIsBlessingModalOpen] =
+    useState<boolean>(false);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState<boolean>(false);
   const [isLoreModalOpen, setIsLoreModalOpen] = useState<boolean>(false);
   const [isPracticeActive, setIsPracticeActive] = useState<boolean>(false);
+  // 'blessing' shares the round just floated; 'invite' is a general invitation from the top bar
+  const [shareSource, setShareSource] = useState<'invite' | 'blessing' | null>(null);
 
   const { locale } = useLanguage();
-  // Stock couplets follow the active language; anything the player typed stays as written
+
   const displayConfig = useMemo<KrathongConfig>(
     () => ({
       ...krathongConfig,
@@ -64,9 +79,15 @@ export default function LoiKrathongPage() {
     }),
     [krathongConfig, locale]
   );
+  const shareOfferings = useMemo(
+    () => (shareSource === 'blessing' ? getActiveOfferings(displayConfig) : NO_OFFERINGS),
+    [shareSource, displayConfig]
+  );
+  const closeShareSheet = useCallback(() => setShareSource(null), []);
 
   const blessingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gameStateRef = useRef<GameState>(gameState);
+  const localRoundIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -81,7 +102,6 @@ export default function LoiKrathongPage() {
     }, BLESSING_MODAL_DELAY_MS);
   }, []);
 
-  // Camera runs at the pier, and inside the How-to-Play practice folio (reachable from HOME too)
   const shouldTrackHand =
     cameraEnabled && (gameState === 'INTERACT' || isPracticeActive);
   const { videoRef, gestureState, gestureRef, retryCamera } = useHandTracking({
@@ -89,34 +109,66 @@ export default function LoiKrathongPage() {
   });
 
   useEffect(() => {
-    const unsubscribe = subscribeToGlobalRiver((items) => {
+    const unsubscribe = subscribeToGlobalRiver((incomingItems) => {
       const now = Date.now();
-      setFloatingKrathongs(
-        items.filter(
-          (item) => !item.isLocal || now - item.createdAt < FLOAT_LIFESPAN_MS
-        )
-      );
+      const inInteract = gameStateRef.current === 'INTERACT';
+      const localIds = localRoundIdsRef.current;
+
+      setFloatingKrathongs((prev) => {
+        const localMap = new Map<string, FloatingKrathong>();
+        for (const item of prev) {
+          if (item.isLocal) {
+            localMap.set(item.id, item);
+          }
+        }
+
+        const merged = incomingItems
+          .map((item) => {
+            const existingLocal = localMap.get(item.id);
+            if (existingLocal) {
+              localMap.delete(item.id);
+              return existingLocal;
+            }
+            if (localIds.has(item.id)) {
+              return { ...item, isLocal: true, isAmbient: false };
+            }
+            return item;
+          })
+          .filter((item) => {
+            if (item.isAmbient) return true;
+            if (item.isLocal && inInteract) return true;
+            return now - item.createdAt < FLOAT_LIFESPAN_MS;
+          });
+
+        for (const remainingLocal of localMap.values()) {
+          if (inInteract || now - remainingLocal.createdAt < FLOAT_LIFESPAN_MS) {
+            merged.push(remainingLocal);
+          }
+        }
+
+        return merged;
+      });
     });
+
     return () => unsubscribe();
   }, []);
 
-  // Prune only expired player-released (isLocal) items; ambient background items cycle seamlessly inside the 60fps canvas
   useEffect(() => {
     const cycleInterval = setInterval(() => {
       const now = Date.now();
       const inInteract = gameStateRef.current === 'INTERACT';
       setFloatingKrathongs((prev) => {
-        const hasExpiredLocal = prev.some(
+        const hasExpired = prev.some(
           (item) =>
-            item.isLocal &&
-            !inInteract &&
+            !item.isAmbient &&
+            !(item.isLocal && inInteract) &&
             now - item.createdAt >= FLOAT_LIFESPAN_MS
         );
-        if (!hasExpiredLocal) return prev;
+        if (!hasExpired) return prev;
         return prev.filter(
           (item) =>
-            !item.isLocal ||
-            inInteract ||
+            item.isAmbient ||
+            (item.isLocal && inInteract) ||
             now - item.createdAt < FLOAT_LIFESPAN_MS
         );
       });
@@ -141,23 +193,33 @@ export default function LoiKrathongPage() {
         item.itemType
       );
 
+      localRoundIdsRef.current.add(published.id);
+
       setFloatingKrathongs((prev) => {
-        if (prev.some((existing) => existing.id === published.id)) return prev;
+        if (prev.some((existing) => existing.id === published.id)) {
+          return prev.map((existing) =>
+            existing.id === published.id
+              ? { ...existing, isLocal: true, isAmbient: false }
+              : existing
+          );
+        }
         return [...prev, published];
       });
     },
     []
   );
 
-  const handleProgressChange = useCallback((released: number, total: number) => {
-    setReleasedCount(released);
-    setTotalRoundCount(total);
-  }, []);
+  const handleProgressChange = useCallback(
+    (released: number, total: number) => {
+      setReleasedCount(released);
+      setTotalRoundCount(total);
+    },
+    []
+  );
 
   const handleAllItemsReleased = useCallback(
     (totalCount: number) => {
       const roundEndNow = Date.now();
-      // Start the float & fade-out timer for ALL items in the set simultaneously once the last item is released
       setFloatingKrathongs((prev) =>
         prev.map((item) =>
           item.isLocal ? { ...item, createdAt: roundEndNow } : item
@@ -177,8 +239,15 @@ export default function LoiKrathongPage() {
     setReleasedCount(items.length);
     setTotalRoundCount(items.length);
 
-    const skyTargets = getSkyLanternTargets(window.innerWidth, window.innerHeight);
-    const riverTargets = getRiverSpotTargets(window.innerWidth, window.innerHeight);
+    const skyTargets = getSkyLanternTargets(
+      window.innerWidth,
+      window.innerHeight
+    );
+    const riverTargets = getRiverSpotTargets(
+      window.innerWidth,
+      window.innerHeight
+    );
+
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       if (item.itemType === 'lantern') {
@@ -203,6 +272,7 @@ export default function LoiKrathongPage() {
     if (blessingTimerRef.current) {
       clearTimeout(blessingTimerRef.current);
     }
+    localRoundIdsRef.current.clear();
     setFloatingKrathongs((prev) =>
       prev.map((item) => (item.isLocal ? { ...item, isLocal: false } : item))
     );
@@ -218,6 +288,9 @@ export default function LoiKrathongPage() {
     setGameState('HOME');
   }, []);
 
+  const isAnyModalOpen =
+    isHowToPlayOpen || isLoreModalOpen || isBlessingModalOpen;
+
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-[#0D1321] select-none">
       <RiverCanvas
@@ -225,6 +298,7 @@ export default function LoiKrathongPage() {
         activeConfig={displayConfig}
         floatingKrathongs={floatingKrathongs}
         gestureRef={gestureRef}
+        isPaused={isAnyModalOpen}
         onReleaseItem={handleReleaseItem}
         onProgressChange={handleProgressChange}
         onAllItemsReleased={handleAllItemsReleased}
@@ -235,9 +309,9 @@ export default function LoiKrathongPage() {
           gameState={gameState}
           onGoHome={handleGoHome}
           onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
+          onOpenInvite={() => setShareSource('invite')}
         />
 
-        {/* Scrolls only when a screen is taller than the device (phones, landscape) */}
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
           <div className="flex min-h-full flex-col">
             <AnimatePresence mode="wait">
@@ -287,7 +361,6 @@ export default function LoiKrathongPage() {
         </div>
       </div>
 
-      {/* Samut Khoi Modals & Blessing Modal */}
       <HowToPlayModal
         isOpen={isHowToPlayOpen}
         onClose={() => setIsHowToPlayOpen(false)}
@@ -311,6 +384,13 @@ export default function LoiKrathongPage() {
         releasedCount={totalRoundCount}
         onPlayAgain={handlePlayAgain}
         onDismiss={() => setIsBlessingModalOpen(false)}
+        onOpenShare={() => setShareSource('blessing')}
+      />
+
+      <ShareInviteSheet
+        isOpen={shareSource !== null}
+        offerings={shareOfferings}
+        onClose={closeShareSheet}
       />
     </main>
   );

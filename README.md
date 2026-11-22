@@ -38,6 +38,7 @@
 - **พรจากพระแม่คงคา:** เมื่อปล่อยครบทุกชิ้น จะได้รับโปสการ์ดอวยพร สมุดเยี่ยมชม และปุ่มชวนเพื่อนมาลอย
 - **สมุดข่อยวิธีเล่น:** คู่มือการใช้มือพร้อมลานฝึกให้ลองจีบนิ้วหยิบกระทงก่อนลงสนามจริง
 - **สมุดข่อยตำนานประเพณี:** ๕ ผูก ว่าด้วยที่มาของลอยกระทง ความเชื่อเรื่องพระแม่คงคา ประวัติในสยาม เพลงรำวงวันลอยกระทงของสุนทราภรณ์ และลอยกระทงในวัฒนธรรมสมัยนิยม
+- **ชวนเพื่อนมาลอย:** แชร์ลิงก์ไป LINE, Facebook, Messenger, WhatsApp, Telegram, X และอีเมลได้ในคลิกเดียว พร้อมการ์ดภาพแนวตั้ง 1080×1920 ที่วาดกระทงและคำพรของคุณจริง มี QR code ให้สแกนเข้าเล่น แชร์ลง IG Story, TikTok หรือ Facebook Story ได้ และมีรูปพรีวิวลิงก์ (og:image) ให้อัตโนมัติ
 - **2 ภาษา:** ไทย (ค่าเริ่มต้น) และอังกฤษ จำภาษาที่เลือกไว้ให้ครั้งถัดไป
 - **ลอยร่วมกันแบบเรียลไทม์:** ซิงก์กระทงของทุกคนผ่าน Firebase Realtime Database หรือใช้ `BroadcastChannel` ระหว่างแท็บเมื่อไม่ได้ตั้งค่า Firebase
 - **กราฟิกวาดด้วยโค้ดทั้งหมด:** ฉาก กระทง โคมลอย และภาพพระแม่คงคาวาดด้วย Canvas 2D และ SVG ไม่ใช้ไฟล์รูปภาพ
@@ -97,6 +98,8 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Storage bucket |
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Messaging sender ID |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | App ID |
+| `NEXT_PUBLIC_SITE_URL` | (ไม่บังคับ) โดเมนจริงของเว็บ เช่น `https://loykrater.vercel.app` ใช้ในลิงก์แชร์ QR code และรูปพรีวิว |
+| `NEXT_PUBLIC_FACEBOOK_APP_ID` | (ไม่บังคับ) ให้ปุ่ม Messenger บนคอมพิวเตอร์เปิดหน้าส่งข้อความได้ ถ้าไม่ใส่จะคัดลอกลิงก์แทน |
 
 > **ไม่บังคับ:** ถ้าไม่ได้ตั้งค่า Firebase เว็บยังเล่นได้ครบทุกอย่าง แต่กระทงจะแชร์กันได้เฉพาะระหว่างแท็บในเบราว์เซอร์เดียวกัน (ผ่าน `BroadcastChannel`) แทนการซิงก์ข้ามเครื่อง
 
@@ -161,10 +164,11 @@ loykrater/
     │   ├── page.tsx               # หน้าหลัก ควบคุมสถานะของแอป
     │   ├── globals.css            # ตัวแปรสี ฟอนต์ กรอบย่อมุม และ scrollbar
     │   ├── icon.svg               # ไอคอนพระจันทร์บนแท็บเบราว์เซอร์
-    │   └── apple-icon.tsx         # ไอคอนสำหรับหน้าจอโฮม iOS
+    │   ├── apple-icon.tsx         # ไอคอนสำหรับหน้าจอโฮม iOS
+    │   └── opengraph-image.tsx    # รูปพรีวิวเวลาแชร์ลิงก์ (สร้างตอน build)
     ├── components/
     │   ├── home/                  # หน้าแรกและโลโก้
-    │   ├── modals/                # สมุดข่อยวิธีเล่น ลานฝึก ตำนานประเพณี และพรพระแม่คงคา
+    │   ├── modals/                # สมุดข่อยวิธีเล่น ลานฝึก ตำนานประเพณี พรพระแม่คงคา และหน้าชวนเพื่อน
     │   ├── navigation/            # แถบด้านบน (หน้าแรก วิธีเล่น ภาษา เสียง)
     │   ├── CustomizationPanel.tsx # แผงประดิษฐ์เครื่องลอยและคำอธิษฐาน
     │   ├── RiverCanvas.tsx        # ลูปวาดฉาก ฟิสิกส์การหยิบปล่อย 60 FPS
@@ -178,7 +182,10 @@ loykrater/
     ├── hooks/useHandTracking.ts   # กล้อง MediaPipe และการคำนวณท่าจีบนิ้ว
     ├── lib/
     │   ├── canvasRenderer.ts      # ฟังก์ชันวาดกราฟิก 2D และ sprite cache
-    │   └── firebase.ts            # Firebase Realtime Database และ BroadcastChannel
+    │   ├── firebase.ts            # Firebase Realtime Database และ BroadcastChannel
+    │   ├── shareCard.ts           # วาดการ์ดสตอรี่ 1080×1920 พร้อม QR code
+    │   ├── shareLinks.ts          # ลิงก์แชร์ของแต่ละแพลตฟอร์ม คัดลอก และบันทึกรูป
+    │   └── siteUrl.ts             # ที่อยู่เว็บสำหรับลิงก์แชร์
     └── types/krathong.ts          # TypeScript types ทั้งหมด
 ```
 

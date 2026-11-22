@@ -38,6 +38,9 @@ const SITE_DESCRIPTION =
   "ประดิษฐ์กระทงใบตองและโคมลอย จารึกคำอธิษฐาน แล้วใช้นิ้วมือหยิบปล่อยลงสายน้ำผ่านกล้องเว็บแคม ลอยกระทงออนไลน์คืนวันเพ็ญเดือน ๑๒ ไปพร้อมคนที่คุณรัก";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://loykrater.vercel.app"
+  ),
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
   applicationName: "ลอย กะ เธอ",
@@ -51,6 +54,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     type: "website",
+    url: "/",
     locale: "th_TH",
     alternateLocale: ["en_US"],
     siteName: "ลอย กะ เธอ",
@@ -58,7 +62,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
   },

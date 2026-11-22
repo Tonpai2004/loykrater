@@ -27,7 +27,6 @@ function loadAudioPrefs(): StoredAudioPrefs {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      // Default to OFF (muted) when visiting for the first time
       return { isMuted: true, volume: DEFAULT_VOLUME };
     }
     const parsed = JSON.parse(raw) as Partial<StoredAudioPrefs>;
@@ -52,9 +51,10 @@ function saveAudioPrefs(prefs: StoredAudioPrefs) {
   }
 }
 
-// Saved prefs live in a tiny external store so the server HTML (always muted) and the
-// first client render agree; the visitor's saved choice is applied right after hydration.
-const SERVER_PREFS: StoredAudioPrefs = { isMuted: true, volume: DEFAULT_VOLUME };
+const SERVER_PREFS: StoredAudioPrefs = {
+  isMuted: true,
+  volume: DEFAULT_VOLUME,
+};
 let cachedPrefs: StoredAudioPrefs | null = null;
 const prefListeners = new Set<() => void>();
 
@@ -104,19 +104,14 @@ export const AudioVolumeController: React.FC = () => {
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
 
-    // Only attempt to play if user's last saved preference was unmuted
     if (!initialPrefs.isMuted && initialPrefs.volume > 0.005) {
-      audio.play().catch(() => {
-        // Will unlock on first user interaction if browser blocked autoplay
-      });
+      audio.play().catch(() => {});
     }
 
     const unlockAudioOnFirstGesture = () => {
       if (!audioRef.current || userMutedRef.current) return;
       if (audioRef.current.paused) {
-        audioRef.current.play().catch(() => {
-          // Ignore if still blocked
-        });
+        audioRef.current.play().catch(() => {});
       }
     };
 
@@ -148,9 +143,7 @@ export const AudioVolumeController: React.FC = () => {
 
       audio.muted = false;
       audio.volume = restoredVol;
-      audio.play().catch(() => {
-        // Ignore play error
-      });
+      audio.play().catch(() => {});
     } else {
       userMutedRef.current = true;
       writePrefs({ isMuted: true, volume });
@@ -180,9 +173,7 @@ export const AudioVolumeController: React.FC = () => {
         writePrefs({ isMuted: false, volume: nextVol });
         audio.muted = false;
         if (audio.paused) {
-          audio.play().catch(() => {
-            // Ignore play error
-          });
+          audio.play().catch(() => {});
         }
       }
     },
@@ -199,13 +190,11 @@ export const AudioVolumeController: React.FC = () => {
       transition={{ type: 'spring', stiffness: 100, damping: 16 }}
       className="thai-chamfer-sm pointer-events-auto relative flex items-center gap-3 border border-[#D4AF37]/55 bg-[#0B0E17]/92 p-0 text-[#FFFDF7] shadow-[0_14px_34px_rgba(0,0,0,0.75)] backdrop-blur-md sm:px-3.5 sm:py-2"
     >
-      {/* Decorative Phra Nakhon Gold Corner Accents */}
       <span className="pointer-events-none absolute top-1.5 left-1.5 hidden h-1.5 w-1.5 border-t border-l border-[#D4AF37]/75 sm:block" />
       <span className="pointer-events-none absolute top-1.5 right-1.5 hidden h-1.5 w-1.5 border-t border-r border-[#D4AF37]/75 sm:block" />
       <span className="pointer-events-none absolute bottom-1.5 left-1.5 hidden h-1.5 w-1.5 border-b border-l border-[#D4AF37]/75 sm:block" />
       <span className="pointer-events-none absolute right-1.5 bottom-1.5 hidden h-1.5 w-1.5 border-r border-b border-[#D4AF37]/75 sm:block" />
 
-      {/* One-Click Mute / Unmute Seal Button */}
       <button
         type="button"
         onClick={handleToggleMute}
@@ -226,11 +215,9 @@ export const AudioVolumeController: React.FC = () => {
         )}
       </button>
 
-      {/* Label + Animated Chime Equalizer + Gold-Leaf Volume Slider */}
       <div className="hidden flex-col gap-1 pr-1 sm:flex">
         <div className="flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-1.5">
-            {/* Animated Golden Equalizer Bars */}
             <span className="flex h-3 items-end gap-[2px]">
               {[0, 1, 2].map((barIdx) => (
                 <motion.span
@@ -267,7 +254,6 @@ export const AudioVolumeController: React.FC = () => {
           </span>
         </div>
 
-        {/* Custom Gold-Leaf Volume Slider */}
         <div className="relative flex items-center">
           <input
             type="range"
