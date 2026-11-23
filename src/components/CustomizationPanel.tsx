@@ -869,7 +869,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                         updateCurrentSlot('authorName', e.target.value)
                       }
                       placeholder={ct.authorPlaceholder}
-                      className="font-heading flex-1 border border-[#D4AF37]/35 bg-[#12172B] px-3 py-1.5 text-xs text-[#FFF275] placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
+                      className="font-heading flex-1 border border-[#D4AF37]/35 bg-[#12172B] px-3 py-1.5 text-base text-[#FFF275] sm:text-xs placeholder-[#FFFDF7]/45 transition-colors focus:border-[#FFF275] focus:bg-[#171E38] focus:outline-none"
                     />
                   </div>
 

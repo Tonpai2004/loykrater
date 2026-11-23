@@ -78,6 +78,13 @@
   color: #1C1815;
 }
 
+/* The game surface is select-none; Safari then refuses to place a caret in fields inside it */
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 body {
   background: linear-gradient(180deg, #1A1B41 0%, #0D1321 100%);
   color: var(--foreground);

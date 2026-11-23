@@ -343,15 +343,26 @@ export default function LoiKrathongPage() {
         onAllItemsReleased={handleAllItemsReleased}
       />
 
-      <div className="pointer-events-none relative z-10 flex h-full w-full flex-col gap-3 [zoom:var(--ui-zoom,1)] pt-[max(0.75rem,env(safe-area-inset-top))] pr-[max(0.75rem,env(safe-area-inset-right))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] sm:pt-[max(1.25rem,env(safe-area-inset-top))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] sm:pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pl-[max(1.5rem,env(safe-area-inset-left))]">
-        <TopBarControls
-          gameState={gameState}
-          onGoHome={handleGoHome}
-          onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
-          onOpenInvite={() => setShareSource('invite')}
-        />
+      {/* The river canvas only takes touches at the pier (INTERACT). Everywhere else this layer must catch
+          them itself, or swipes that start in gaps or the safe-area padding fall through to the touch-none
+          canvas and the page can't scroll on phones (iOS Safari won't scroll a pointer-events:none box at all). */}
+      <div
+        className={`relative z-10 flex h-full w-full flex-col [zoom:var(--ui-zoom,1)] pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-[max(1.25rem,env(safe-area-inset-top))] ${
+          gameState === 'INTERACT' ? 'pointer-events-none' : 'pointer-events-auto'
+        }`}
+      >
+        <div className="shrink-0 pr-[max(0.75rem,env(safe-area-inset-right))] pl-[max(0.75rem,env(safe-area-inset-left))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] sm:pl-[max(1.5rem,env(safe-area-inset-left))]">
+          <TopBarControls
+            gameState={gameState}
+            onGoHome={handleGoHome}
+            onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
+            onOpenInvite={() => setShareSource('invite')}
+          />
+        </div>
 
-        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+        {/* Side/bottom safe-area padding and the gap under the top bar live inside the scroller so a swipe
+            that starts anywhere on screen, edges included, scrolls the page */}
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pt-3 pr-[max(0.75rem,env(safe-area-inset-right))] pl-[max(0.75rem,env(safe-area-inset-left))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] sm:pl-[max(1.5rem,env(safe-area-inset-left))] pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <div className="flex min-h-full flex-col">
             {/* initial={false}: the home copy is server-rendered visible and enters via the CSS .lk-enter animation */}
             <AnimatePresence mode="wait" initial={false}>

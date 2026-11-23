@@ -98,7 +98,7 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Storage bucket |
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Messaging sender ID |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | App ID |
-| `NEXT_PUBLIC_SITE_URL` | (ไม่บังคับ) โดเมนจริงของเว็บ เช่น `https://loykrater.vercel.app` ใช้ในลิงก์แชร์ QR code และรูปพรีวิว |
+| `NEXT_PUBLIC_SITE_URL` | (ไม่บังคับ) โดเมนจริงของเว็บ เช่น `https://loykrater2026.vercel.app` ใช้ในลิงก์แชร์ QR code และรูปพรีวิว |
 | `NEXT_PUBLIC_FACEBOOK_APP_ID` | (ไม่บังคับ) ให้ปุ่ม Messenger บนคอมพิวเตอร์เปิดหน้าส่งข้อความได้ ถ้าไม่ใส่จะคัดลอกลิงก์แทน |
 
 > **ไม่บังคับ:** ถ้าไม่ได้ตั้งค่า Firebase เว็บยังเล่นได้ครบทุกอย่าง แต่กระทงจะแชร์กันได้เฉพาะระหว่างแท็บในเบราว์เซอร์เดียวกัน (ผ่าน `BroadcastChannel`) แทนการซิงก์ข้ามเครื่อง
