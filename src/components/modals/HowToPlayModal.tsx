@@ -6,6 +6,7 @@ import { Xmark, NavArrowLeft, NavArrowRight } from 'iconoir-react';
 import { InteractiveTutorialSandbox } from '@/components/modals/InteractiveTutorialSandbox';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { HandGestureState } from '@/types/krathong';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 interface HowToPlayModalProps {
   isOpen: boolean;
@@ -112,10 +113,10 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                 <div className="min-w-0">
                   <h2 className="font-display truncate text-base font-medium tracking-wider text-[#F4D06F] sm:text-lg">
                     <span className="md:hidden">
-                      {hp.manuscriptHeaderShort}
+                      {keepThaiPhrases(hp.manuscriptHeaderShort)}
                     </span>
                     <span className="hidden md:inline">
-                      {hp.manuscriptHeader}
+                      {keepThaiPhrases(hp.manuscriptHeader)}
                     </span>
                   </h2>
                   <p className="font-editorial hidden truncate text-xs tracking-[0.22em] text-[#C5A059]/80 uppercase sm:block">
@@ -153,8 +154,8 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                         {folio.num}.
                       </span>
                       <span className="font-display truncate text-[13px] font-medium tracking-wide whitespace-nowrap text-[#FFFDF7] sm:text-sm">
-                        <span className="md:hidden">{folio.short}</span>
-                        <span className="hidden md:inline">{folio.title}</span>
+                        <span className="md:hidden">{keepThaiPhrases(folio.short)}</span>
+                        <span className="hidden md:inline">{keepThaiPhrases(folio.title)}</span>
                       </span>
                     </div>
                     <div className="font-heading mt-0.5 hidden truncate pl-4 text-[10px] text-[#C5A059] md:block">
@@ -170,10 +171,10 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                 <div className="space-y-6">
                   <div className="border-b border-[#C5A059]/30 pb-4">
                     <h3 className="font-display text-base font-medium tracking-wide text-balance text-[#F4D06F] sm:text-lg">
-                      {hp.gesturesSection.introTitle}
+                      {keepThaiPhrases(hp.gesturesSection.introTitle)}
                     </h3>
                     <p className="font-heading mt-1.5 text-xs leading-relaxed text-[#E6DEC8]/85 sm:text-sm">
-                      {hp.gesturesSection.introDesc}
+                      {keepThaiPhrases(hp.gesturesSection.introDesc)}
                     </p>
                   </div>
 
@@ -216,13 +217,13 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
-                          {hp.gesturesSection.step1Title}
+                          {keepThaiPhrases(hp.gesturesSection.step1Title)}
                         </h4>
                         <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
-                          {hp.gesturesSection.step1Tag}
+                          {keepThaiPhrases(hp.gesturesSection.step1Tag)}
                         </p>
                         <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
-                          {hp.gesturesSection.step1Desc}
+                          {keepThaiPhrases(hp.gesturesSection.step1Desc)}
                         </p>
                       </div>
                     </div>
@@ -273,13 +274,13 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
-                          {hp.gesturesSection.step2Title}
+                          {keepThaiPhrases(hp.gesturesSection.step2Title)}
                         </h4>
                         <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
-                          {hp.gesturesSection.step2Tag}
+                          {keepThaiPhrases(hp.gesturesSection.step2Tag)}
                         </p>
                         <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
-                          {hp.gesturesSection.step2Desc}
+                          {keepThaiPhrases(hp.gesturesSection.step2Desc)}
                         </p>
                       </div>
                     </div>
@@ -330,13 +331,13 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275]">
-                          {hp.gesturesSection.step3Title}
+                          {keepThaiPhrases(hp.gesturesSection.step3Title)}
                         </h4>
                         <p className="font-editorial text-[11px] tracking-[0.18em] text-[#C5A059] uppercase">
-                          {hp.gesturesSection.step3Tag}
+                          {keepThaiPhrases(hp.gesturesSection.step3Tag)}
                         </p>
                         <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:mt-1.5">
-                          {hp.gesturesSection.step3Desc}
+                          {keepThaiPhrases(hp.gesturesSection.step3Desc)}
                         </p>
                       </div>
                     </div>
@@ -344,7 +345,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
 
                   <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#C5A059]/30 pt-4">
                     <p className="font-heading text-xs text-[#C5A059]">
-                      {hp.gesturesSection.distanceNote}
+                      {keepThaiPhrases(hp.gesturesSection.distanceNote)}
                     </p>
                     <button
                       type="button"
@@ -361,10 +362,10 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                 <div className="space-y-4">
                   <div className="border-b border-[#C5A059]/30 pb-3">
                     <h3 className="font-display text-base font-medium tracking-wide text-balance text-[#F4D06F] sm:text-lg">
-                      {hp.practiceSection.title}
+                      {keepThaiPhrases(hp.practiceSection.title)}
                     </h3>
                     <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/85">
-                      {hp.practiceSection.subtitle}
+                      {keepThaiPhrases(hp.practiceSection.subtitle)}
                     </p>
                   </div>
 
@@ -382,7 +383,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                 <div className="space-y-5">
                   <div className="border-b border-[#C5A059]/30 pb-3">
                     <h3 className="font-display text-base font-medium tracking-wide text-balance text-[#F4D06F] sm:text-lg">
-                      {hp.craftSection.introTitle}
+                      {keepThaiPhrases(hp.craftSection.introTitle)}
                     </h3>
                   </div>
 
@@ -393,10 +394,10 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                       </span>
                       <div>
                         <h4 className="font-display text-sm font-medium text-balance text-[#FFF275] sm:text-base">
-                          {hp.craftSection.item1Title}
+                          {keepThaiPhrases(hp.craftSection.item1Title)}
                         </h4>
                         <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:text-sm">
-                          {hp.craftSection.item1Desc}
+                          {keepThaiPhrases(hp.craftSection.item1Desc)}
                         </p>
                       </div>
                     </div>
@@ -407,10 +408,10 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                       </span>
                       <div>
                         <h4 className="font-display text-sm font-medium text-balance text-[#FFF275] sm:text-base">
-                          {hp.craftSection.item2Title}
+                          {keepThaiPhrases(hp.craftSection.item2Title)}
                         </h4>
                         <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:text-sm">
-                          {hp.craftSection.item2Desc}
+                          {keepThaiPhrases(hp.craftSection.item2Desc)}
                         </p>
                       </div>
                     </div>
@@ -421,10 +422,10 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                       </span>
                       <div>
                         <h4 className="font-display text-sm font-medium text-balance text-[#FFF275] sm:text-base">
-                          {hp.craftSection.item3Title}
+                          {keepThaiPhrases(hp.craftSection.item3Title)}
                         </h4>
                         <p className="font-heading mt-1 text-xs leading-relaxed text-[#E6DEC8]/80 sm:text-sm">
-                          {hp.craftSection.item3Desc}
+                          {keepThaiPhrases(hp.craftSection.item3Desc)}
                         </p>
                       </div>
                     </div>
@@ -445,7 +446,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                   className="inline-flex h-9 cursor-pointer items-center gap-1.5 border border-[#C5A059]/45 bg-[#1C1610] px-2.5 text-xs whitespace-nowrap text-[#E6DEC8] transition-opacity hover:border-[#F4D06F] disabled:cursor-not-allowed disabled:opacity-35 sm:px-3.5"
                 >
                   <NavArrowLeft width={14} height={14} />
-                  <span className="hidden sm:inline">{hp.footerPrev}</span>
+                  <span className="hidden sm:inline">{keepThaiPhrases(hp.footerPrev)}</span>
                 </button>
                 <button
                   type="button"
@@ -457,7 +458,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
                   aria-label={hp.footerNext}
                   className="inline-flex h-9 cursor-pointer items-center gap-1.5 border border-[#C5A059]/45 bg-[#1C1610] px-2.5 text-xs whitespace-nowrap text-[#E6DEC8] transition-opacity hover:border-[#F4D06F] disabled:cursor-not-allowed disabled:opacity-35 sm:px-3.5"
                 >
-                  <span className="hidden sm:inline">{hp.footerNext}</span>
+                  <span className="hidden sm:inline">{keepThaiPhrases(hp.footerNext)}</span>
                   <NavArrowRight width={14} height={14} />
                 </button>
               </div>

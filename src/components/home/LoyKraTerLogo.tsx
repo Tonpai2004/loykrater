@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 export const LoyKraTerLogo: React.FC = () => {
   const { t } = useLanguage();
@@ -269,7 +270,7 @@ export const LoyKraTerLogo: React.FC = () => {
       <motion.p
         className="lk-enter [--lk-enter-delay:0.32s] [--lk-enter-y:8px] font-heading mt-[clamp(0.5rem,1.6dvh,0.75rem)] max-w-[34rem] text-[13px] leading-relaxed text-balance text-[#FFFDF7]/85 sm:text-sm [@media(max-height:440px)]:hidden"
       >
-        {t.home.descriptionLine1} {t.home.descriptionLine2}
+        {keepThaiPhrases(`${t.home.descriptionLine1} ${t.home.descriptionLine2}`)}
       </motion.p>
     </div>
   );

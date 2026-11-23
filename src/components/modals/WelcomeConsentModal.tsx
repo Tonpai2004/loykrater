@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatLines, HardDrive, ShieldCheck, VideoCamera, Xmark } from 'iconoir-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 const ITEM_ICONS = [VideoCamera, ChatLines, ShieldCheck, HardDrive];
 
@@ -62,13 +63,13 @@ export const WelcomeConsentModal: React.FC<WelcomeConsentModalProps> = ({
                 </div>
                 <div className="min-w-0">
                   <p className="font-heading text-xs font-medium tracking-wider text-[#F4D06F]">
-                    {t.consent.headerTag}
+                    {keepThaiPhrases(t.consent.headerTag)}
                   </p>
                   <h2
                     id="consent-title"
                     className="font-display mt-0.5 text-lg leading-snug text-balance text-[#FFF275] sm:text-2xl"
                   >
-                    {t.consent.title}
+                    {keepThaiPhrases(t.consent.title)}
                   </h2>
                 </div>
               </div>
@@ -122,10 +123,10 @@ export const WelcomeConsentModal: React.FC<WelcomeConsentModalProps> = ({
                       </span>
                       <div className="min-w-0">
                         <p className="font-display text-sm leading-snug text-[#FFF275]">
-                          {item.title}
+                          {keepThaiPhrases(item.title)}
                         </p>
                         <p className="font-heading mt-1 text-xs leading-relaxed text-pretty text-[#FFFDF7]/75">
-                          {item.body}
+                          {keepThaiPhrases(item.body)}
                         </p>
                       </div>
                     </li>
@@ -142,10 +143,10 @@ export const WelcomeConsentModal: React.FC<WelcomeConsentModalProps> = ({
                 className="thai-chamfer-sm font-heading flex w-full cursor-pointer items-center justify-center gap-2 border border-[#FFF275]/60 bg-[#D4AF37] px-4 py-3 text-sm font-semibold whitespace-nowrap text-[#0B0E17] transition-colors hover:bg-[#FFF275] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFF275] sm:w-auto sm:min-w-72"
               >
                 <span className="h-2 w-2 rotate-45 bg-[#0B0E17]" />
-                <span>{t.consent.acceptBtn}</span>
+                <span>{keepThaiPhrases(t.consent.acceptBtn)}</span>
               </button>
               <p className="font-heading text-center text-xs text-pretty text-[#FFFDF7]/55">
-                {t.consent.footnote}
+                {keepThaiPhrases(t.consent.footnote)}
               </p>
             </div>
           </motion.div>

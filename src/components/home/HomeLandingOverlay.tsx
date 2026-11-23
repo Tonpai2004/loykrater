@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { LoyKraTerLogo } from '@/components/home/LoyKraTerLogo';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 interface HomeLandingOverlayProps {
   onEnterPier: () => void;
@@ -70,10 +71,10 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
             </svg>
             <div className="text-left">
               <div className="font-display text-base font-semibold tracking-wide whitespace-nowrap sm:text-xl">
-                {t.home.enterPierTitle}
+                {keepThaiPhrases(t.home.enterPierTitle)}
               </div>
               <div className="font-heading text-[clamp(0.6rem,2.7vw,0.6875rem)] font-medium whitespace-nowrap text-[#0D1321]/80">
-                {t.home.enterPierSub}
+                {keepThaiPhrases(t.home.enterPierSub)}
               </div>
             </div>
           </div>
@@ -115,10 +116,10 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
             </div>
             <div className="min-w-0 flex-1">
               <div className="font-display text-sm font-medium whitespace-nowrap text-[#FFF275] group-hover:text-[#FFFDF7]">
-                {t.home.howToPlayTitle}
+                {keepThaiPhrases(t.home.howToPlayTitle)}
               </div>
               <div className="font-heading text-[11px] whitespace-nowrap text-[#FFFDF7]/70">
-                {t.home.howToPlaySub}
+                {keepThaiPhrases(t.home.howToPlaySub)}
               </div>
             </div>
           </button>
@@ -158,10 +159,10 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
             </div>
             <div className="min-w-0 flex-1">
               <div className="font-display text-sm font-medium whitespace-nowrap text-[#F4D06F] group-hover:text-[#FFF275]">
-                {t.home.loreTitle}
+                {keepThaiPhrases(t.home.loreTitle)}
               </div>
               <div className="font-heading text-[11px] whitespace-nowrap text-[#FFFDF7]/70">
-                {t.home.loreSub}
+                {keepThaiPhrases(t.home.loreSub)}
               </div>
             </div>
           </button>

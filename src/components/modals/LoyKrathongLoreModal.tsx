@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { NavArrowLeft, NavArrowRight, Xmark } from 'iconoir-react';
 import { LORE_CONTENT, LoreChapterId } from '@/constants/loreContent';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 interface LoyKrathongLoreModalProps {
   isOpen: boolean;
@@ -69,8 +70,8 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                 </div>
                 <div className="min-w-0">
                   <h2 className="font-display truncate text-base font-medium tracking-wider text-[#F4D06F] sm:text-lg">
-                    <span className="md:hidden">{lr.headerShort}</span>
-                    <span className="hidden md:inline">{lr.header}</span>
+                    <span className="md:hidden">{keepThaiPhrases(lr.headerShort)}</span>
+                    <span className="hidden md:inline">{keepThaiPhrases(lr.header)}</span>
                   </h2>
                   <p className="font-editorial hidden truncate text-xs tracking-[0.22em] text-[#C5A059]/80 uppercase sm:block">
                     {lr.sub}
@@ -143,10 +144,10 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                           : 'font-heading tracking-wide'
                       }`}
                     >
-                      {chapter.sub}
+                      {keepThaiPhrases(chapter.sub)}
                     </p>
                     <h3 className="font-display mt-1.5 text-xl font-medium tracking-wide text-balance text-[#F4D06F] sm:text-2xl">
-                      {chapter.title}
+                      {keepThaiPhrases(chapter.title)}
                     </h3>
                     <div className="mx-auto mt-3 flex w-40 items-center gap-2.5">
                       <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#C5A059]/70" />
@@ -156,7 +157,7 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                   </header>
 
                   <p className="font-display mt-5 border-l-2 border-[#C5A059]/70 pl-4 text-sm leading-relaxed text-pretty text-[#F5EFE4]/90 sm:text-[15px]">
-                    {chapter.lede}
+                    {keepThaiPhrases(chapter.lede)}
                   </p>
 
                   <div className="mt-6 space-y-5">
@@ -165,11 +166,11 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                         <h4 className="font-display flex items-baseline gap-2.5 text-[15px] font-medium text-[#FFF275] sm:text-base">
                           <span className="h-1.5 w-1.5 shrink-0 translate-y-[-2px] rotate-45 bg-[#C5A059]" />
                           <span className="text-balance">
-                            {section.heading}
+                            {keepThaiPhrases(section.heading)}
                           </span>
                         </h4>
                         <p className="font-heading mt-1.5 pl-4 text-[13px] leading-[1.85] text-pretty text-[#E6DEC8]/85 sm:text-sm">
-                          {section.body}
+                          {keepThaiPhrases(section.body)}
                         </p>
                       </section>
                     ))}
@@ -184,10 +185,10 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                             : 'font-heading tracking-wide'
                         }`}
                       >
-                        {chapter.note.label}
+                        {keepThaiPhrases(chapter.note.label)}
                       </p>
                       <p className="font-heading mt-1 text-xs leading-relaxed text-pretty text-[#E6DEC8]/80 sm:text-[13px]">
-                        {chapter.note.text}
+                        {keepThaiPhrases(chapter.note.text)}
                       </p>
                     </aside>
                   )}
@@ -206,7 +207,7 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                 className="inline-flex h-9 cursor-pointer items-center gap-1.5 border border-[#C5A059]/45 bg-[#1C1610] px-2.5 text-xs whitespace-nowrap text-[#E6DEC8] transition-opacity hover:border-[#F4D06F] disabled:cursor-not-allowed disabled:opacity-35 sm:px-3.5"
               >
                 <NavArrowLeft width={14} height={14} />
-                <span className="hidden sm:inline">{lr.prevBtn}</span>
+                <span className="hidden sm:inline">{keepThaiPhrases(lr.prevBtn)}</span>
               </button>
 
               <span
@@ -226,7 +227,7 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                   aria-label={lr.nextBtn}
                   className="inline-flex h-9 cursor-pointer items-center gap-1.5 border border-[#C5A059]/45 bg-[#1C1610] px-2.5 text-xs whitespace-nowrap text-[#E6DEC8] transition-colors hover:border-[#F4D06F] sm:px-3.5"
                 >
-                  <span className="hidden sm:inline">{lr.nextBtn}</span>
+                  <span className="hidden sm:inline">{keepThaiPhrases(lr.nextBtn)}</span>
                   <NavArrowRight width={14} height={14} />
                 </button>
               ) : (
@@ -235,7 +236,7 @@ export const LoyKrathongLoreModal: React.FC<LoyKrathongLoreModalProps> = ({
                   onClick={onClose}
                   className="thai-chamfer-sm h-9 cursor-pointer border border-[#C5A059] bg-[#1C1610] px-4 text-xs font-medium tracking-wide whitespace-nowrap text-[#F4D06F] transition-colors hover:border-[#FFF275] hover:text-[#FFF275] sm:px-5"
                 >
-                  {lr.closeBtn}
+                  {keepThaiPhrases(lr.closeBtn)}
                 </button>
               )}
             </div>

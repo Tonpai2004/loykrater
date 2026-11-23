@@ -6,6 +6,7 @@ import { HomeSimpleDoor, ShareAndroid } from 'iconoir-react';
 import { AudioVolumeController } from '@/components/AudioVolumeController';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { GameState } from '@/types/krathong';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 interface TopBarControlsProps {
   gameState: GameState;
@@ -47,7 +48,7 @@ export const TopBarControls: React.FC<TopBarControlsProps> = ({
                   height={15}
                   className="text-[#F4D06F]"
                 />
-                <span className="hidden sm:inline">{t.nav.home}</span>
+                <span className="hidden sm:inline">{keepThaiPhrases(t.nav.home)}</span>
               </button>
 
               <button
@@ -81,7 +82,7 @@ export const TopBarControls: React.FC<TopBarControlsProps> = ({
                     strokeWidth="1.2"
                   />
                 </svg>
-                <span className="hidden min-[420px]:inline">{t.nav.guide}</span>
+                <span className="hidden min-[420px]:inline">{keepThaiPhrases(t.nav.guide)}</span>
               </button>
             </motion.div>
           )}
@@ -97,7 +98,7 @@ export const TopBarControls: React.FC<TopBarControlsProps> = ({
           className="thai-chamfer-sm flex h-9 cursor-pointer items-center gap-1.5 border border-[#D4AF37]/45 bg-[#0B0E17]/88 px-2.5 text-xs font-medium whitespace-nowrap text-[#F4D06F] shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-md transition-colors hover:border-[#FFF275] hover:text-[#FFF275] sm:px-3"
         >
           <ShareAndroid width={15} height={15} strokeWidth={1.8} />
-          <span className="hidden md:inline">{t.nav.invite}</span>
+          <span className="hidden md:inline">{keepThaiPhrases(t.nav.invite)}</span>
         </button>
 
         <div

@@ -19,6 +19,7 @@ import {
   KrathongConfig,
   RitualItemType,
 } from '@/types/krathong';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 interface InteractiveTutorialSandboxProps {
   videoRef: React.RefCallback<HTMLVideoElement>;
@@ -432,7 +433,7 @@ export const InteractiveTutorialSandbox: React.FC<
             className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 border border-[#C5A059]/50 bg-[#1A1510] px-3 text-xs whitespace-nowrap text-[#E6DEC8] transition-colors hover:border-[#FFF275] hover:text-[#FFF275]"
           >
             <RefreshDouble width={13} height={13} />
-            <span>{pt.resetBtn}</span>
+            <span>{keepThaiPhrases(pt.resetBtn)}</span>
           </button>
         </div>
       </div>
@@ -441,17 +442,19 @@ export const InteractiveTutorialSandbox: React.FC<
         <div className="flex items-center gap-2.5">
           <span className="h-2 w-2 shrink-0 rotate-45 bg-[#F4D06F]" />
           <span className="font-heading leading-snug text-pretty">
-            {uiPhase === 'released'
-              ? practiceType === 'krathong'
-                ? pt.statusSuccessKrathong
-                : pt.statusSuccessLantern
-              : uiPhase === 'inTarget'
-                ? pt.statusStep3
-                : uiPhase === 'grabbed'
-                  ? practiceType === 'krathong'
-                    ? pt.statusStep2Krathong
-                    : pt.statusStep2Lantern
-                  : pt.statusStep1}
+            {keepThaiPhrases(
+              uiPhase === 'released'
+                ? practiceType === 'krathong'
+                  ? pt.statusSuccessKrathong
+                  : pt.statusSuccessLantern
+                : uiPhase === 'inTarget'
+                  ? pt.statusStep3
+                  : uiPhase === 'grabbed'
+                    ? practiceType === 'krathong'
+                      ? pt.statusStep2Krathong
+                      : pt.statusStep2Lantern
+                    : pt.statusStep1
+            )}
           </span>
         </div>
       </div>
@@ -499,11 +502,13 @@ export const InteractiveTutorialSandbox: React.FC<
       </div>
 
       <p className="font-heading text-[11px] leading-snug text-pretty text-[#C5A059]/85">
-        {cameraEnabled
-          ? gestureState.isReady
-            ? pt.camActive
-            : pt.camWaiting
-          : pt.camOff}
+        {keepThaiPhrases(
+          cameraEnabled
+            ? gestureState.isReady
+              ? pt.camActive
+              : pt.camWaiting
+            : pt.camOff
+        )}
       </p>
     </div>
   );

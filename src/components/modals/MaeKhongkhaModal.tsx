@@ -12,6 +12,7 @@ import {
 import { KrathongConfig, OfferingSlotConfig, RitualMode } from '@/types/krathong';
 import { getActiveOfferings, THAI_NUMERALS } from '@/components/RiverCanvas';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 interface MaeKhongkhaModalProps {
   isOpen: boolean;
@@ -331,15 +332,17 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
 
                 <div className="w-full border-t border-[#D4AF37]/25 pt-3">
                   <p className="font-display text-sm text-[#F4D06F]">
-                    {deityTitle}
+                    {keepThaiPhrases(deityTitle)}
                   </p>
                   <p className="font-wish mt-1 text-xs text-pretty text-[#FFFDF7]/80">
-                    {blessingQuote}
+                    {keepThaiPhrases(blessingQuote)}
                   </p>
                   <p className="font-heading mt-1.5 text-[10px] text-[#D4AF37]/80">
-                    {isEn
-                      ? `(${releasedCount} offering${releasedCount > 1 ? 's' : ''} received)`
-                      : `(รับเครื่องสักการะครบทั้ง ${releasedCount} ชิ้นแล้ว)`}
+                    {keepThaiPhrases(
+                      isEn
+                        ? `(${releasedCount} offering${releasedCount > 1 ? 's' : ''} received)`
+                        : `(รับเครื่องสักการะครบทั้ง ${releasedCount} ชิ้นแล้ว)`
+                    )}
                   </p>
                 </div>
               </div>
@@ -355,7 +358,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                   <div className="flex items-start justify-between gap-2 border-b border-[#D4AF37]/30 pb-3">
                     <div>
                       <p className="font-heading text-[11px] font-medium tracking-wider text-[#F4D06F]">
-                        {t.blessingModal.headerTag}
+                        {keepThaiPhrases(t.blessingModal.headerTag)}
                       </p>
                       <h2 className="font-display mt-0.5 text-lg leading-snug font-normal text-balance text-[#FFF275] sm:text-2xl">
                         {isEn
@@ -384,7 +387,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                             {' '}
                             upon{' '}
                             <strong className="font-semibold text-[#FFF275]">
-                              {namesDisplay}
+                              {keepThaiPhrases(namesDisplay)}
                             </strong>
                           </>
                         ) : null}{' '}
@@ -395,19 +398,18 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                       </>
                     ) : (
                       <>
-                        ขอบใจยิ่งนักหนา
+                        {keepThaiPhrases('ขอบใจยิ่งนักหนา')}
                         {hasAnyAuthor ? (
                           <>
                             {' '}
                             <strong className="font-semibold text-[#FFF275]">
-                              {namesDisplay}
+                              {keepThaiPhrases(namesDisplay)}
                             </strong>
                           </>
                         ) : null}{' '}
-                        ที่มาร่วมลอยประทีปและโคมทองในค่ำคืนนี้
-                        ขอความปรารถนาอันงามทั้ง {releasedCount}{' '}
-                        ชิ้นจงสัมฤทธิ์ผลดั่งแสงจันทร์วันเพ็ญ
-                        ไร้โรคาพยาธิและร่มเย็นเป็นสุขทุกทิวาราตรีเทอญ
+                        {keepThaiPhrases(
+                          `ที่มาร่วมลอยประทีปและโคมทองในค่ำคืนนี้ ขอความปรารถนาอันงามทั้ง ${releasedCount} ชิ้นจงสัมฤทธิ์ผลดั่งแสงจันทร์วันเพ็ญ ไร้โรคาพยาธิและร่มเย็นเป็นสุขทุกทิวาราตรีเทอญ`
+                        )}
                       </>
                     )}
                   </p>
@@ -446,11 +448,11 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                             </span>
                             {slot.hideWish ? (
                               <p className="font-wish text-sm text-[#FFF275]/80 italic">
-                                {t.blessingModal.privateWishNotice}
+                                {keepThaiPhrases(t.blessingModal.privateWishNotice)}
                               </p>
                             ) : cleanWish ? (
                               <p className="font-wish text-sm text-[#FFFDF7]">
-                                “{cleanWish}”
+                                {keepThaiPhrases(`“${cleanWish}”`)}
                               </p>
                             ) : null}
                           </div>
@@ -564,7 +566,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
                     className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-2 border border-[#FFF275]/60 bg-[#D4AF37] px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#0B0E17] transition-colors hover:bg-[#FFF275]"
                   >
                     <RefreshDouble width={16} height={16} strokeWidth={2} />
-                    <span>{t.blessingModal.playAgainBtn}</span>
+                    <span>{keepThaiPhrases(t.blessingModal.playAgainBtn)}</span>
                   </button>
                 </div>
               </div>

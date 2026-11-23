@@ -356,6 +356,9 @@ async function getFirebaseDatabase(): Promise<{
       import('firebase/database'),
     ]);
     const [{ initializeApp, getApps, getApp }, sdk] = await firebaseSdkPromise;
+    // Skip the long-polling handshake: it loads an iframe with a deprecated unload listener
+    // and several uncacheable requests before upgrading to a WebSocket anyway
+    sdk.forceWebSockets();
     const app: FirebaseApp =
       getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     return { db: sdk.getDatabase(app), sdk };

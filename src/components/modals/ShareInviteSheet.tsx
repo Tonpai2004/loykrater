@@ -29,6 +29,7 @@ import {
 } from '@/lib/shareLinks';
 import { getDisplayHost, getSiteUrl } from '@/lib/siteUrl';
 import { OfferingSlotConfig } from '@/types/krathong';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 interface ShareInviteSheetProps {
   isOpen: boolean;
@@ -290,7 +291,7 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
             {/* Invite card preview */}
             <div className="order-2 flex flex-col items-center gap-3 border-t border-[#D4AF37]/30 bg-[#080B14] p-4 sm:p-6 md:order-1 md:col-span-5 md:border-t-0 md:border-r">
               <p className="font-heading hidden self-start text-[11px] font-medium tracking-wider text-[#F4D06F] md:block">
-                {t.share.cardSection}
+                {keepThaiPhrases(t.share.cardSection)}
               </p>
 
               <div className="relative aspect-[9/16] w-40 overflow-hidden border border-[#D4AF37]/45 bg-[#0D1321] shadow-[0_18px_40px_rgba(0,0,0,0.7)] min-[420px]:w-48 md:w-full md:max-w-60">
@@ -304,14 +305,14 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                 ) : card?.status === 'error' ? (
                   <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center">
                     <p className="font-heading text-xs text-[#FFFDF7]/75">
-                      {t.share.cardFailed}
+                      {keepThaiPhrases(t.share.cardFailed)}
                     </p>
                     <button
                       type="button"
                       onClick={() => setRenderNonce((n) => n + 1)}
                       className="thai-chamfer-sm font-heading cursor-pointer border border-[#D4AF37]/60 px-3 py-1.5 text-[11px] text-[#FFF275] transition-colors hover:bg-[#12172B]"
                     >
-                      {t.share.cardRetryBtn}
+                      {keepThaiPhrases(t.share.cardRetryBtn)}
                     </button>
                   </div>
                 ) : (
@@ -322,18 +323,18 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                       className="h-10 w-10 rounded-full bg-[radial-gradient(circle_at_40%_36%,#FFFDE8_0%,#FFF275_45%,#F4C542_100%)] shadow-[0_0_28px_rgba(255,242,117,0.6)]"
                     />
                     <p className="font-heading text-[11px] text-[#F4D06F]/80">
-                      {t.share.cardRendering}
+                      {keepThaiPhrases(t.share.cardRendering)}
                     </p>
                   </div>
                 )}
               </div>
 
               <p className="font-heading text-center text-[10px] leading-relaxed text-pretty text-[#FFFDF7]/60">
-                {t.share.cardHint}
+                {keepThaiPhrases(t.share.cardHint)}
               </p>
               {showLongPressHint && (
                 <p className="font-heading text-center text-[11px] text-[#FFF275]">
-                  {t.share.longPressHint}
+                  {keepThaiPhrases(t.share.longPressHint)}
                 </p>
               )}
             </div>
@@ -342,16 +343,16 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
             <div className="order-1 flex flex-col gap-4 bg-[linear-gradient(160deg,rgba(24,30,58,0.98)_0%,rgba(13,17,34,0.99)_100%)] p-4 sm:p-6 md:order-2 md:col-span-7">
               <div className="border-b border-[#D4AF37]/30 pr-11 pb-3 md:pr-10">
                 <p className="font-heading text-[11px] font-medium tracking-wider text-[#F4D06F]">
-                  {t.share.headerTag}
+                  {keepThaiPhrases(t.share.headerTag)}
                 </p>
                 <h2 className="font-display mt-0.5 text-lg leading-snug text-balance text-[#FFF275] sm:text-2xl">
-                  {t.share.title}
+                  {keepThaiPhrases(t.share.title)}
                 </h2>
               </div>
 
               <div className="flex flex-col gap-2.5">
                 <p className="font-heading text-[11px] font-medium tracking-wider text-[#F4D06F]">
-                  {t.share.linkSection}
+                  {keepThaiPhrases(t.share.linkSection)}
                 </p>
 
                 <div className="grid grid-cols-4 gap-2">
@@ -363,13 +364,13 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                       className={tileClass}
                     >
                       {channel.icon}
-                      <span className={tileLabelClass}>{channel.label}</span>
+                      <span className={tileLabelClass}>{keepThaiPhrases(channel.label)}</span>
                     </button>
                   ))}
                   {canUseNativeShare() && (
                     <button type="button" onClick={handleNativeShare} className={tileClass}>
                       <ShareNetwork size={22} weight="duotone" color="#F4D06F" />
-                      <span className={tileLabelClass}>{t.share.moreAppsBtn}</span>
+                      <span className={tileLabelClass}>{keepThaiPhrases(t.share.moreAppsBtn)}</span>
                     </button>
                   )}
                 </div>
@@ -384,14 +385,14 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                     className="thai-chamfer-sm font-heading flex shrink-0 cursor-pointer items-center gap-1.5 border border-[#D4AF37]/60 bg-[#B83B2A] px-3.5 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFFDF7] transition-colors hover:bg-[#D4AF37] hover:text-[#0B0E17]"
                   >
                     <LinkSimple size={15} weight="bold" />
-                    <span>{t.share.copyLinkBtn}</span>
+                    <span>{keepThaiPhrases(t.share.copyLinkBtn)}</span>
                   </button>
                 </div>
               </div>
 
               <div className="flex flex-col gap-2.5 border-t border-[#D4AF37]/25 pt-3.5">
                 <p className="font-heading text-[11px] font-medium tracking-wider text-[#F4D06F]">
-                  {t.share.cardSection}
+                  {keepThaiPhrases(t.share.cardSection)}
                 </p>
                 <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
                   <button
@@ -401,7 +402,7 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                     className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-2 border border-[#FFF275]/60 bg-[#D4AF37] px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#0B0E17] transition-colors hover:bg-[#FFF275] disabled:cursor-wait disabled:opacity-55"
                   >
                     <ImageSquare size={17} weight="bold" />
-                    <span>{t.share.cardShareBtn}</span>
+                    <span>{keepThaiPhrases(t.share.cardShareBtn)}</span>
                   </button>
                   <button
                     type="button"
@@ -410,7 +411,7 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                     className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-2 border border-[#D4AF37]/50 bg-[#080B14] px-3 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#12172B] disabled:cursor-wait disabled:opacity-55"
                   >
                     <DownloadSimple size={16} weight="bold" />
-                    <span>{t.share.cardSaveBtn}</span>
+                    <span>{keepThaiPhrases(t.share.cardSaveBtn)}</span>
                   </button>
                 </div>
               </div>
@@ -426,7 +427,7 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                   role="status"
                   className="thai-chamfer-sm font-heading pointer-events-none sticky bottom-3 z-30 mx-auto mb-3 w-[calc(100%-1.5rem)] max-w-md border border-[#52B788]/50 bg-[#0B1F18]/95 px-4 py-2.5 text-center text-xs text-[#FFF275] shadow-[0_12px_30px_rgba(0,0,0,0.6)] order-3 md:col-span-12"
                 >
-                  {toast}
+                  {keepThaiPhrases(toast)}
                 </motion.div>
               )}
             </AnimatePresence>

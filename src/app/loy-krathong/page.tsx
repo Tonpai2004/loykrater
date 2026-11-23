@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LORE_CONTENT } from '@/constants/loreContent';
 import { getCanonicalSiteUrl } from '@/lib/siteUrl';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 // Crawlable, server-rendered edition of the lore manuscript that the home page shows in a modal
 const lore = LORE_CONTENT.th;
@@ -85,7 +86,7 @@ function FloatCta({ label }: { label: string }) {
       href="/"
       className="thai-chamfer inline-flex items-center justify-center border-2 border-[#FFF275] bg-gradient-to-r from-[#F4D06F] via-[#FF8C42] to-[#F4D06F] px-6 py-3 font-display text-base font-semibold tracking-wide text-[#0D1321] shadow-[0_12px_36px_rgba(244,208,111,0.38)] transition-shadow hover:shadow-[0_16px_46px_rgba(244,208,111,0.55)]"
     >
-      {label}
+      {keepThaiPhrases(label)}
     </Link>
   );
 }
@@ -113,15 +114,16 @@ export default function LoyKrathongHistoryPage() {
 
         <header className="mt-8 text-center">
           <p className="font-editorial text-[11px] tracking-[0.3em] text-[#C5A059] uppercase">
-            {lore.sub}
+            {keepThaiPhrases(lore.sub)}
           </p>
           <h1 className="font-display mt-2 text-2xl font-semibold tracking-wide text-balance text-[#F4D06F] sm:text-3xl">
-            {PAGE_TITLE}
+            {keepThaiPhrases(PAGE_TITLE)}
           </h1>
           <Divider />
           <p className="font-heading mt-5 text-sm leading-[1.85] text-pretty text-[#E6DEC8]/85 sm:text-[15px]">
-            {PAGE_DESCRIPTION} เรียบเรียงจาก{lore.headerShort}ของ ลอย กะ เธอ
-            เว็บลอยกระทงออนไลน์ที่ให้คุณประดิษฐ์กระทงและโคมลอย แล้วใช้นิ้วมือหยิบปล่อยลงสายน้ำผ่านกล้อง
+            {keepThaiPhrases(
+              `${PAGE_DESCRIPTION} เรียบเรียงจาก${lore.headerShort}ของ ลอย กะ เธอ เว็บลอยกระทงออนไลน์ที่ให้คุณประดิษฐ์กระทงและโคมลอย แล้วใช้นิ้วมือหยิบปล่อยลงสายน้ำผ่านกล้อง`
+            )}
           </p>
           <div className="mt-6">
             <FloatCta label="ไปลอยกระทงออนไลน์" />
@@ -142,7 +144,7 @@ export default function LoyKrathongHistoryPage() {
                   href={`#${chapter.id}`}
                   className="underline-offset-4 hover:text-[#FFF275] hover:underline"
                 >
-                  {chapter.num}. {chapter.title}
+                  {chapter.num}. {keepThaiPhrases(chapter.title)}
                 </a>
               </li>
             ))}
@@ -153,16 +155,16 @@ export default function LoyKrathongHistoryPage() {
           <section key={chapter.id} id={chapter.id} className="mt-14 scroll-mt-6">
             <header className="text-center">
               <p className="font-heading text-[11px] tracking-wide text-[#C5A059]">
-                {chapter.sub}
+                {keepThaiPhrases(chapter.sub)}
               </p>
               <h2 className="font-display mt-1.5 text-xl font-medium tracking-wide text-balance text-[#F4D06F] sm:text-2xl">
-                {chapter.title}
+                {keepThaiPhrases(chapter.title)}
               </h2>
               <Divider />
             </header>
 
             <p className="font-display mt-5 border-l-2 border-[#C5A059]/70 pl-4 text-sm leading-relaxed text-pretty text-[#F5EFE4]/90 sm:text-[15px]">
-              {chapter.lede}
+              {keepThaiPhrases(chapter.lede)}
             </p>
 
             <div className="mt-6 space-y-5">
@@ -173,10 +175,10 @@ export default function LoyKrathongHistoryPage() {
                       aria-hidden="true"
                       className="h-1.5 w-1.5 shrink-0 translate-y-[-2px] rotate-45 bg-[#C5A059]"
                     />
-                    <span className="text-balance">{section.heading}</span>
+                    <span className="text-balance">{keepThaiPhrases(section.heading)}</span>
                   </h3>
                   <p className="font-heading mt-1.5 pl-4 text-[13px] leading-[1.85] text-pretty text-[#E6DEC8]/85 sm:text-sm">
-                    {section.body}
+                    {keepThaiPhrases(section.body)}
                   </p>
                 </section>
               ))}
@@ -185,10 +187,10 @@ export default function LoyKrathongHistoryPage() {
             {chapter.note && (
               <aside className="mt-7 border border-dashed border-[#C5A059]/50 bg-[#13100C] px-4 py-3.5">
                 <p className="font-heading text-[11px] tracking-wide text-[#F4D06F]">
-                  {chapter.note.label}
+                  {keepThaiPhrases(chapter.note.label)}
                 </p>
                 <p className="font-heading mt-1 text-xs leading-relaxed text-pretty text-[#E6DEC8]/80 sm:text-[13px]">
-                  {chapter.note.text}
+                  {keepThaiPhrases(chapter.note.text)}
                 </p>
               </aside>
             )}
@@ -197,10 +199,10 @@ export default function LoyKrathongHistoryPage() {
 
         <footer className="mt-16 border-t border-[#C5A059]/45 pt-8 text-center">
           <p className="font-display text-lg font-medium text-[#F4D06F]">
-            ถึงคราวลอยกระทงของคุณแล้ว
+            {keepThaiPhrases('ถึงคราวลอยกระทงของคุณแล้ว')}
           </p>
           <p className="font-heading mt-2 text-[13px] leading-relaxed text-[#E6DEC8]/80 sm:text-sm">
-            ประดิษฐ์กระทงใบตองหรือโคมลอย จารึกคำอธิษฐาน แล้วลอยไปพร้อมคนที่คุณรัก
+            {keepThaiPhrases('ประดิษฐ์กระทงใบตองหรือโคมลอย จารึกคำอธิษฐาน แล้วลอยไปพร้อมคนที่คุณรัก')}
           </p>
           <div className="mt-5">
             <FloatCta label="เริ่มลอยกระทงออนไลน์" />

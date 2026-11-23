@@ -11,6 +11,7 @@ import {
 } from 'iconoir-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { GameState, HandGestureState } from '@/types/krathong';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 interface HandTrackerHUDProps {
   gameState: GameState;
@@ -79,7 +80,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
                   strokeWidth={1.6}
                   className="mb-1 text-[#D4AF37]"
                 />
-                {t.hud.mouseFallbackHint}
+                {keepThaiPhrases(t.hud.mouseFallbackHint)}
               </div>
             )}
 
@@ -89,7 +90,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
                   title={gestureState.error}
                   className="font-heading mb-1.5 line-clamp-2 text-[10px] text-balance text-[#FF99C8]"
                 >
-                  {t.hud.cameraError}
+                  {keepThaiPhrases(t.hud.cameraError)}
                 </p>
                 <button
                   type="button"
@@ -97,7 +98,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
                   className="font-heading flex cursor-pointer items-center gap-1 border border-[#D4AF37]/40 bg-[#D4AF37]/15 px-2.5 py-1 text-[10px] whitespace-nowrap text-[#FFF275]"
                 >
                   <RefreshDouble width={12} height={12} />
-                  {t.hud.retryCamera}
+                  {keepThaiPhrases(t.hud.retryCamera)}
                 </button>
               </div>
             )}
@@ -126,7 +127,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
 
           <div className="flex items-center justify-between gap-1.5 pt-1.5 pb-0.5 text-[11px] text-[#FFFDF7] sm:pt-2">
             <span className="font-heading text-[10px] whitespace-nowrap text-[#F4D06F] sm:text-[11px]">
-              {t.hud.releasedProgress(releasedCount, totalCount)}
+              {keepThaiPhrases(t.hud.releasedProgress(releasedCount, totalCount))}
             </span>
             <button
               type="button"
@@ -143,7 +144,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
                     height={12}
                     className="text-[#B83B2A]"
                   />
-                  <span className="hidden sm:inline">{t.hud.camToggleOff}</span>
+                  <span className="hidden sm:inline">{keepThaiPhrases(t.hud.camToggleOff)}</span>
                 </>
               ) : (
                 <>
@@ -152,7 +153,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
                     height={12}
                     className="text-[#D4AF37]"
                   />
-                  <span className="hidden sm:inline">{t.hud.camToggleOn}</span>
+                  <span className="hidden sm:inline">{keepThaiPhrases(t.hud.camToggleOn)}</span>
                 </>
               )}
             </button>
@@ -177,7 +178,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
             className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-1.5 border border-[#D4AF37]/40 bg-[#0B0E17]/90 px-4 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFFDF7] transition-colors hover:border-[#D4AF37]"
           >
             <Undo width={15} height={15} className="text-[#D4AF37]" />
-            <span>{t.hud.backToCustomize}</span>
+            <span>{keepThaiPhrases(t.hud.backToCustomize)}</span>
           </button>
 
           <button
@@ -186,7 +187,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
             className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-2 bg-[#D4AF37] px-5 py-2.5 text-xs font-semibold whitespace-nowrap text-[#0B0E17] transition-colors hover:bg-[#FFF275]"
           >
             <SendDiagonal width={15} height={15} strokeWidth={2} />
-            <span>{t.hud.quickLaunchAll}</span>
+            <span>{keepThaiPhrases(t.hud.quickLaunchAll)}</span>
           </button>
         </motion.div>
       )}
@@ -200,10 +201,10 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
         >
           <div>
             <h3 className="font-display text-[15px] font-normal text-balance text-[#FFFDF7] sm:text-base">
-              {t.hud.floatingTitle}
+              {keepThaiPhrases(t.hud.floatingTitle)}
             </h3>
             <p className="font-heading mt-0.5 text-xs text-balance text-[#FFF275]/85">
-              {t.hud.floatingSub}
+              {keepThaiPhrases(t.hud.floatingSub)}
             </p>
           </div>
 
@@ -213,7 +214,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
               onClick={onOpenBlessingModal}
               className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-1.5 border border-[#D4AF37]/50 bg-[#141932] px-3 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFF275] transition-colors hover:bg-[#D4AF37]/20 sm:px-4"
             >
-              <span>{t.hud.receiveBlessingBtn}</span>
+              <span>{keepThaiPhrases(t.hud.receiveBlessingBtn)}</span>
             </button>
 
             <button
@@ -221,7 +222,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
               onClick={onCreateAnother}
               className="thai-chamfer-sm font-heading cursor-pointer bg-[#B83B2A] px-3 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFFDF7] transition-colors hover:bg-[#D4AF37] hover:text-[#0B0E17] sm:px-5"
             >
-              {t.hud.createAnotherBtn}
+              {keepThaiPhrases(t.hud.createAnotherBtn)}
             </button>
           </div>
         </motion.div>

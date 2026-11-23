@@ -9,9 +9,11 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { getCanonicalSiteUrl } from "@/lib/siteUrl";
 import "./globals.css";
 
+// Only the Thai files are preloaded (subsets = preload list); the Latin faces are still declared
+// and download on demand through unicode-range, so slow phones fetch 6 fonts up front instead of 14
 const baiJamjureeFont = Bai_Jamjuree({
   variable: "--font-heading",
-  subsets: ["thai", "latin"],
+  subsets: ["thai"],
   weight: ["400", "500", "600"],
 });
 
@@ -25,8 +27,8 @@ const charmFont = Charm({
 
 const pridiFont = Pridi({
   variable: "--font-display",
-  subsets: ["thai", "latin"],
-  weight: ["300", "400", "500", "600"],
+  subsets: ["thai"],
+  weight: ["400", "500", "600"],
 });
 
 const cormorantFont = Cormorant_Garamond({

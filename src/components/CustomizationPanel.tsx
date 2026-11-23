@@ -25,6 +25,7 @@ import {
   COLOR_NAMES_EN,
 } from '@/constants/translations';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { keepThaiPhrases } from '@/lib/thaiText';
 
 interface CustomizationPanelProps {
   config: KrathongConfig;
@@ -431,7 +432,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#D4AF37]/55 bg-[#0B0E17]/90 px-3.5 py-1.5 text-xs text-[#FFF275] shadow-[0_8px_22px_rgba(0,0,0,0.65)] backdrop-blur-md transition-colors hover:border-[#FFF275] hover:bg-[#141932]"
               >
                 <Eye width={14} height={14} strokeWidth={2} />
-                <span>{ct.submergeBtn}</span>
+                <span>{keepThaiPhrases(ct.submergeBtn)}</span>
               </button>
             </motion.div>
           )}
@@ -500,13 +501,13 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     {ct.atelierTag}
                   </p>
                   <h2 className="font-display text-lg font-normal tracking-wide whitespace-nowrap text-[#FFFDF7] sm:text-xl">
-                    {ct.atelierTitle}
+                    {keepThaiPhrases(ct.atelierTitle)}
                   </h2>
                 </div>
 
                 <div className="flex items-center justify-between gap-2 sm:justify-end">
                   <span className="font-heading text-xs whitespace-nowrap text-[#F4D06F]">
-                    {ct.countLabel}
+                    {keepThaiPhrases(ct.countLabel)}
                   </span>
                   <div className="flex items-center border border-[#D4AF37]/45 bg-[#080B14] p-0.5">
                     {OFFERING_COUNTS.map((num) => {
@@ -533,7 +534,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               {currentCount > 1 && (
                 <div className="mt-2.5 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2.5">
                   <span className="font-heading shrink-0 text-[11px] whitespace-nowrap text-[#FFFDF7]/70">
-                    {ct.selectSlotLabel}
+                    {keepThaiPhrases(ct.selectSlotLabel)}
                   </span>
                   <div
                     className="grid flex-1 gap-1.5"
@@ -589,17 +590,17 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     >
                       <div className="flex w-full items-baseline justify-between">
                         <span className="font-display text-xs text-[#F4D06F]">
-                          {ct.typeLabel(numerals[idx])}
+                          {keepThaiPhrases(ct.typeLabel(numerals[idx]))}
                         </span>
                         {active && (
                           <span className="h-1.5 w-1.5 rotate-45 bg-[#FFF275]" />
                         )}
                       </div>
                       <span className="font-heading mt-0.5 text-xs font-medium">
-                        {opt.label}
+                        {keepThaiPhrases(opt.label)}
                       </span>
                       <span className="font-wish text-[11px] text-[#FFFDF7]/60">
-                        {opt.sub}
+                        {keepThaiPhrases(opt.sub)}
                       </span>
                     </button>
                   );
@@ -642,7 +643,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               <div className="mt-2.5 grid grid-cols-1 gap-2.5 border-t border-[#D4AF37]/25 pt-2.5 sm:grid-cols-3">
                 <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
                   <span className="font-heading text-[11px] text-[#F4D06F]">
-                    {ct.colorFields.baseColor.title}
+                    {keepThaiPhrases(ct.colorFields.baseColor.title)}
                   </span>
                   <div className="flex flex-nowrap items-center gap-2 xl:gap-2.5">
                     {LEAF_COLORS.map((color) => {
@@ -683,7 +684,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
 
                 <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
                   <span className="font-heading text-[11px] text-[#F4D06F]">
-                    {ct.colorFields.flowerColor.title}
+                    {keepThaiPhrases(ct.colorFields.flowerColor.title)}
                   </span>
                   <div className="flex flex-nowrap items-center gap-2 xl:gap-2.5">
                     {FLOWER_COLORS.map((color) => {
@@ -724,7 +725,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
 
                 <div className="flex items-center justify-between gap-2 bg-[#080B14]/70 px-3 py-2 sm:flex-col sm:items-start">
                   <span className="font-heading text-[11px] text-[#F4D06F]">
-                    {ct.colorFields.candleColor.title}
+                    {keepThaiPhrases(ct.colorFields.candleColor.title)}
                   </span>
                   <div className="flex flex-nowrap items-center gap-2 xl:gap-2.5">
                     {CANDLE_COLORS.map((color) => {
@@ -799,10 +800,10 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 <div className="mb-3 flex items-center justify-between border-b border-[#D4AF37]/30 pb-2.5">
                   <div>
                     <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
-                      {ct.wishBookTag}
+                      {keepThaiPhrases(ct.wishBookTag)}
                     </p>
                     <h3 className="font-display text-lg font-normal text-[#FFFDF7]">
-                      {ct.wishBookTitle}
+                      {keepThaiPhrases(ct.wishBookTitle)}
                     </h3>
                   </div>
                 </div>
@@ -810,7 +811,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 {currentCount > 1 && (
                   <div className="mb-2.5 flex items-center justify-between border border-[#D4AF37]/30 bg-[#080B16]/80 px-2.5 py-1.5 text-xs">
                     <span className="font-heading text-[#F4D06F]">
-                      {ct.writingForSlot}
+                      {keepThaiPhrases(ct.writingForSlot)}
                     </span>
                     <div className="flex items-center gap-1">
                       {slots.map((s, idx) => (
@@ -834,7 +835,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 <div className="border border-[#D4AF37]/35 bg-[#080B16]/95 p-3.5">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <label className="font-heading text-xs font-medium whitespace-nowrap text-[#F4D06F]">
-                      {ct.wishLabel(itemName(currentSlot.itemType))}
+                      {keepThaiPhrases(ct.wishLabel(itemName(currentSlot.itemType)))}
                     </label>
                     <button
                       type="button"
@@ -842,7 +843,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                       className="font-heading flex shrink-0 items-center gap-1 border border-[#D4AF37]/40 bg-[#141932] px-2 py-1 text-[10px] whitespace-nowrap text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/20"
                     >
                       <RefreshDouble width={11} height={11} />
-                      <span>{ct.randomPoemBtn}</span>
+                      <span>{keepThaiPhrases(ct.randomPoemBtn)}</span>
                     </button>
                   </div>
 
@@ -859,7 +860,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
 
                   <div className="mt-3 flex items-center gap-2.5">
                     <span className="font-heading shrink-0 text-xs text-[#F4D06F]/90">
-                      {ct.authorLabel}
+                      {keepThaiPhrases(ct.authorLabel)}
                     </span>
                     <input
                       type="text"
@@ -875,9 +876,9 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
 
                   <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-[#D4AF37]/25 pt-2.5">
                     <span className="font-heading text-[11px] text-[#FFFDF7]/75">
-                      {currentSlot.hideWish
-                        ? ct.hideWishOnNote
-                        : ct.hideWishOffNote}
+                      {keepThaiPhrases(
+                        currentSlot.hideWish ? ct.hideWishOnNote : ct.hideWishOffNote
+                      )}
                     </span>
                     <button
                       type="button"
@@ -896,12 +897,12 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                       {currentSlot.hideWish ? (
                         <>
                           <EyeClosed width={13} height={13} strokeWidth={2} />
-                          <span>{ct.hideWishOnBtn}</span>
+                          <span>{keepThaiPhrases(ct.hideWishOnBtn)}</span>
                         </>
                       ) : (
                         <>
                           <Eye width={13} height={13} strokeWidth={2} />
-                          <span>{ct.hideWishOffBtn}</span>
+                          <span>{keepThaiPhrases(ct.hideWishOffBtn)}</span>
                         </>
                       )}
                     </button>
@@ -925,11 +926,11 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     className="text-[#0B0E17] transition-transform duration-300 group-hover:rotate-12"
                   />
                   <span className="whitespace-nowrap">
-                    {ct.startInteractBtn(numerals[currentCount - 1])}
+                    {keepThaiPhrases(ct.startInteractBtn(numerals[currentCount - 1]))}
                   </span>
                 </span>
                 <span className="font-display hidden text-xs font-medium whitespace-nowrap text-[#0B0E17] min-[480px]:inline">
-                  {ct.startInteractCta}
+                  {keepThaiPhrases(ct.startInteractCta)}
                 </span>
               </motion.button>
             </motion.div>
@@ -964,7 +965,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                       onClick={() => setIsBookSubmerged(false)}
                       className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#FFF275]/80 bg-[#0B0E17]/95 px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#FFF275] shadow-[0_0_26px_rgba(244,208,111,0.45)] backdrop-blur-md transition-all hover:bg-[#141932] sm:px-4"
                     >
-                      <span>{ct.emergeBtn}</span>
+                      <span>{keepThaiPhrases(ct.emergeBtn)}</span>
                     </button>
 
                     <button
@@ -973,7 +974,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                       className="thai-chamfer-sm font-heading flex items-center gap-1.5 border border-[#FFF275]/70 bg-[#D4AF37] px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#0B0E17] shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-colors hover:bg-[#FFF275] sm:px-4"
                     >
                       <PeaceHand width={15} height={15} strokeWidth={2} />
-                      <span>{ct.launchNowBtn}</span>
+                      <span>{keepThaiPhrases(ct.launchNowBtn)}</span>
                     </button>
                   </div>
                 </div>
@@ -1003,13 +1004,13 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               <div className="flex items-start justify-between gap-2 border-b border-[#D4AF37]/30 pb-3">
                 <div>
                   <p className="font-heading text-[11px] tracking-wider text-[#F4D06F]">
-                    {ct.colorModalTag}
+                    {keepThaiPhrases(ct.colorModalTag)}
                   </p>
                   <h3 className="font-display text-lg font-normal text-[#FFFDF7]">
-                    {ct.colorFields[activeColorModal].title}
+                    {keepThaiPhrases(ct.colorFields[activeColorModal].title)}
                   </h3>
                   <p className="font-heading text-[11px] text-[#FFFDF7]/65">
-                    {ct.colorFields[activeColorModal].sub}
+                    {keepThaiPhrases(ct.colorFields[activeColorModal].sub)}
                   </p>
                 </div>
                 <button
@@ -1023,7 +1024,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
 
               <div className="mt-3.5">
                 <p className="font-heading mb-2 text-xs font-medium text-[#F4D06F]">
-                  {ct.colorModalPresets}
+                  {keepThaiPhrases(ct.colorModalPresets)}
                 </p>
                 <div className="grid grid-cols-8 gap-1.5 sm:grid-cols-4 sm:gap-2">
                   {ALL_THAI_COLOR_PAIRS.map((pair) => {
@@ -1068,7 +1069,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 <div>
                   <div className="mb-1 flex items-center justify-between">
                     <span className="font-heading text-xs text-[#F4D06F]">
-                      {ct.colorModalHue}
+                      {keepThaiPhrases(ct.colorModalHue)}
                     </span>
                     <span className="font-heading text-[10px] text-[#FFFDF7]/65">
                       {modalHsl.h}°
@@ -1094,7 +1095,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 <div>
                   <div className="mb-1 flex items-center justify-between">
                     <span className="font-heading text-xs text-[#F4D06F]">
-                      {ct.colorModalTone}
+                      {keepThaiPhrases(ct.colorModalTone)}
                     </span>
                     <span className="font-heading text-[10px] text-[#FFFDF7]/65">
                       {modalHsl.l}%
@@ -1127,13 +1128,13 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                   />
                   <div>
                     <p className="font-heading text-[10px] text-[#FFFDF7]/65">
-                      {ct.colorModalCurrent}
+                      {keepThaiPhrases(ct.colorModalCurrent)}
                     </p>
                     <p className="font-heading text-xs font-semibold text-[#FFF275]">
                       {modalColorValue.toUpperCase()}
                       {modalColorPair && (
                         <span className="ml-1.5 font-normal text-[#FFFDF7]/70">
-                          {colorName(modalColorPair)}
+                          {keepThaiPhrases(colorName(modalColorPair))}
                         </span>
                       )}
                     </p>
@@ -1160,7 +1161,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     className="font-heading flex items-center justify-center gap-1.5 border border-[#D4AF37]/60 bg-[#141932] px-3 py-2 text-xs whitespace-nowrap text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#D4AF37]/20"
                   >
                     <ColorPicker width={14} height={14} strokeWidth={2} />
-                    <span>{ct.colorModalEyedropper}</span>
+                    <span>{keepThaiPhrases(ct.colorModalEyedropper)}</span>
                   </button>
 
                   <button
@@ -1169,7 +1170,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     className="font-heading flex items-center justify-center gap-1.5 border border-[#FFF275]/60 bg-[#D4AF37] px-3.5 py-2 text-xs font-semibold whitespace-nowrap text-[#0B0E17] transition-colors hover:bg-[#FFF275]"
                   >
                     <Check width={14} height={14} strokeWidth={2.2} />
-                    <span>{ct.colorModalDone}</span>
+                    <span>{keepThaiPhrases(ct.colorModalDone)}</span>
                   </button>
                 </div>
               </div>
