@@ -41,7 +41,7 @@ export const TopBarControls: React.FC<TopBarControlsProps> = ({
                 onClick={onGoHome}
                 aria-label={t.nav.home}
                 title={t.nav.home}
-                className="thai-chamfer-sm flex h-9 cursor-pointer items-center gap-1.5 border border-[#D4AF37]/45 bg-[#0B0E17]/88 px-2.5 text-xs font-medium whitespace-nowrap text-[#FFFDF7]/90 shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-md transition-colors hover:border-[#F4D06F] hover:text-[#FFF275] sm:px-3"
+                className="thai-chamfer-sm flex h-9 cursor-pointer items-center gap-1.5 border border-[#D4AF37]/45 bg-[#0B0E17]/92 px-2.5 text-xs font-medium whitespace-nowrap text-[#FFFDF7]/90 shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-colors hover:border-[#F4D06F] hover:text-[#FFF275] sm:px-3"
               >
                 <HomeSimpleDoor
                   width={15}
@@ -56,7 +56,7 @@ export const TopBarControls: React.FC<TopBarControlsProps> = ({
                 onClick={onOpenHowToPlay}
                 aria-label={t.nav.guide}
                 title={t.nav.guide}
-                className="thai-chamfer-sm flex h-9 cursor-pointer items-center gap-1.5 border border-[#D4AF37]/45 bg-[#0B0E17]/88 px-2.5 text-xs font-medium whitespace-nowrap text-[#F4D06F] shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-md transition-colors hover:border-[#FFF275] hover:text-[#FFF275] sm:px-3"
+                className="thai-chamfer-sm flex h-9 cursor-pointer items-center gap-1.5 border border-[#D4AF37]/45 bg-[#0B0E17]/92 px-2.5 text-xs font-medium whitespace-nowrap text-[#F4D06F] shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-colors hover:border-[#FFF275] hover:text-[#FFF275] sm:px-3"
               >
                 <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none">
                   <path
@@ -95,7 +95,7 @@ export const TopBarControls: React.FC<TopBarControlsProps> = ({
           onClick={onOpenInvite}
           aria-label={t.nav.invite}
           title={t.nav.invite}
-          className="thai-chamfer-sm flex h-9 cursor-pointer items-center gap-1.5 border border-[#D4AF37]/45 bg-[#0B0E17]/88 px-2.5 text-xs font-medium whitespace-nowrap text-[#F4D06F] shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-md transition-colors hover:border-[#FFF275] hover:text-[#FFF275] sm:px-3"
+          className="thai-chamfer-sm flex h-9 cursor-pointer items-center gap-1.5 border border-[#D4AF37]/45 bg-[#0B0E17]/92 px-2.5 text-xs font-medium whitespace-nowrap text-[#F4D06F] shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-colors hover:border-[#FFF275] hover:text-[#FFF275] sm:px-3"
         >
           <ShareAndroid width={15} height={15} strokeWidth={1.8} />
           <span className="hidden md:inline">{keepThaiPhrases(t.nav.invite)}</span>
@@ -104,7 +104,7 @@ export const TopBarControls: React.FC<TopBarControlsProps> = ({
         <div
           role="group"
           aria-label="Language switcher"
-          className="thai-chamfer-sm flex h-9 items-center border border-[#D4AF37]/55 bg-[#0B0E17]/92 p-1 shadow-[0_14px_34px_rgba(0,0,0,0.75)] backdrop-blur-md sm:h-auto"
+          className="thai-chamfer-sm flex h-9 items-center border border-[#D4AF37]/55 bg-[#0B0E17]/92 p-1 shadow-[0_14px_34px_rgba(0,0,0,0.75)] sm:h-auto"
         >
           <button
             type="button"

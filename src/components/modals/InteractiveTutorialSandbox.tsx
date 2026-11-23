@@ -480,6 +480,7 @@ export const InteractiveTutorialSandbox: React.FC<
           <div className="relative aspect-[4/3] w-28 overflow-hidden border border-[#C5A059]/65 bg-[#06080F]/90 shadow-lg sm:w-32">
             <video
               ref={videoRef}
+              autoPlay
               playsInline
               muted
               className={`h-full w-full -scale-x-100 object-cover transition-opacity ${
@@ -504,7 +505,7 @@ export const InteractiveTutorialSandbox: React.FC<
       <p className="font-heading text-[11px] leading-snug text-pretty text-[#C5A059]/85">
         {keepThaiPhrases(
           cameraEnabled
-            ? gestureState.isReady
+            ? gestureState.isReady && gestureState.trackerReady
               ? pt.camActive
               : pt.camWaiting
             : pt.camOff

@@ -77,7 +77,10 @@ export interface TrackedHand {
 }
 
 export interface HandGestureState {
+  // Camera stream is live (the preview shows)
   isReady: boolean;
+  // Hand model loaded; until then the preview shows but no hands are detected
+  trackerReady: boolean;
   isTracking: boolean;
   isPinching: boolean;
   cursor: NormalizedPoint | null;
@@ -85,6 +88,7 @@ export interface HandGestureState {
   indexTip: NormalizedPoint | null;
   pinchDistance: number;
   hands: TrackedHand[];
+  // CameraErrorCode from useHandTracking ('denied' | 'unavailable' | 'tracker' | 'unknown')
   error: string | null;
 }
 

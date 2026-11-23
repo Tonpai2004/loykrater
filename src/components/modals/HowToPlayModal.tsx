@@ -92,7 +92,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060B]/88 p-2.5 backdrop-blur-md sm:p-6 [@media(max-height:500px)]:p-2!"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060B]/92 p-2.5 sm:p-6 [@media(max-height:500px)]:p-2!"
           onClick={onClose}
         >
           <motion.div

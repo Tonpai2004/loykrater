@@ -291,7 +291,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onDismiss}
-          className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#060810]/85 p-2.5 backdrop-blur-md sm:p-4"
+          className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#060810]/92 p-2.5 sm:p-4"
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -301,7 +301,7 @@ export const MaeKhongkhaModal: React.FC<MaeKhongkhaModalProps> = ({
               type="button"
               onClick={onDismiss}
               aria-label={t.blessingModal.closeBtn}
-              className="absolute top-2.5 right-2.5 z-20 flex h-9 w-9 cursor-pointer items-center justify-center border border-[#D4AF37]/50 bg-[#080B14]/90 text-[#FFFDF7]/85 backdrop-blur-sm transition-colors hover:border-[#FFF275] hover:text-[#FFF275] md:hidden"
+              className="absolute top-2.5 right-2.5 z-20 flex h-9 w-9 cursor-pointer items-center justify-center border border-[#D4AF37]/50 bg-[#080B14]/90 text-[#FFFDF7]/85 transition-colors hover:border-[#FFF275] hover:text-[#FFF275] md:hidden"
             >
               <Xmark width={18} height={18} strokeWidth={1.8} />
             </button>

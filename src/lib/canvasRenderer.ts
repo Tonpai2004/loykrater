@@ -499,41 +499,55 @@ function getOrCreateLanternSprite(
   return sprite;
 }
 
-function drawWishSlipTag(
+interface WishSlipLayout {
+  truncatedWish: string;
+  authorLabel: string;
+  hasWish: boolean;
+  hasAuthor: boolean;
+  halfW: number;
+  slipH: number;
+}
+
+const WISH_FONT = '400 13.5px Charm, cursive, serif';
+const AUTHOR_FONT = '600 10.5px "Bai Jamjuree", sans-serif';
+
+function layoutWishSlip(
   ctx: CanvasRenderingContext2D,
   wishText: string,
-  authorName: string,
-  slipY: number,
-  tagOpacity = 1
-): void {
-  if (tagOpacity <= 0.02) return;
-
+  authorName: string
+): WishSlipLayout | null {
   const cleanWish = wishText.trim();
   const authorLabel = authorName.trim();
   const hasWish = cleanWish.length > 0;
   const hasAuthor = authorLabel.length > 0;
-
-  if (!hasWish && !hasAuthor) return;
-
-  const prevAlpha = ctx.globalAlpha;
-  ctx.globalAlpha = prevAlpha * tagOpacity;
+  if (!hasWish && !hasAuthor) return null;
 
   const truncatedWish =
     cleanWish.length > 46 ? `${cleanWish.slice(0, 46)}...` : cleanWish;
-  const wishFont = '400 13.5px Charm, cursive, serif';
-  const authorFont = '600 10.5px "Bai Jamjuree", sans-serif';
-
   const wishWidth = hasWish
-    ? measureCachedTextWidth(ctx, wishFont, `“${truncatedWish}”`)
+    ? measureCachedTextWidth(ctx, WISH_FONT, `“${truncatedWish}”`)
     : 0;
   const authorWidth = hasAuthor
-    ? measureCachedTextWidth(ctx, authorFont, authorLabel)
+    ? measureCachedTextWidth(ctx, AUTHOR_FONT, authorLabel)
     : 0;
   const contentWidth = Math.max(wishWidth, authorWidth, 84);
+  return {
+    truncatedWish,
+    authorLabel,
+    hasWish,
+    hasAuthor,
+    halfW: (contentWidth + 32) / 2,
+    slipH: hasWish && hasAuthor ? 44 : 30,
+  };
+}
 
-  const slipW = contentWidth + 32;
-  const slipH = hasWish && hasAuthor ? 44 : 30;
-  const halfW = slipW / 2;
+function paintWishSlip(
+  ctx: CanvasRenderingContext2D,
+  slip: WishSlipLayout,
+  slipY: number
+): void {
+  const { truncatedWish, authorLabel, hasWish, hasAuthor, halfW, slipH } = slip;
+
   const cut = 6;
 
   ctx.fillStyle = 'rgba(16, 20, 42, 0.92)';
@@ -564,22 +578,90 @@ function drawWishSlipTag(
   ctx.textAlign = 'center';
   if (hasAuthor && hasWish) {
     ctx.fillStyle = '#F4D06F';
-    ctx.font = authorFont;
+    ctx.font = AUTHOR_FONT;
     ctx.fillText(authorLabel, 0, slipY + 16);
 
     ctx.fillStyle = '#FFFDF7';
-    ctx.font = wishFont;
+    ctx.font = WISH_FONT;
     ctx.fillText(`“${truncatedWish}”`, 0, slipY + 34);
   } else if (hasWish) {
     ctx.fillStyle = '#FFFDF7';
-    ctx.font = wishFont;
+    ctx.font = WISH_FONT;
     ctx.fillText(`“${truncatedWish}”`, 0, slipY + 20);
   } else {
     ctx.fillStyle = '#F4D06F';
-    ctx.font = authorFont;
+    ctx.font = AUTHOR_FONT;
     ctx.fillText(authorLabel, 0, slipY + 19);
   }
 
+}
+
+// Up to 35 floating slips each set Thai text every frame, which is the costliest thing the
+// river draws; each slip is painted once into a sprite and then just blitted.
+const SLIP_SPRITE_SCALE = 2;
+// Room above the slip for its diamond clasp (drawn 4px above the top edge)
+const SLIP_SPRITE_PAD = 6;
+const wishSlipSpriteCache = new Map<string, HTMLCanvasElement>();
+
+let slipFontsRequested = false;
+
+function fontsReady(): boolean {
+  if (typeof document === 'undefined' || !document.fonts) return true;
+  const ready = document.fonts.check(WISH_FONT) && document.fonts.check(AUTHOR_FONT);
+  if (!ready && !slipFontsRequested) {
+    // Charm isn't preloaded and canvas text doesn't trigger a web-font download by itself
+    slipFontsRequested = true;
+    void Promise.all([document.fonts.load(WISH_FONT), document.fonts.load(AUTHOR_FONT)]).catch(
+      () => undefined
+    );
+  }
+  return ready;
+}
+
+function drawWishSlipTag(
+  ctx: CanvasRenderingContext2D,
+  wishText: string,
+  authorName: string,
+  slipY: number,
+  tagOpacity = 1
+): void {
+  if (tagOpacity <= 0.02) return;
+
+  // Font readiness is part of the key so a slip painted with the fallback font
+  // is repainted once Charm / Bai Jamjuree arrive
+  const ready = fontsReady();
+  const key = `${ready ? 1 : 0}|${authorName}|${wishText}`;
+  let sprite = wishSlipSpriteCache.get(key);
+
+  if (!sprite && typeof document !== 'undefined') {
+    if (!ready) wishWidthCache.clear();
+    const slip = layoutWishSlip(ctx, wishText, authorName);
+    if (!slip) return;
+    const w = Math.ceil(slip.halfW * 2 + 4);
+    const h = Math.ceil(slip.slipH + SLIP_SPRITE_PAD + 4);
+    const canvas = document.createElement('canvas');
+    canvas.width = w * SLIP_SPRITE_SCALE;
+    canvas.height = h * SLIP_SPRITE_SCALE;
+    const sCtx = canvas.getContext('2d');
+    if (!sCtx) return;
+    sCtx.scale(SLIP_SPRITE_SCALE, SLIP_SPRITE_SCALE);
+    sCtx.translate(w / 2, 0);
+    paintWishSlip(sCtx, slip, SLIP_SPRITE_PAD);
+    sprite = canvas;
+
+    if (wishSlipSpriteCache.size >= MAX_SPRITE_CACHE_SIZE * 2) {
+      const firstKey = wishSlipSpriteCache.keys().next().value;
+      if (firstKey) wishSlipSpriteCache.delete(firstKey);
+    }
+    wishSlipSpriteCache.set(key, sprite);
+  }
+  if (!sprite) return;
+
+  const w = sprite.width / SLIP_SPRITE_SCALE;
+  const h = sprite.height / SLIP_SPRITE_SCALE;
+  const prevAlpha = ctx.globalAlpha;
+  ctx.globalAlpha = prevAlpha * tagOpacity;
+  ctx.drawImage(sprite, -w / 2, slipY - SLIP_SPRITE_PAD, w, h);
   ctx.globalAlpha = prevAlpha;
 }
 
@@ -825,15 +907,19 @@ export function drawRiverSurface(
 
   const moonX = width * 0.77;
   const reflectionSlices = 14;
+  // Sized for a desktop-wide river; on a phone the full-width slices read as grey bars, not a glint
+  const reflectionScale = Math.max(0.5, Math.min(1, width / 1000));
   for (let i = 0; i < reflectionSlices; i++) {
     const progress = i / reflectionSlices;
     const sliceY =
       horizonY + 12 + Math.pow(progress, 1.35) * (riverHeight * 0.8);
     const waveShift =
-      Math.sin(time * 0.002 + i * 0.9) * (10 + progress * 26);
+      Math.sin(time * 0.002 + i * 0.9) * (10 + progress * 26) * reflectionScale;
     const sliceWidth = Math.max(
       6,
-      (22 + progress * 84) * (0.88 + 0.12 * Math.sin(time * 0.003 + i))
+      (22 + progress * 84) *
+        (0.88 + 0.12 * Math.sin(time * 0.003 + i)) *
+        reflectionScale
     );
     const sliceHeight = Math.max(2, 2.5 + progress * 3.2);
 

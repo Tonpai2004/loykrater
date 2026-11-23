@@ -297,20 +297,69 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
     let animationFrameId: number;
     let lastTime = performance.now();
+    let resizeFrameId: number | null = null;
 
-    const handleResize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
+    // Adaptive resolution: a device that can't hold ~40 fps drops to fewer canvas pixels
+    // (1.5x → 1x → 0.75x) instead of stuttering. The art is flat shapes, so it barely shows.
+    const RESOLUTION_STEPS = [1.5, 1, 0.75];
+    let resolutionStep = 0;
+    let averageFrameMs = 16.7;
+    let framesSinceAdjust = 0;
+    let downgrades = 0;
+
+    const applyCanvasSize = () => {
+      resizeFrameId = null;
+      const dpr = Math.min(window.devicePixelRatio || 1, RESOLUTION_STEPS[resolutionStep]);
+      const nextWidth = Math.round(window.innerWidth * dpr);
+      const nextHeight = Math.round(window.innerHeight * dpr);
+      // Mobile browsers fire resize while the address bar slides; reallocating an
+      // unchanged canvas would clear it and cost a frame
+      if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+        canvas.width = nextWidth;
+        canvas.height = nextHeight;
+      }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    handleResize();
+    const handleResize = () => {
+      resizeFrameId ??= requestAnimationFrame(applyCanvasSize);
+    };
+
+    applyCanvasSize();
     window.addEventListener('resize', handleResize);
 
     const renderLoop = (time: number) => {
-      const dt = Math.min(0.032, Math.max(0.008, (time - lastTime) / 1000));
+      const frameMs = time - lastTime;
+      // Up to 50 ms per step so motion keeps real speed down to 20 fps instead of slowing down
+      const dt = Math.min(0.05, Math.max(0.008, frameMs / 1000));
       lastTime = time;
+
+      if (frameMs > 0 && frameMs < 250 && !document.hidden) {
+        averageFrameMs = averageFrameMs * 0.95 + frameMs * 0.05;
+        framesSinceAdjust++;
+        if (
+          framesSinceAdjust > 120 &&
+          averageFrameMs > 25 &&
+          resolutionStep < RESOLUTION_STEPS.length - 1
+        ) {
+          resolutionStep++;
+          downgrades++;
+          framesSinceAdjust = 0;
+          averageFrameMs = 16.7;
+          applyCanvasSize();
+        } else if (
+          // A slow patch (hand-tracker start-up, a modal opening) shouldn't cost sharpness for good
+          framesSinceAdjust > 600 &&
+          averageFrameMs < 18 &&
+          resolutionStep > 0 &&
+          // A device that keeps falling back really is slow; stop bouncing between sizes
+          downgrades < 3
+        ) {
+          resolutionStep--;
+          framesSinceAdjust = 0;
+          applyCanvasSize();
+        }
+      }
 
       const {
         gameState: currentMode,
@@ -807,6 +856,7 @@ export const RiverCanvas: React.FC<RiverCanvasProps> = ({
 
     return () => {
       cancelAnimationFrame(animationFrameId);
+      if (resizeFrameId !== null) cancelAnimationFrame(resizeFrameId);
       window.removeEventListener('resize', handleResize);
     };
   }, [gestureRef, completeSingleItemRelease]);

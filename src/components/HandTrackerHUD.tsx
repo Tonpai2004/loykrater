@@ -12,6 +12,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { GameState, HandGestureState } from '@/types/krathong';
 import { keepThaiPhrases } from '@/lib/thaiText';
+import { isInAppBrowser } from '@/lib/shareLinks';
 
 interface HandTrackerHUDProps {
   gameState: GameState;
@@ -50,6 +51,17 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
 }) => {
   const { t } = useLanguage();
   const detectedHandCount = gestureState.hands?.length ?? 0;
+  // LINE / Facebook in-app browsers are where shared links open, and most of them block the camera
+  const errorMessage =
+    gestureState.error === 'denied' || gestureState.error === 'unavailable'
+      ? isInAppBrowser()
+        ? t.hud.cameraInApp
+        : gestureState.error === 'denied'
+          ? t.hud.cameraDenied
+          : t.hud.cameraUnavailable
+      : gestureState.error === 'tracker'
+        ? t.hud.trackerError
+        : t.hud.cameraError;
 
   return (
     <div className="pointer-events-none flex w-full shrink-0 flex-row items-end justify-between gap-2 sm:gap-4">
@@ -58,11 +70,12 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={SPRING_TRANSITION}
-          className="thai-chamfer pointer-events-auto relative w-[clamp(8.5rem,min(26dvh,40vw),15rem)] shrink-0 border border-[#D4AF37]/45 bg-[#0B0E17]/95 p-1.5 shadow-[0_16px_42px_rgba(0,0,0,0.75)] backdrop-blur-md sm:p-2"
+          className="thai-chamfer pointer-events-auto relative w-[clamp(8.5rem,min(26dvh,40vw),15rem)] shrink-0 border border-[#D4AF37]/45 bg-[#0B0E17]/95 p-1.5 shadow-[0_16px_42px_rgba(0,0,0,0.75)] sm:p-2"
         >
           <div className="relative aspect-video w-full overflow-hidden border border-[#D4AF37]/25 bg-[#070910]">
             <video
               ref={videoRef}
+              autoPlay
               playsInline
               muted
               className={`h-full w-full -scale-x-100 object-cover transition-opacity ${
@@ -86,11 +99,8 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
 
             {cameraEnabled && gestureState.error && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#070910]/95 px-2 pt-6 pb-2 text-center">
-                <p
-                  title={gestureState.error}
-                  className="font-heading mb-1.5 line-clamp-2 text-[10px] text-balance text-[#FF99C8]"
-                >
-                  {keepThaiPhrases(t.hud.cameraError)}
+                <p className="font-heading mb-1.5 line-clamp-3 text-[10px] leading-snug text-balance text-[#FF99C8]">
+                  {keepThaiPhrases(errorMessage)}
                 </p>
                 <button
                   type="button"
@@ -110,17 +120,23 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
                     ? 'animate-ping bg-[#FFF275]'
                     : gestureState.isTracking
                       ? 'bg-[#52B788]'
-                      : 'bg-white/40'
+                      : cameraEnabled && !gestureState.trackerReady && !gestureState.error
+                        ? 'animate-pulse bg-[#F4D06F]'
+                        : 'bg-white/40'
                 }`}
               />
               <span className="font-heading truncate text-[#FFFDF7]">
-                {gestureState.isPinching
-                  ? t.hud.pinching
-                  : gestureState.isTracking
-                    ? t.hud.handsDetected(detectedHandCount)
-                    : cameraEnabled
-                      ? t.hud.searchingHand
-                      : t.hud.camOff}
+                {!cameraEnabled
+                  ? t.hud.camOff
+                  : !gestureState.isReady
+                    ? t.hud.openingCamera
+                    : !gestureState.trackerReady
+                      ? t.hud.loadingTracker
+                      : gestureState.isPinching
+                        ? t.hud.pinching
+                        : gestureState.isTracking
+                          ? t.hud.handsDetected(detectedHandCount)
+                          : t.hud.searchingHand}
               </span>
             </div>
           </div>
@@ -135,6 +151,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
               aria-label={
                 cameraEnabled ? t.hud.camToggleOff : t.hud.camToggleOn
               }
+              title={cameraEnabled ? t.hud.camToggleOff : t.hud.camToggleOn}
               className="font-heading flex shrink-0 cursor-pointer items-center gap-1 border border-white/15 bg-white/5 px-1.5 py-1 text-[10px] whitespace-nowrap text-[#FFFDF7]/85 transition-colors hover:border-[#D4AF37]/50 sm:px-2 sm:py-0.5"
             >
               {cameraEnabled ? (
@@ -144,7 +161,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
                     height={12}
                     className="text-[#B83B2A]"
                   />
-                  <span className="hidden sm:inline">{keepThaiPhrases(t.hud.camToggleOff)}</span>
+                  <span className="hidden [@media(min-width:640px)_and_(min-height:600px)]:inline">{keepThaiPhrases(t.hud.camToggleOff)}</span>
                 </>
               ) : (
                 <>
@@ -153,7 +170,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
                     height={12}
                     className="text-[#D4AF37]"
                   />
-                  <span className="hidden sm:inline">{keepThaiPhrases(t.hud.camToggleOn)}</span>
+                  <span className="hidden [@media(min-width:640px)_and_(min-height:600px)]:inline">{keepThaiPhrases(t.hud.camToggleOn)}</span>
                 </>
               )}
             </button>
@@ -168,7 +185,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
           transition={SPRING_TRANSITION}
           className="pointer-events-auto flex flex-col items-stretch gap-2 self-end sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-2.5"
         >
-          <div className="font-heading hidden border border-[#D4AF37]/35 bg-[#0B0E17]/90 px-4 py-2 text-xs whitespace-nowrap text-[#FFF275] backdrop-blur-md lg:block">
+          <div className="font-heading hidden border border-[#D4AF37]/35 bg-[#0B0E17]/90 px-4 py-2 text-xs whitespace-nowrap text-[#FFF275] lg:block">
             {t.hud.interactInstruction} ({releasedCount}/{totalCount})
           </div>
 
@@ -197,7 +214,7 @@ export const HandTrackerHUD: React.FC<HandTrackerHUDProps> = ({
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={SPRING_TRANSITION}
-          className="thai-chamfer pointer-events-auto mx-auto flex w-full max-w-md flex-col items-center gap-3 border border-[#D4AF37]/45 bg-[#0B0E17]/95 px-4 py-3.5 text-center shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-md sm:w-auto sm:max-w-none sm:gap-5 sm:px-6 sm:py-4 md:flex-row md:text-left"
+          className="thai-chamfer pointer-events-auto mx-auto flex w-full max-w-md flex-col items-center gap-3 border border-[#D4AF37]/45 bg-[#0B0E17]/95 px-4 py-3.5 text-center shadow-[0_20px_50px_rgba(0,0,0,0.85)] sm:w-auto sm:max-w-none sm:gap-5 sm:px-6 sm:py-4 md:flex-row md:text-left"
         >
           <div>
             <h3 className="font-display text-[15px] font-normal text-balance text-[#FFFDF7] sm:text-base">

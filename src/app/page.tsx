@@ -26,7 +26,7 @@ import {
 import { localizeWish } from '@/constants/translations';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { acceptConsent, useConsentAccepted } from '@/lib/consentStore';
-import { useHandTracking } from '@/hooks/useHandTracking';
+import { prefetchHandTrackingAssets, useHandTracking } from '@/hooks/useHandTracking';
 import {
   publishKrathong,
   subscribeToGlobalRiver,
@@ -127,6 +127,19 @@ export default function LoiKrathongPage() {
   const { videoRef, gestureState, gestureRef, retryCamera } = useHandTracking({
     enabled: shouldTrackHand,
   });
+
+  // While the visitor crafts, pull the hand-tracking files into the cache in idle time,
+  // so the camera screen starts tracking almost as soon as it opens
+  useEffect(() => {
+    if (gameState !== 'CUSTOMIZE' || !cameraEnabled) return;
+    const start = () => prefetchHandTrackingAssets();
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(start, { timeout: 3000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = setTimeout(start, 1500);
+    return () => clearTimeout(id);
+  }, [gameState, cameraEnabled]);
 
   useEffect(() => {
     const unsubscribe = subscribeToGlobalRiver((incomingItems) => {

@@ -189,7 +189,7 @@ export const AudioVolumeController: React.FC = () => {
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 100, damping: 16 }}
-      className="thai-chamfer-sm pointer-events-auto relative flex items-center gap-3 border border-[#D4AF37]/55 bg-[#0B0E17]/92 p-0 text-[#FFFDF7] shadow-[0_14px_34px_rgba(0,0,0,0.75)] backdrop-blur-md sm:px-3.5 sm:py-2"
+      className="thai-chamfer-sm pointer-events-auto relative flex items-center gap-3 border border-[#D4AF37]/55 bg-[#0B0E17]/92 p-0 text-[#FFFDF7] shadow-[0_14px_34px_rgba(0,0,0,0.75)] sm:px-3.5 sm:py-2"
     >
       <span className="pointer-events-none absolute top-1.5 left-1.5 hidden h-1.5 w-1.5 border-t border-l border-[#D4AF37]/75 sm:block" />
       <span className="pointer-events-none absolute top-1.5 right-1.5 hidden h-1.5 w-1.5 border-t border-r border-[#D4AF37]/75 sm:block" />

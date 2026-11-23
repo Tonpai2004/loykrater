@@ -86,7 +86,7 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
           <button
             type="button"
             onClick={onOpenHowToPlay}
-            className="thai-chamfer-sm group relative flex cursor-pointer items-center gap-3 border border-[#C5A059]/70 bg-[#0E0C0A]/90 px-3.5 py-2.5 text-left backdrop-blur-md transition-all hover:border-[#FFF275] hover:bg-[#181410]/95 hover:shadow-[0_8px_24px_rgba(212,175,55,0.24)] sm:px-4 sm:py-3"
+            className="thai-chamfer-sm group relative flex cursor-pointer items-center gap-3 border border-[#C5A059]/70 bg-[#0E0C0A]/90 px-3.5 py-2.5 text-left transition-all hover:border-[#FFF275] hover:bg-[#181410]/95 hover:shadow-[0_8px_24px_rgba(212,175,55,0.24)] sm:px-4 sm:py-3"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#C5A059]/55 bg-[#C5A059]/10 text-[#F4D06F] transition-transform group-hover:scale-105">
               <svg viewBox="0 0 28 28" className="h-5 w-5" fill="none">
@@ -127,7 +127,7 @@ export const HomeLandingOverlay: React.FC<HomeLandingOverlayProps> = ({
           <button
             type="button"
             onClick={onOpenLore}
-            className="thai-chamfer-sm group relative flex cursor-pointer items-center gap-3 border border-[#C5A059]/50 bg-[#0E0C0A]/85 px-3.5 py-2.5 text-left backdrop-blur-md transition-all hover:border-[#F4D06F] hover:bg-[#181410]/95 hover:shadow-[0_8px_24px_rgba(212,175,55,0.18)] sm:px-4 sm:py-3"
+            className="thai-chamfer-sm group relative flex cursor-pointer items-center gap-3 border border-[#C5A059]/50 bg-[#0E0C0A]/92 px-3.5 py-2.5 text-left transition-all hover:border-[#F4D06F] hover:bg-[#181410]/95 hover:shadow-[0_8px_24px_rgba(212,175,55,0.18)] sm:px-4 sm:py-3"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#C5A059]/45 bg-[#C5A059]/10 text-[#F4D06F] transition-transform group-hover:scale-105">
               <svg viewBox="0 0 28 28" className="h-5 w-5" fill="none">

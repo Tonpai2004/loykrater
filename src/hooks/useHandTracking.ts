@@ -12,14 +12,43 @@ const MEDIAPIPE_WASM_URL =
   'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3/wasm';
 const MEDIAPIPE_FALLBACK_WASM_URL =
   'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
-const HAND_MODEL_ASSET_URL =
+// Served from our own CDN with a 1-year cache (next.config headers); Google Storage was slow
+// (~16 s for 7.8 MB) and only cached for an hour, so it stays only as a fallback
+const HAND_MODEL_ASSET_URL = '/models/hand_landmarker.task';
+const HAND_MODEL_FALLBACK_URL =
   'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 
 const PINCH_ENGAGE_THRESHOLD = 0.065;
 const PINCH_RELEASE_THRESHOLD = 0.088;
 const CURSOR_SMOOTHING_FACTOR = 0.42;
 const MIN_DETECTION_INTERVAL_MS = 32;
+// Detection runs on the main thread next to the river animation; a slow device backs off
+// to this interval so the canvas keeps getting frames
+const MAX_DETECTION_INTERVAL_MS = 120;
 const MAX_TRACKED_HANDS = 5;
+// Phones are held by one person, and each extra hand adds a landmark pass per frame
+const MAX_TRACKED_HANDS_TOUCH = 2;
+
+export type CameraErrorCode = 'denied' | 'unavailable' | 'tracker' | 'unknown';
+
+function cameraErrorCode(err: unknown): CameraErrorCode {
+  const name = err instanceof DOMException ? err.name : '';
+  if (name === 'NotAllowedError' || name === 'SecurityError') return 'denied';
+  if (
+    name === 'NotFoundError' ||
+    name === 'NotReadableError' ||
+    name === 'OverconstrainedError' ||
+    typeof navigator === 'undefined' ||
+    !navigator.mediaDevices?.getUserMedia
+  ) {
+    return 'unavailable';
+  }
+  return 'unknown';
+}
+
+function isTouchDevice(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
+}
 
 interface UseHandTrackingOptions {
   enabled: boolean;
@@ -60,33 +89,75 @@ async function createHandLandmarkerInstance(): Promise<HandLandmarker> {
 
   const sharedOptions = {
     runningMode: 'VIDEO' as const,
-    numHands: MAX_TRACKED_HANDS,
+    numHands: isTouchDevice() ? MAX_TRACKED_HANDS_TOUCH : MAX_TRACKED_HANDS,
     minHandDetectionConfidence: 0.5,
     minHandPresenceConfidence: 0.5,
     minTrackingConfidence: 0.5,
   };
 
-  try {
-    return await HandLandmarker.createFromOptions(vision, {
-      ...sharedOptions,
-      baseOptions: {
-        modelAssetPath: HAND_MODEL_ASSET_URL,
-        delegate: 'GPU',
-      },
-    });
-  } catch {
-    return await HandLandmarker.createFromOptions(vision, {
-      ...sharedOptions,
-      baseOptions: {
-        modelAssetPath: HAND_MODEL_ASSET_URL,
-        delegate: 'CPU',
-      },
-    });
+  const attempts: { modelAssetPath: string; delegate: 'GPU' | 'CPU' }[] = [
+    { modelAssetPath: HAND_MODEL_ASSET_URL, delegate: 'GPU' },
+    { modelAssetPath: HAND_MODEL_ASSET_URL, delegate: 'CPU' },
+    { modelAssetPath: HAND_MODEL_FALLBACK_URL, delegate: 'CPU' },
+  ];
+  let lastError: unknown;
+  for (const baseOptions of attempts) {
+    try {
+      return await HandLandmarker.createFromOptions(vision, {
+        ...sharedOptions,
+        baseOptions,
+      });
+    } catch (err) {
+      lastError = err;
+    }
   }
+  throw lastError;
+}
+
+// One landmarker for the whole visit: created on first need, reused when the camera is toggled
+let landmarkerPromise: Promise<HandLandmarker> | null = null;
+
+function loadHandLandmarker(): Promise<HandLandmarker> {
+  landmarkerPromise ??= createHandLandmarkerInstance().catch((err) => {
+    landmarkerPromise = null;
+    throw err;
+  });
+  return landmarkerPromise;
+}
+
+let assetsPrefetched = false;
+
+// Warms the HTTP cache with the MediaPipe runtime and hand model (~22 MB) while the visitor is
+// still crafting, so the river screen only has to start them. Download only: compiling the
+// wasm here would stall the crafting UI on slower phones. Skipped on data-saver connections.
+export function prefetchHandTrackingAssets(): void {
+  if (assetsPrefetched || typeof window === 'undefined') return;
+  const connection = (
+    navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
+  ).connection;
+  if (connection?.saveData || /2g/.test(connection?.effectiveType ?? '')) return;
+  assetsPrefetched = true;
+
+  const drain = async (url: string) => {
+    try {
+      const res = await fetch(url, { priority: 'low' } as RequestInit);
+      const reader = res.body?.getReader();
+      if (!reader) return;
+      while (!(await reader.read()).done) {
+        // Stream to the cache without holding the bytes in memory
+      }
+    } catch {
+      // A failed prefetch only means the river screen downloads it instead
+    }
+  };
+  void drain(`${MEDIAPIPE_WASM_URL}/vision_wasm_internal.js`);
+  void drain(`${MEDIAPIPE_WASM_URL}/vision_wasm_internal.wasm`);
+  void drain(HAND_MODEL_ASSET_URL);
 }
 
 const INITIAL_GESTURE_STATE: HandGestureState = {
   isReady: false,
+  trackerReady: false,
   isTracking: false,
   isPinching: false,
   cursor: null,
@@ -145,21 +216,40 @@ export function useHandTracking({
     let activeStream: MediaStream | null = null;
     let lastVideoTime = -1;
     let lastDetectTimestamp = 0;
+    let detectionIntervalMs = MIN_DETECTION_INTERVAL_MS;
+
+    const reportError = (code: CameraErrorCode) => {
+      gestureRef.current = { ...INITIAL_GESTURE_STATE, error: code };
+      setGestureState({ ...gestureRef.current });
+    };
 
     async function initializePipeline() {
       try {
         setGestureState((prev) => ({ ...prev, error: null }));
 
-        if (!landmarkerRef.current) {
-          const instance = await createHandLandmarkerInstance();
-          if (!isMounted) {
-            instance.close();
-            return;
-          }
-          landmarkerRef.current = instance;
-        }
+        // The hand model downloads while the camera opens, so the visitor sees themselves at once
+        // instead of staring at a blank box until ~22 MB of MediaPipe has arrived
+        const landmarkerReady = landmarkerRef.current
+          ? Promise.resolve(landmarkerRef.current)
+          : loadHandLandmarker();
+        landmarkerReady
+          .then((instance) => {
+            if (!isMounted) return;
+            landmarkerRef.current = instance;
+            gestureRef.current = { ...gestureRef.current, trackerReady: true };
+            setGestureState((prev) => ({ ...prev, trackerReady: true }));
+          })
+          .catch(() => {
+            if (!isMounted) return;
+            // The camera may still be live; keep its preview and just flag the tracker
+            gestureRef.current = { ...gestureRef.current, error: 'tracker' };
+            setGestureState((prev) => ({ ...prev, error: 'tracker' }));
+          });
 
-        if (!isMounted) return;
+        if (!navigator.mediaDevices?.getUserMedia) {
+          reportError('unavailable');
+          return;
+        }
 
         activeStream = await navigator.mediaDevices.getUserMedia({
           video: {
@@ -207,12 +297,22 @@ export function useHandTracking({
 
           if (
             video.currentTime !== lastVideoTime &&
-            nowMs - lastDetectTimestamp >= MIN_DETECTION_INTERVAL_MS
+            nowMs - lastDetectTimestamp >= detectionIntervalMs
           ) {
             lastVideoTime = video.currentTime;
             lastDetectTimestamp = nowMs;
 
+            const detectStart = performance.now();
             const result = landmarker.detectForVideo(video, nowMs);
+            // Leave the river at least ~2/3 of the main thread: a 40 ms detection waits 120 ms
+            const detectCost = performance.now() - detectStart;
+            detectionIntervalMs = Math.min(
+              MAX_DETECTION_INTERVAL_MS,
+              Math.max(
+                MIN_DETECTION_INTERVAL_MS,
+                detectionIntervalMs * 0.8 + detectCost * 3 * 0.2
+              )
+            );
             const rawHands = result.landmarks ?? [];
 
             if (rawHands.length === 0) {
@@ -221,6 +321,7 @@ export function useHandTracking({
               smoothedCursorsRef.current = Array(MAX_TRACKED_HANDS).fill(null);
               gestureRef.current = {
                 isReady: true,
+                trackerReady: true,
                 isTracking: false,
                 isPinching: false,
                 cursor: null,
@@ -287,6 +388,7 @@ export function useHandTracking({
 
               gestureRef.current = {
                 isReady: true,
+                trackerReady: true,
                 isTracking: true,
                 isPinching: anyPinching,
                 cursor: primary.cursor,
@@ -312,15 +414,7 @@ export function useHandTracking({
         rafIdRef.current = requestAnimationFrame(detectFrame);
       } catch (err) {
         if (!isMounted) return;
-        const message =
-          err instanceof Error
-            ? err.message
-            : 'ไม่สามารถเปิดใช้งานกล้องเว็บแคมได้ กรุณาอนุญาตการเข้าถึงกล้อง';
-        gestureRef.current = {
-          ...INITIAL_GESTURE_STATE,
-          error: message,
-        };
-        setGestureState({ ...gestureRef.current });
+        reportError(cameraErrorCode(err));
       }
     }
 

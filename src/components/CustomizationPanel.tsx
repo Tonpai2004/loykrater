@@ -429,7 +429,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               <button
                 type="button"
                 onClick={() => setIsBookSubmerged(true)}
-                className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#D4AF37]/55 bg-[#0B0E17]/90 px-3.5 py-1.5 text-xs text-[#FFF275] shadow-[0_8px_22px_rgba(0,0,0,0.65)] backdrop-blur-md transition-colors hover:border-[#FFF275] hover:bg-[#141932]"
+                className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#D4AF37]/55 bg-[#0B0E17]/90 px-3.5 py-1.5 text-xs text-[#FFF275] shadow-[0_8px_22px_rgba(0,0,0,0.65)] transition-colors hover:border-[#FFF275] hover:bg-[#141932]"
               >
                 <Eye width={14} height={14} strokeWidth={2} />
                 <span>{keepThaiPhrases(ct.submergeBtn)}</span>
@@ -488,7 +488,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 ease: 'easeInOut',
               }}
               style={{ transformOrigin: 'right center' }}
-              className="thai-chamfer relative flex flex-1 flex-col justify-between border border-[#D4AF37]/45 bg-[#0E1222]/95 p-4 text-[#FFFDF7] shadow-[0_22px_55px_rgba(4,6,14,0.88)] backdrop-blur-xl sm:p-5"
+              className="thai-chamfer relative flex flex-1 flex-col justify-between border border-[#D4AF37]/45 bg-[#0E1222]/95 p-4 text-[#FFFDF7] shadow-[0_22px_55px_rgba(4,6,14,0.88)] sm:p-5"
             >
               <span className="pointer-events-none absolute top-2.5 left-3 h-2.5 w-2.5 border-t border-l border-[#D4AF37]/70" />
               <span className="pointer-events-none absolute top-2.5 right-3 h-2.5 w-2.5 border-t border-r border-[#D4AF37]/70" />
@@ -789,7 +789,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 background:
                   'linear-gradient(165deg, rgba(24, 29, 56, 0.97) 0%, rgba(12, 16, 33, 0.98) 100%)',
               }}
-              className="thai-chamfer relative flex w-full flex-col justify-between border border-[#D4AF37]/65 bg-[#141932] p-5 text-[#FFFDF7] shadow-[0_22px_55px_rgba(4,6,14,0.92)] backdrop-blur-xl lg:w-[410px]"
+              className="thai-chamfer relative flex w-full flex-col justify-between border border-[#D4AF37]/65 bg-[#141932] p-5 text-[#FFFDF7] shadow-[0_22px_55px_rgba(4,6,14,0.92)] lg:w-[410px]"
             >
               <span className="pointer-events-none absolute top-2.5 left-3 h-2.5 w-2.5 border-t border-l border-[#D4AF37]/80" />
               <span className="pointer-events-none absolute top-2.5 right-3 h-2.5 w-2.5 border-t border-r border-[#D4AF37]/80" />
@@ -963,7 +963,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsBookSubmerged(false)}
-                      className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#FFF275]/80 bg-[#0B0E17]/95 px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#FFF275] shadow-[0_0_26px_rgba(244,208,111,0.45)] backdrop-blur-md transition-all hover:bg-[#141932] sm:px-4"
+                      className="thai-chamfer-sm font-heading flex items-center gap-2 border border-[#FFF275]/80 bg-[#0B0E17]/95 px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#FFF275] shadow-[0_0_26px_rgba(244,208,111,0.45)] transition-all hover:bg-[#141932] sm:px-4"
                     >
                       <span>{keepThaiPhrases(ct.emergeBtn)}</span>
                     </button>
@@ -991,7 +991,7 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setActiveColorModal(null)}
-            className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#060810]/75 p-3 backdrop-blur-sm sm:p-4"
+            className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#060810]/88 p-3 sm:p-4"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.94, y: 16 }}

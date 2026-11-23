@@ -265,7 +265,7 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="pointer-events-auto fixed inset-0 z-[60] flex items-center justify-center bg-[#060810]/85 p-2.5 backdrop-blur-md sm:p-4"
+          className="pointer-events-auto fixed inset-0 z-[60] flex items-center justify-center bg-[#060810]/92 p-2.5 sm:p-4"
         >
           <motion.div
             onClick={(e) => e.stopPropagation()}
