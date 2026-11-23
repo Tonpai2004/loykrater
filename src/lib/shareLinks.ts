@@ -10,6 +10,7 @@ export type ShareChannelId =
 export interface SharePayload {
   url: string;
   title: string;
+  // Invite line that ends where the link should follow ("…ร่วมกันลอยได้ที่ <url>")
   text: string;
 }
 
@@ -66,7 +67,7 @@ export function resolveShareLaunch(
       return {
         kind: 'open',
         href: touch
-          ? `https://line.me/R/share?text=${encodeURIComponent(`${text}\n${url}`)}`
+          ? `https://line.me/R/share?text=${encodeURIComponent(`${text} ${url}`)}`
           : `https://social-plugins.line.me/lineit/share?url=${u}&text=${encodeURIComponent(text)}`,
       };
     case 'facebook':
@@ -83,7 +84,7 @@ export function resolveShareLaunch(
       }
       return { kind: 'copy' };
     case 'whatsapp':
-      return { kind: 'open', href: `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}` };
+      return { kind: 'open', href: `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}` };
     case 'telegram':
       return {
         kind: 'open',
@@ -97,7 +98,7 @@ export function resolveShareLaunch(
     case 'email':
       return {
         kind: 'open',
-        href: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${text}\n\n${url}`)}`,
+        href: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${text} ${url}`)}`,
       };
   }
 }

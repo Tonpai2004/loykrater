@@ -6,12 +6,11 @@ import {
   DownloadSimple,
   EnvelopeSimple,
   FacebookLogo,
-  InstagramLogo,
+  ImageSquare,
   LinkSimple,
   MessengerLogo,
   ShareNetwork,
   TelegramLogo,
-  TiktokLogo,
   WhatsappLogo,
   XLogo,
 } from '@phosphor-icons/react';
@@ -42,7 +41,7 @@ type CardResult =
   | { key: string; status: 'ready'; file: File; previewUrl: string }
   | { key: string; status: 'error' };
 
-const CARD_FILENAME = 'loy-kra-ter-story.png';
+const CARD_FILENAME = 'loy-kra-ter-card.png';
 const TOAST_VISIBLE_MS = 3600;
 
 const LineLogo: React.FC<{ size?: number }> = ({ size = 22 }) => (
@@ -81,19 +80,10 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
   const renderKey = `${locale}|${renderNonce}|${JSON.stringify(offerings)}`;
   const card = cardResult?.key === renderKey ? cardResult : null;
 
-  const payload = useMemo<SharePayload>(() => {
-    const featured = offerings.find((slot) => !slot.hideWish && slot.wishText.trim());
-    const names = Array.from(
-      new Set(offerings.map((slot) => slot.authorName.trim()).filter(Boolean))
-    ).join(', ');
-    return {
-      url: siteUrl,
-      title: t.share.shareTitle,
-      text: featured
-        ? t.share.wishText(names, featured.wishText.trim())
-        : t.share.inviteText,
-    };
-  }, [offerings, siteUrl, t]);
+  const payload = useMemo<SharePayload>(
+    () => ({ url: siteUrl, title: t.share.shareTitle, text: t.share.inviteText }),
+    [siteUrl, t]
+  );
 
   const showToast = useCallback((message: string) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -115,7 +105,7 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
     []
   );
 
-  // Paint the story card off-screen when the sheet opens, the language flips or the offerings change;
+  // Paint the invite card off-screen when the sheet opens, the language flips or the offerings change;
   // reopening with the same content reuses the last card
   useEffect(() => {
     if (!isOpen || !siteUrl || paintedKeyRef.current === renderKey) return;
@@ -193,7 +183,8 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
     showToast(t.share.toastSaved);
   };
 
-  const handleShareStory = async () => {
+  // Shares the card image with the invite text and link, for chats and timelines
+  const handleShareCard = async () => {
     if (card?.status !== 'ready') return;
 
     if (!canShareImageFile(card.file)) {
@@ -204,8 +195,12 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
     // Start the copy inside the tap, then share right away so the gesture isn't spent
     const copying = copyText(payload.url);
     try {
-      await navigator.share({ files: [card.file], title: payload.title });
-      if (await copying) showToast(t.share.toastStoryLink);
+      await navigator.share({
+        files: [card.file],
+        title: payload.title,
+        text: `${payload.text} ${payload.url}`,
+      });
+      if (await copying) showToast(t.share.toastCardShared);
     } catch (error) {
       if ((error as DOMException)?.name === 'AbortError') return;
       saveCard(card.file);
@@ -292,10 +287,10 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
               <Xmark width={18} height={18} strokeWidth={1.8} />
             </button>
 
-            {/* Story card preview */}
-            <div className="flex flex-col items-center gap-3 border-b border-[#D4AF37]/30 bg-[#080B14] p-4 sm:p-6 md:col-span-5 md:border-r md:border-b-0">
-              <p className="font-heading self-start pr-11 text-[11px] font-medium tracking-wider text-[#F4D06F] md:pr-0">
-                {t.share.storySection}
+            {/* Invite card preview */}
+            <div className="order-2 flex flex-col items-center gap-3 border-t border-[#D4AF37]/30 bg-[#080B14] p-4 sm:p-6 md:order-1 md:col-span-5 md:border-t-0 md:border-r">
+              <p className="font-heading hidden self-start text-[11px] font-medium tracking-wider text-[#F4D06F] md:block">
+                {t.share.cardSection}
               </p>
 
               <div className="relative aspect-[9/16] w-40 overflow-hidden border border-[#D4AF37]/45 bg-[#0D1321] shadow-[0_18px_40px_rgba(0,0,0,0.7)] min-[420px]:w-48 md:w-full md:max-w-60">
@@ -303,20 +298,20 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                   // eslint-disable-next-line @next/next/no-img-element -- local blob preview, nothing for next/image to optimise
                   <img
                     src={card.previewUrl}
-                    alt={t.share.storySection}
+                    alt={t.share.cardSection}
                     className="h-full w-full object-cover"
                   />
                 ) : card?.status === 'error' ? (
                   <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center">
                     <p className="font-heading text-xs text-[#FFFDF7]/75">
-                      {t.share.storyFailed}
+                      {t.share.cardFailed}
                     </p>
                     <button
                       type="button"
                       onClick={() => setRenderNonce((n) => n + 1)}
                       className="thai-chamfer-sm font-heading cursor-pointer border border-[#D4AF37]/60 px-3 py-1.5 text-[11px] text-[#FFF275] transition-colors hover:bg-[#12172B]"
                     >
-                      {t.share.storyRetryBtn}
+                      {t.share.cardRetryBtn}
                     </button>
                   </div>
                 ) : (
@@ -327,14 +322,14 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                       className="h-10 w-10 rounded-full bg-[radial-gradient(circle_at_40%_36%,#FFFDE8_0%,#FFF275_45%,#F4C542_100%)] shadow-[0_0_28px_rgba(255,242,117,0.6)]"
                     />
                     <p className="font-heading text-[11px] text-[#F4D06F]/80">
-                      {t.share.storyRendering}
+                      {t.share.cardRendering}
                     </p>
                   </div>
                 )}
               </div>
 
               <p className="font-heading text-center text-[10px] leading-relaxed text-pretty text-[#FFFDF7]/60">
-                {t.share.storyHint}
+                {t.share.cardHint}
               </p>
               {showLongPressHint && (
                 <p className="font-heading text-center text-[11px] text-[#FFF275]">
@@ -344,8 +339,8 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-4 bg-[linear-gradient(160deg,rgba(24,30,58,0.98)_0%,rgba(13,17,34,0.99)_100%)] p-4 sm:p-6 md:col-span-7">
-              <div className="border-b border-[#D4AF37]/30 pb-3 md:pr-10">
+            <div className="order-1 flex flex-col gap-4 bg-[linear-gradient(160deg,rgba(24,30,58,0.98)_0%,rgba(13,17,34,0.99)_100%)] p-4 sm:p-6 md:order-2 md:col-span-7">
+              <div className="border-b border-[#D4AF37]/30 pr-11 pb-3 md:pr-10">
                 <p className="font-heading text-[11px] font-medium tracking-wider text-[#F4D06F]">
                   {t.share.headerTag}
                 </p>
@@ -355,46 +350,11 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
               </div>
 
               <div className="flex flex-col gap-2.5">
-                <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={handleShareStory}
-                    disabled={!cardReady}
-                    className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-2 border border-[#FFF275]/60 bg-[#D4AF37] px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#0B0E17] transition-colors hover:bg-[#FFF275] disabled:cursor-wait disabled:opacity-55"
-                  >
-                    <InstagramLogo size={17} weight="bold" />
-                    <span>{t.share.storyShareBtn}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => cardReady && saveCard(card.file)}
-                    disabled={!cardReady}
-                    className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-2 border border-[#D4AF37]/50 bg-[#080B14] px-3 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#12172B] disabled:cursor-wait disabled:opacity-55"
-                  >
-                    <DownloadSimple size={16} weight="bold" />
-                    <span>{t.share.storySaveBtn}</span>
-                  </button>
-                </div>
-
-                <ol className="space-y-1 border border-[#D4AF37]/25 border-l-2 border-l-[#F4D06F] bg-[#080B14]/80 py-2 pr-3 pl-3">
-                  {t.share.storySteps.map((step, i) => (
-                    <li
-                      key={step}
-                      className="font-heading flex gap-2 text-[11px] leading-relaxed text-[#FFFDF7]/80"
-                    >
-                      <span className="shrink-0 text-[#F4D06F]">{t.numerals[i]}.</span>
-                      <span className="text-pretty">{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
-              <div className="flex flex-col gap-2.5 border-t border-[#D4AF37]/25 pt-3.5">
                 <p className="font-heading text-[11px] font-medium tracking-wider text-[#F4D06F]">
                   {t.share.linkSection}
                 </p>
 
-                <div className="grid grid-cols-3 gap-2 min-[420px]:grid-cols-5">
+                <div className="grid grid-cols-4 gap-2">
                   {linkChannels.map((channel) => (
                     <button
                       key={channel.id}
@@ -406,24 +366,6 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                       <span className={tileLabelClass}>{channel.label}</span>
                     </button>
                   ))}
-                  <button
-                    type="button"
-                    onClick={handleShareStory}
-                    disabled={!cardReady}
-                    className={tileClass}
-                  >
-                    <InstagramLogo size={22} weight="fill" color="#E1306C" />
-                    <span className={tileLabelClass}>IG Story</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleShareStory}
-                    disabled={!cardReady}
-                    className={tileClass}
-                  >
-                    <TiktokLogo size={22} weight="fill" color="#FFFDF7" />
-                    <span className={tileLabelClass}>TikTok</span>
-                  </button>
                   {canUseNativeShare() && (
                     <button type="button" onClick={handleNativeShare} className={tileClass}>
                       <ShareNetwork size={22} weight="duotone" color="#F4D06F" />
@@ -446,6 +388,32 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                   </button>
                 </div>
               </div>
+
+              <div className="flex flex-col gap-2.5 border-t border-[#D4AF37]/25 pt-3.5">
+                <p className="font-heading text-[11px] font-medium tracking-wider text-[#F4D06F]">
+                  {t.share.cardSection}
+                </p>
+                <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={handleShareCard}
+                    disabled={!cardReady}
+                    className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-2 border border-[#FFF275]/60 bg-[#D4AF37] px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-[#0B0E17] transition-colors hover:bg-[#FFF275] disabled:cursor-wait disabled:opacity-55"
+                  >
+                    <ImageSquare size={17} weight="bold" />
+                    <span>{t.share.cardShareBtn}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => cardReady && saveCard(card.file)}
+                    disabled={!cardReady}
+                    className="thai-chamfer-sm font-heading flex cursor-pointer items-center justify-center gap-2 border border-[#D4AF37]/50 bg-[#080B14] px-3 py-2.5 text-xs font-medium whitespace-nowrap text-[#FFF275] transition-colors hover:border-[#FFF275] hover:bg-[#12172B] disabled:cursor-wait disabled:opacity-55"
+                  >
+                    <DownloadSimple size={16} weight="bold" />
+                    <span>{t.share.cardSaveBtn}</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             <AnimatePresence>
@@ -456,7 +424,7 @@ export const ShareInviteSheet: React.FC<ShareInviteSheetProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 12 }}
                   role="status"
-                  className="thai-chamfer-sm font-heading pointer-events-none sticky bottom-3 z-30 mx-auto mb-3 w-[calc(100%-1.5rem)] max-w-md border border-[#52B788]/50 bg-[#0B1F18]/95 px-4 py-2.5 text-center text-xs text-[#FFF275] shadow-[0_12px_30px_rgba(0,0,0,0.6)] md:col-span-12"
+                  className="thai-chamfer-sm font-heading pointer-events-none sticky bottom-3 z-30 mx-auto mb-3 w-[calc(100%-1.5rem)] max-w-md border border-[#52B788]/50 bg-[#0B1F18]/95 px-4 py-2.5 text-center text-xs text-[#FFF275] shadow-[0_12px_30px_rgba(0,0,0,0.6)] order-3 md:col-span-12"
                 >
                   {toast}
                 </motion.div>

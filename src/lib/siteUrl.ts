@@ -14,12 +14,12 @@ export function getSiteUrl(): string {
   return LOCAL_FALLBACK_URL;
 }
 
-// "https://loykrater2026.vercel.app/" → "loykrater2026.vercel.app" for printing on cards
+// "https://loykrater.vercel.app/" → "loykrater.vercel.app" for printing on cards
 export function getDisplayHost(url: string): string {
   return url.replace(/^https?:\/\//, '').replace(/\/+$/, '');
 }
 
-const PRODUCTION_FALLBACK_URL = 'https://loykrater2026.vercel.app';
+const PRODUCTION_FALLBACK_URL = 'https://loykrater.vercel.app';
 
 // Fixed public origin for crawler-facing output (metadataBase, canonical, sitemap, robots, JSON-LD).
 // Unlike getSiteUrl() it never depends on the visitor's address, so every crawl sees one canonical host.
